@@ -2,7 +2,7 @@
 
 ## Platform Support
 
-||
+| Platform| Supported
 |---------|------------
 | Linux   | Yes
 | MacOSX  | Not yet...
