@@ -25,6 +25,34 @@
 #   unused-packages = true
 
 
+[[constraint]]
+  branch = "master"
+  name = "github.com/4ydx/gltext"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/go-gl/gl"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/go-gl/glfw"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/go-gl/mathgl"
+
+[[constraint]]
+  name = "go.uber.org/zap"
+  version = "1.8.0"
+
+[[constraint]]
+  branch = "master"
+  name = "golang.org/x/image"
+
 [prune]
   go-tests = true
   unused-packages = true
+
+  [[prune.project]]
+    name = "github.com/go-gl/glfw"
+    unused-packages = false

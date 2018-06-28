@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"math"
 	"os"
 	"runtime"
 
@@ -10,28 +11,31 @@ import (
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/go-gl/mathgl/mgl32"
-	"gitlab.com/liamg/terminal/config"
+	"gitlab.com/liamg/raft/config"
+	"gitlab.com/liamg/raft/terminal"
 	"go.uber.org/zap"
 	"golang.org/x/image/math/fixed"
 )
 
 type GUI struct {
-	window *glfw.Window
-	logger *zap.SugaredLogger
-	config config.Config
-	font   *v41.Font
-	width  int
-	height int
+	window   *glfw.Window
+	logger   *zap.SugaredLogger
+	config   config.Config
+	font     *v41.Font
+	terminal *terminal.Terminal
+	width    int
+	height   int
 }
 
-func New(config config.Config, logger *zap.SugaredLogger) *GUI {
+func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
 
 	//logger.
 	return &GUI{
-		config: config,
-		logger: logger,
-		width:  600,
-		height: 300,
+		config:   config,
+		logger:   logger,
+		width:    600,
+		height:   300,
+		terminal: terminal,
 	}
 }
 
@@ -49,6 +53,18 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 		gui.font.ResizeWindow(float32(width), float32(height))
 	}
 	gl.Viewport(0, 0, int32(width), int32(height))
+
+	scaleMin, scaleMax := float32(1.0), float32(1.1)
+	text := v41.NewText(gui.font, scaleMin, scaleMax)
+	text.SetString("A")
+	cw, ch := text.Width(), text.Height()
+
+	cols := int(math.Floor(float64(float32(width) / cw)))
+	rows := int(math.Floor(float64(float32(height) / ch)))
+
+	if err := gui.terminal.SetSize(cols, rows); err != nil {
+		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", cols, rows, err)
+	}
 }
 
 func (gui *GUI) getTermSize() (int, int) {
@@ -56,6 +72,20 @@ func (gui *GUI) getTermSize() (int, int) {
 	text := v41.NewText(gui.font, scaleMin, scaleMax)
 	text.SetString("A")
 	return gui.width / int(text.Width()), gui.height / int(text.Height())
+}
+
+// checks if the terminals cells have been updated, and updates the text objects if needed
+func (gui *GUI) updateCells() {
+}
+
+// builds text objects
+func (gui *GUI) createCells() {
+	scaleMin, scaleMax := float32(1.0), float32(1.1)
+	text := v41.NewText(gui.font, scaleMin, scaleMax)
+	text.SetString("hello")
+	text.SetColor(mgl32.Vec3{1, 1, 1})
+	text.SetPosition(mgl32.Vec2{-float32(gui.width) / 2, -float32(gui.height) / 2})
+
 }
 
 func (gui *GUI) Render() error {
@@ -107,6 +137,7 @@ func (gui *GUI) Render() error {
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		// Render the string.
+		gui.window.SetTitle(gui.terminal.GetTitle())
 
 		text.Draw()
 

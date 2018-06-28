@@ -3,9 +3,12 @@ package main
 import (
 	"fmt"
 	"os"
+	"time"
 
-	"gitlab.com/liamg/terminal/config"
-	"gitlab.com/liamg/terminal/gui"
+	"gitlab.com/liamg/raft/config"
+	"gitlab.com/liamg/raft/gui"
+	"gitlab.com/liamg/raft/pty"
+	"gitlab.com/liamg/raft/terminal"
 	"go.uber.org/zap"
 )
 
@@ -28,15 +31,23 @@ func main() {
 	sugaredLogger := logger.Sugar()
 	defer sugaredLogger.Sync()
 
-	/*
-		sugaredLogger.Infof("Allocationg pty...")
-			pty, err := pty.NewPtyWithShell()
-			if err != nil {
-				panic(err)
-			}
-	*/
+	sugaredLogger.Infof("Allocationg pty...")
+	pty, err := pty.NewPtyWithShell()
+	if err != nil {
+		panic(err)
+	}
 
-	g := gui.New(conf, sugaredLogger)
+	sugaredLogger.Infof("Creating terminal...")
+	terminal := terminal.New(pty, sugaredLogger)
+
+	go terminal.Read()
+
+	go func() {
+		time.Sleep(time.Second * 5)
+		terminal.Write([]byte("tput cols && tput lines\n"))
+	}()
+
+	g := gui.New(conf, terminal, sugaredLogger)
 	if err := g.Render(); err != nil {
 		sugaredLogger.Fatalf("Render error: %s", err)
 	}
