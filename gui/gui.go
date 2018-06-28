@@ -31,6 +31,8 @@ type GUI struct {
 	charHeight float32
 	texts      [][]*v41.Text
 	textLock   sync.Mutex
+	cols       int
+	rows       int
 }
 
 func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
@@ -54,6 +56,13 @@ func (gui *GUI) SetSize(w int, h int) {
 }
 
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
+
+	if width == gui.width && height == gui.height {
+		return
+	}
+
+	gui.logger.Debugf("GUI resize to %dx%d", width, height)
+
 	gui.width = width
 	gui.height = height
 	if gui.font != nil {
@@ -65,28 +74,28 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	text := v41.NewText(gui.font, scaleMin, scaleMax)
 	text.SetString("A")
 	gui.charWidth, gui.charHeight = text.Width(), text.Height()
+	text.Release()
 
-	cols := int(math.Floor(float64(float32(width) / gui.charWidth)))
-	rows := int(math.Floor(float64(float32(height) / gui.charHeight)))
+	gui.cols = int(math.Floor(float64(float32(width) / gui.charWidth)))
+	gui.rows = int(math.Floor(float64(float32(height) / gui.charHeight)))
 
-	if err := gui.terminal.SetSize(cols, rows); err != nil {
-		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", cols, rows, err)
+	if err := gui.terminal.SetSize(gui.cols, gui.rows); err != nil {
+		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", gui.cols, gui.rows, err)
 	}
 
 	gui.createTexts()
 }
 
 func (gui *GUI) getTermSize() (int, int) {
-	scaleMin, scaleMax := float32(1.0), float32(1.1)
-	text := v41.NewText(gui.font, scaleMin, scaleMax)
-	text.SetString("A")
-	return gui.width / int(text.Width()), gui.height / int(text.Height())
+	return gui.cols, gui.rows
 }
 
 // checks if the terminals cells have been updated, and updates the text objects if needed
 func (gui *GUI) updateTexts() {
 	gui.textLock.Lock()
 	defer gui.textLock.Unlock()
+
+	//gui.logger.Debugf("Updating texts...")
 
 	cols, rows := gui.getTermSize()
 
@@ -101,6 +110,11 @@ func (gui *GUI) updateTexts() {
 				gui.texts[row][col].SetString(string(r))
 				gui.texts[row][col].SetColor(mgl32.Vec3{1, 1, 1})
 				// @todo set colour
+				gui.texts[row][col].Show()
+			} else {
+				//gui.texts[row][col].Hide()
+				gui.texts[row][col].SetString("?")
+				gui.texts[row][col].SetColor(mgl32.Vec3{0.1, 0.1, 0.15})
 			}
 		}
 	}
@@ -109,7 +123,6 @@ func (gui *GUI) updateTexts() {
 // builds text objects
 func (gui *GUI) createTexts() {
 	gui.textLock.Lock()
-	defer gui.textLock.Unlock()
 	scaleMin, scaleMax := float32(1.0), float32(1.1)
 
 	cols, rows := gui.getTermSize()
@@ -123,17 +136,26 @@ func (gui *GUI) createTexts() {
 		for col := 0; col < cols; col++ {
 			if len(texts[row]) <= col {
 				text := v41.NewText(gui.font, scaleMin, scaleMax)
+				text.Hide()
 
 				if row < len(gui.texts) {
 					if col < len(gui.texts[row]) {
 						text.SetString(gui.texts[row][col].String)
+						gui.texts[row][col].Release()
+						if gui.texts[row][col].String != "" {
+							text.Show()
+						}
 					}
 				}
 
-				text.SetColor(mgl32.Vec3{1, 1, 1})
-
 				x := ((float32(col) * gui.charWidth) - (float32(gui.width) / 2)) + (gui.charWidth / 2)
 				y := -(((float32(row) * gui.charHeight) - (float32(gui.height) / 2)) + (gui.charHeight / 2))
+
+				if col == 0 && row == 0 {
+					gui.logger.Debugf("0,0 is at %f,%f", x, y)
+				} else if col == cols-1 && row == rows-1 {
+					gui.logger.Debugf("%d,%d is at %f,%f", col, row, x, y)
+				}
 
 				text.SetPosition(mgl32.Vec2{x, y})
 				texts[row] = append(texts[row], text)
@@ -142,7 +164,9 @@ func (gui *GUI) createTexts() {
 	}
 
 	gui.texts = texts
+	gui.textLock.Unlock()
 
+	gui.updateTexts()
 }
 
 func (gui *GUI) Render() error {
@@ -170,16 +194,14 @@ func (gui *GUI) Render() error {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
-	gui.resize(gui.window, gui.width, gui.height)
-
 	gui.window.SetFramebufferSizeCallback(gui.resize)
-	w, h := gui.window.GetFramebufferSize()
-	gl.Viewport(0, 0, int32(w), int32(h))
+	w, h := gui.window.GetSize()
+	gui.resize(gui.window, w, h)
+
+	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
 
 	gui.logger.Debugf("Starting pty read handling...")
-	gui.terminal.OnUpdate(func() {
-		gui.updateTexts()
-	})
+	gui.terminal.OnUpdate(gui.updateTexts)
 	go gui.terminal.Read()
 
 	scaleMin, scaleMax := float32(1.0), float32(1.1)
@@ -201,7 +223,7 @@ func (gui *GUI) Render() error {
 
 		select {
 		case <-ticker.C:
-			text.SetString(fmt.Sprintf("%d fps | %d, %d", frames, gui.terminal.GetPosition().Row, gui.terminal.GetPosition().Col))
+			text.SetString(fmt.Sprintf("%d fps | %d, %d | %s", frames, gui.terminal.GetPosition().Col, gui.terminal.GetPosition().Row, gui.texts[0][0].String))
 			frames = 0
 		default:
 		}
@@ -217,6 +239,8 @@ func (gui *GUI) Render() error {
 
 		for row := 0; row < rows; row++ {
 			for col := 0; col < cols; col++ {
+				gui.texts[row][col].SetColor(mgl32.Vec3{1, 1, 1})
+				//gui.texts[row][col].SetString("?")
 				gui.texts[row][col].Draw()
 			}
 		}

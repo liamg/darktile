@@ -86,12 +86,35 @@ func (terminal *Terminal) Read() error {
 				b = <-buffer
 				switch b {
 				case 0x5b: // CSI: Control Sequence Introducer ]
-					b = <-buffer
-					switch b {
-					case 0x4b: // K - EOL - Erase to end of line
+					var final byte
+					params := []byte{}
+					intermediate := []byte{}
+				CSI:
+					for {
+						b = <-buffer
+						switch true {
+						case b >= 0x30 && b <= 0x3F:
+							params = append(params, b)
+						case b >= 0x20 && b <= 0x2F:
+							intermediate = append(intermediate, b)
+						case b >= 0x40 && b <= 0x7e:
+							final = b
+							break CSI
+						}
+					}
 
+					switch final {
+					case 0x4b: // K - EOL - Erase to end of line
+						if len(params) == 0 || params[0] == byte('0') {
+							terminal.ClearToEndOfLine()
+						} else {
+							terminal.logger.Errorf("Unsupported EL")
+						}
+					case byte('m'):
+						// SGR: colour and shit
 					default:
-						terminal.logger.Debugf("Unknown CSI control sequence: 0x%02X (%s)", b, string([]byte{b}))
+						b = <-buffer
+						terminal.logger.Debugf("Unknown CSI control sequence: 0x%02X (%s)", final, string([]byte{final}))
 					}
 				case 0x5d: // OSC: Operating System Command
 					b = <-buffer
@@ -128,11 +151,13 @@ func (terminal *Terminal) Read() error {
 				default:
 					// render character at current location
 					//		fmt.Printf("%s\n", string([]byte{b}))
-					terminal.writeRune([]rune(string([]byte{b}))[0])
+					if err := terminal.writeRune([]rune(string([]byte{b}))[0]); err != nil {
+						terminal.logger.Errorf("Failed to write rune %s", string([]byte{b}))
+					}
 				}
 
 			}
-
+			terminal.triggerOnUpdate()
 		}
 	}()
 
@@ -148,7 +173,7 @@ func (terminal *Terminal) Read() error {
 			for _, x := range readBytes {
 				buffer <- x
 			}
-			terminal.triggerOnUpdate()
+
 		}
 	}
 }
@@ -187,7 +212,7 @@ func (terminal *Terminal) newLine() {
 func (terminal *Terminal) Clear() {
 	for y := range terminal.cells {
 		for x := range terminal.cells[y] {
-			terminal.cells[y][x].rune = 0
+			terminal.cells[y][x].r = 0
 		}
 	}
 	terminal.position = Position{0, 0}
@@ -206,7 +231,7 @@ func (terminal *Terminal) GetRuneAtPos(pos Position) (rune, error) {
 		return 0, fmt.Errorf("Col %d does not exist", pos.Col)
 	}
 
-	return terminal.cells[pos.Row][pos.Col].rune, nil
+	return terminal.cells[pos.Row][pos.Col].r, nil
 }
 
 func (terminal *Terminal) setRuneAtPos(pos Position, r rune) error {
@@ -219,9 +244,11 @@ func (terminal *Terminal) setRuneAtPos(pos Position, r rune) error {
 		return fmt.Errorf("Col %d does not exist", pos.Col)
 	}
 
-	//fmt.Printf("%d %d %s\n", pos.Row, pos.Col, string(r))
+	if pos.Row == 0 && pos.Col == 0 {
+		fmt.Printf("\n\nSetting %d %d to %q\n\n\n", pos.Row, pos.Col, string(r))
+	}
 
-	terminal.cells[pos.Row][pos.Col].rune = r
+	terminal.cells[pos.Row][pos.Col].r = r
 	return nil
 }
 

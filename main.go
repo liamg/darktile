@@ -43,6 +43,7 @@ func main() {
 	go func() {
 		time.Sleep(time.Second * 5)
 		terminal.Write([]byte("tput cols && tput lines\n"))
+		terminal.Write([]byte("ls -la\n"))
 	}()
 
 	g := gui.New(conf, terminal, sugaredLogger)
