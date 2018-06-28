@@ -5,6 +5,8 @@ import (
 	"math"
 	"os"
 	"runtime"
+	"sync"
+	"time"
 
 	"github.com/4ydx/gltext"
 	v41 "github.com/4ydx/gltext/v4.1"
@@ -18,13 +20,17 @@ import (
 )
 
 type GUI struct {
-	window   *glfw.Window
-	logger   *zap.SugaredLogger
-	config   config.Config
-	font     *v41.Font
-	terminal *terminal.Terminal
-	width    int
-	height   int
+	window     *glfw.Window
+	logger     *zap.SugaredLogger
+	config     config.Config
+	font       *v41.Font
+	terminal   *terminal.Terminal
+	width      int
+	height     int
+	charWidth  float32
+	charHeight float32
+	texts      [][]*v41.Text
+	textLock   sync.Mutex
 }
 
 func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
@@ -36,6 +42,7 @@ func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredL
 		width:    600,
 		height:   300,
 		terminal: terminal,
+		texts:    [][]*v41.Text{},
 	}
 }
 
@@ -57,14 +64,16 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	scaleMin, scaleMax := float32(1.0), float32(1.1)
 	text := v41.NewText(gui.font, scaleMin, scaleMax)
 	text.SetString("A")
-	cw, ch := text.Width(), text.Height()
+	gui.charWidth, gui.charHeight = text.Width(), text.Height()
 
-	cols := int(math.Floor(float64(float32(width) / cw)))
-	rows := int(math.Floor(float64(float32(height) / ch)))
+	cols := int(math.Floor(float64(float32(width) / gui.charWidth)))
+	rows := int(math.Floor(float64(float32(height) / gui.charHeight)))
 
 	if err := gui.terminal.SetSize(cols, rows); err != nil {
 		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", cols, rows, err)
 	}
+
+	gui.createTexts()
 }
 
 func (gui *GUI) getTermSize() (int, int) {
@@ -75,16 +84,64 @@ func (gui *GUI) getTermSize() (int, int) {
 }
 
 // checks if the terminals cells have been updated, and updates the text objects if needed
-func (gui *GUI) updateCells() {
+func (gui *GUI) updateTexts() {
+	gui.textLock.Lock()
+	defer gui.textLock.Unlock()
+
+	cols, rows := gui.getTermSize()
+
+	for row := 0; row < rows; row++ {
+		for col := 0; col < cols; col++ {
+
+			r, err := gui.terminal.GetRuneAtPos(terminal.Position{Row: row, Col: col})
+			if err != nil {
+				gui.logger.Errorf("Failed to read rune: %s", err)
+			}
+			if r > 0 {
+				gui.texts[row][col].SetString(string(r))
+				gui.texts[row][col].SetColor(mgl32.Vec3{1, 1, 1})
+				// @todo set colour
+			}
+		}
+	}
 }
 
 // builds text objects
-func (gui *GUI) createCells() {
+func (gui *GUI) createTexts() {
+	gui.textLock.Lock()
+	defer gui.textLock.Unlock()
 	scaleMin, scaleMax := float32(1.0), float32(1.1)
-	text := v41.NewText(gui.font, scaleMin, scaleMax)
-	text.SetString("hello")
-	text.SetColor(mgl32.Vec3{1, 1, 1})
-	text.SetPosition(mgl32.Vec2{-float32(gui.width) / 2, -float32(gui.height) / 2})
+
+	cols, rows := gui.getTermSize()
+
+	texts := [][]*v41.Text{}
+	for row := 0; row < rows; row++ {
+
+		if len(texts) <= row {
+			texts = append(texts, []*v41.Text{})
+		}
+		for col := 0; col < cols; col++ {
+			if len(texts[row]) <= col {
+				text := v41.NewText(gui.font, scaleMin, scaleMax)
+
+				if row < len(gui.texts) {
+					if col < len(gui.texts[row]) {
+						text.SetString(gui.texts[row][col].String)
+					}
+				}
+
+				text.SetColor(mgl32.Vec3{1, 1, 1})
+
+				x := ((float32(col) * gui.charWidth) - (float32(gui.width) / 2)) + (gui.charWidth / 2)
+				y := -(((float32(row) * gui.charHeight) - (float32(gui.height) / 2)) + (gui.charHeight / 2))
+
+				text.SetPosition(mgl32.Vec2{x, y})
+				texts[row] = append(texts[row], text)
+			}
+		}
+	}
+
+	gui.texts = texts
 
 }
 
@@ -119,12 +176,21 @@ func (gui *GUI) Render() error {
 	w, h := gui.window.GetFramebufferSize()
 	gl.Viewport(0, 0, int32(w), int32(h))
 
+	gui.logger.Debugf("Starting pty read handling...")
+	gui.terminal.OnUpdate(func() {
+		gui.updateTexts()
+	})
+	go gui.terminal.Read()
+
 	scaleMin, scaleMax := float32(1.0), float32(1.1)
 	text := v41.NewText(gui.font, scaleMin, scaleMax)
-	text.SetString("hello")
-	text.SetColor(mgl32.Vec3{1, 1, 1})
-	text.SetPosition(mgl32.Vec2{-float32(gui.width) / 2, -float32(gui.height) / 2})
+	text.SetString("")
+	text.SetColor(mgl32.Vec3{1, 0, 0})
 	text.SetPosition(mgl32.Vec2{0, 0})
+
+	frames := 0
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
 
 	//gl.Disable(gl.MULTISAMPLE)
 	// stop smoothing fonts
@@ -133,17 +199,35 @@ func (gui *GUI) Render() error {
 	gui.logger.Debugf("Starting render...")
 	for !gui.window.ShouldClose() {
 
+		select {
+		case <-ticker.C:
+			text.SetString(fmt.Sprintf("%d fps | %d, %d", frames, gui.terminal.GetPosition().Row, gui.terminal.GetPosition().Col))
+			frames = 0
+		default:
+		}
+
 		gl.UseProgram(program)
 		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
 		// Render the string.
 		gui.window.SetTitle(gui.terminal.GetTitle())
 
+		gui.textLock.Lock()
+		cols, rows := gui.getTermSize()
+
+		for row := 0; row < rows; row++ {
+			for col := 0; col < cols; col++ {
+				gui.texts[row][col].Draw()
+			}
+		}
+		gui.textLock.Unlock()
+
 		text.Draw()
 
 		glfw.PollEvents()
 		gui.window.SwapBuffers()
 
+		frames++
 	}
 
 	gui.logger.Debugf("Stopping render...")

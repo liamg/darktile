@@ -40,8 +40,6 @@ func main() {
 	sugaredLogger.Infof("Creating terminal...")
 	terminal := terminal.New(pty, sugaredLogger)
 
-	go terminal.Read()
-
 	go func() {
 		time.Sleep(time.Second * 5)
 		terminal.Write([]byte("tput cols && tput lines\n"))
