@@ -1,0 +1,21 @@
+# This is the official list of people who can contribute
+# (and typically have contributed) code to the mathgl
+# repository.
+#
+# The AUTHORS file lists the copyright holders; this file
+# lists people.  For example, Google employees would be listed here
+# but not in AUTHORS, because Google would hold the copyright.
+#
+# When adding J Random Contributor's name to this file,
+# either J's name or J's organization's name should be
+# added to the AUTHORS file.
+#
+# Names should be added to this file like so:
+#     Name <email address>
+#
+# Please keep the list sorted.
+
+Alex Vasi <eee@someuser.com>
+Dmitri Shuralyov <shurcooL@gmail.com>
+GlenKelley <???>
+Zoe Juozapaitis <jragonmiris@gmail.com>
