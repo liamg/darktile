@@ -5,7 +5,6 @@ import (
 	"math"
 	"os"
 	"runtime"
-	"sync"
 	"time"
 
 	"github.com/4ydx/gltext"
@@ -29,10 +28,10 @@ type GUI struct {
 	height     int
 	charWidth  float32
 	charHeight float32
-	texts      [][]*v41.Text
-	textLock   sync.Mutex
+	cells      [][]Cell
 	cols       int
 	rows       int
+	capslock   bool
 }
 
 func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
@@ -44,17 +43,46 @@ func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredL
 		width:    600,
 		height:   300,
 		terminal: terminal,
-		texts:    [][]*v41.Text{},
+		cells:    [][]Cell{},
 	}
 }
 
 // inspired by https://kylewbanks.com/blog/tutorial-opengl-with-golang-part-1-hello-opengl
 
-func (gui *GUI) SetSize(w int, h int) {
-	gui.window.SetSize(w, h)
-	gui.resize(gui.window, w, h)
+func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+
+	caps := gui.capslock
+
+	if mods&glfw.ModShift > 0 {
+		caps = !caps
+	}
+
+	if action == glfw.Repeat || action == glfw.Press {
+
+		switch key {
+		case glfw.KeyCapsLock:
+			gui.capslock = !gui.capslock
+		case glfw.KeyEnter:
+			gui.terminal.Write([]byte{0x0a})
+		default:
+			if key >= 0x41 && key <= 0x5a { // A-Z, normalise to lower
+				key += 0x20
+			}
+			if key >= 0x61 && key <= 0x7a { // a-z
+				if caps {
+					key -= 0x20
+				}
+			}
+			gui.terminal.Write([]byte{byte(key)})
+		}
+
+		//gui.logger.Debugf("Key pressed: 0x%X %q", key, string([]byte{byte(key)}))
+		//gui.terminal.Write([]byte{byte(scancode)})
+	}
+
 }
 
+// can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	if width == gui.width && height == gui.height {
@@ -90,10 +118,10 @@ func (gui *GUI) getTermSize() (int, int) {
 	return gui.cols, gui.rows
 }
 
-// checks if the terminals cells have been updated, and updates the text objects if needed
+// checks if the terminals cells have been updated, and updates the text objects if needed - only call on OS thread
 func (gui *GUI) updateTexts() {
-	gui.textLock.Lock()
-	defer gui.textLock.Unlock()
+
+	// runtime.LockOSThread() ?
 
 	//gui.logger.Debugf("Updating texts...")
 
@@ -102,69 +130,56 @@ func (gui *GUI) updateTexts() {
 	for row := 0; row < rows; row++ {
 		for col := 0; col < cols; col++ {
 
-			r, err := gui.terminal.GetRuneAtPos(terminal.Position{Row: row, Col: col})
-			if err != nil {
-				gui.logger.Errorf("Failed to read rune: %s", err)
+			c, err := gui.terminal.GetCellAtPos(terminal.Position{Line: row, Col: col})
+
+			if err != nil || c == nil {
+				gui.cells[row][col].Hide()
+				continue
 			}
-			if r > 0 {
-				gui.texts[row][col].SetString(string(r))
-				gui.texts[row][col].SetColor(mgl32.Vec3{1, 1, 1})
-				// @todo set colour
-				gui.texts[row][col].Show()
-			} else {
-				//gui.texts[row][col].Hide()
-				gui.texts[row][col].SetString("?")
-				gui.texts[row][col].SetColor(mgl32.Vec3{0.1, 0.1, 0.15})
+
+			if c.IsHidden() {
+
+				gui.cells[row][col].Hide()
+
+				// debug
+				//gui.texts[row][col].SetColor(c.GetColourVec())
+				//gui.texts[row][col].SetString("?")
+				//gui.texts[row][col].Show()
+				// end debug
+				continue
 			}
+
+			gui.cells[row][col].SetColour(c.GetColour())
+			gui.cells[row][col].SetRune(c.GetRune())
+			gui.cells[row][col].Show()
+
 		}
 	}
 }
 
-// builds text objects
+// builds text objects - only call on OS thread
 func (gui *GUI) createTexts() {
-	gui.textLock.Lock()
-	scaleMin, scaleMax := float32(1.0), float32(1.1)
 
 	cols, rows := gui.getTermSize()
 
-	texts := [][]*v41.Text{}
+	cells := [][]Cell{}
 	for row := 0; row < rows; row++ {
 
-		if len(texts) <= row {
-			texts = append(texts, []*v41.Text{})
+		if len(cells) <= row {
+			cells = append(cells, []Cell{})
 		}
 		for col := 0; col < cols; col++ {
-			if len(texts[row]) <= col {
-				text := v41.NewText(gui.font, scaleMin, scaleMax)
-				text.Hide()
-
-				if row < len(gui.texts) {
-					if col < len(gui.texts[row]) {
-						text.SetString(gui.texts[row][col].String)
-						gui.texts[row][col].Release()
-						if gui.texts[row][col].String != "" {
-							text.Show()
-						}
-					}
-				}
+			if len(cells[row]) <= col {
 
 				x := ((float32(col) * gui.charWidth) - (float32(gui.width) / 2)) + (gui.charWidth / 2)
 				y := -(((float32(row) * gui.charHeight) - (float32(gui.height) / 2)) + (gui.charHeight / 2))
 
-				if col == 0 && row == 0 {
-					gui.logger.Debugf("0,0 is at %f,%f", x, y)
-				} else if col == cols-1 && row == rows-1 {
-					gui.logger.Debugf("%d,%d is at %f,%f", col, row, x, y)
-				}
-
-				text.SetPosition(mgl32.Vec2{x, y})
-				texts[row] = append(texts[row], text)
+				cells[row] = append(cells[row], NewCell(gui.font, x, y, gui.charWidth, gui.charHeight))
 			}
 		}
 	}
 
-	gui.texts = texts
-	gui.textLock.Unlock()
+	gui.cells = cells
 
 	gui.updateTexts()
 }
@@ -195,13 +210,19 @@ func (gui *GUI) Render() error {
 	}
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
+	gui.window.SetKeyCallback(gui.key)
 	w, h := gui.window.GetSize()
 	gui.resize(gui.window, w, h)
 
 	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
 
 	gui.logger.Debugf("Starting pty read handling...")
-	gui.terminal.OnUpdate(gui.updateTexts)
+
+	updateChan := make(chan bool, 1024)
+
+	gui.terminal.OnUpdate(func() {
+		updateChan <- true
+	})
 	go gui.terminal.Read()
 
 	scaleMin, scaleMax := float32(1.0), float32(1.1)
@@ -218,40 +239,57 @@ func (gui *GUI) Render() error {
 	// stop smoothing fonts
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
+	updateRequired := false
+
 	gui.logger.Debugf("Starting render...")
+
+	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
+
 	for !gui.window.ShouldClose() {
 
-		select {
-		case <-ticker.C:
-			text.SetString(fmt.Sprintf("%d fps | %d, %d | %s", frames, gui.terminal.GetPosition().Col, gui.terminal.GetPosition().Row, gui.texts[0][0].String))
-			frames = 0
-		default:
+		updateRequired = false
+
+	CheckUpdate:
+		for {
+			select {
+			case <-updateChan:
+				updateRequired = true
+			case <-ticker.C:
+				text.SetString(fmt.Sprintf("%d fps | %dx%d", frames, gui.cols, gui.rows))
+				frames = 0
+				updateRequired = true
+			default:
+				break CheckUpdate
+			}
 		}
 
 		gl.UseProgram(program)
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
 
-		// Render the string.
-		gui.window.SetTitle(gui.terminal.GetTitle())
+		if updateRequired {
 
-		gui.textLock.Lock()
-		cols, rows := gui.getTermSize()
+			gui.updateTexts()
 
-		for row := 0; row < rows; row++ {
-			for col := 0; col < cols; col++ {
-				gui.texts[row][col].SetColor(mgl32.Vec3{1, 1, 1})
-				//gui.texts[row][col].SetString("?")
-				gui.texts[row][col].Draw()
+			// Render the string.
+			gui.window.SetTitle(gui.terminal.GetTitle())
+
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
+			cols, rows := gui.getTermSize()
+
+			for row := 0; row < rows; row++ {
+				for col := 0; col < cols; col++ {
+					gui.cells[row][col].Draw()
+				}
 			}
-		}
-		gui.textLock.Unlock()
 
-		text.Draw()
+			text.Draw()
+		}
+
+		frames++
 
 		glfw.PollEvents()
 		gui.window.SwapBuffers()
 
-		frames++
 	}
 
 	gui.logger.Debugf("Stopping render...")
@@ -320,5 +358,6 @@ func (gui *GUI) createProgram() (uint32, error) {
 
 	prog := gl.CreateProgram()
 	gl.LinkProgram(prog)
+
 	return prog, nil
 }
