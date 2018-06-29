@@ -86,7 +86,9 @@ type Position struct {
 
 func New(pty *os.File, logger *zap.SugaredLogger) *Terminal {
 	return &Terminal{
-		lines:    []Line{},
+		lines: []Line{
+			NewLine(),
+		},
 		pty:      pty,
 		logger:   logger,
 		onUpdate: []func(){},
@@ -256,7 +258,10 @@ func (terminal *Terminal) Read() error {
 
 				switch b {
 				case 0x0a:
-					terminal.newLine()
+					for terminal.position.Line+1 >= len(terminal.lines) {
+						terminal.lines = append(terminal.lines, NewLine())
+					}
+					terminal.position.Line++
 				case 0x0d:
 					terminal.position.Col = 0
 				case 0x08:
@@ -298,19 +303,10 @@ func (terminal *Terminal) writeRune(r rune) {
 
 }
 
-func (terminal *Terminal) newLine() {
-	if terminal.position.Line >= len(terminal.lines) {
-		terminal.lines = append(terminal.lines, NewLine())
-	}
-
-	terminal.position.Col = 0
-	terminal.position.Line++
-}
-
 func (terminal *Terminal) Clear() {
 	// @todo actually should just add a bunch of newlines?
 	for i := 0; i < int(terminal.size.Height); i++ {
-		terminal.newLine()
+		terminal.lines = append(terminal.lines, NewLine())
 	}
 	terminal.SetPosition(Position{Line: 0, Col: 0})
 }
@@ -339,11 +335,6 @@ func (terminal *Terminal) GetCellAtPos(pos Position) (*Cell, error) {
 
 func (terminal *Terminal) setRuneAtPos(pos Position, r rune) error {
 
-	if int(terminal.size.Height) <= pos.Line {
-		terminal.logger.Errorf("Line %d does not exist", pos.Line)
-		return fmt.Errorf("Line %d does not exist", pos.Line)
-	}
-
 	if int(terminal.size.Width) <= pos.Col {
 		terminal.logger.Errorf("Col %d does not exist", pos.Col)
 		return fmt.Errorf("Col %d does not exist", pos.Col)
@@ -355,13 +346,9 @@ func (terminal *Terminal) setRuneAtPos(pos Position, r rune) error {
 
 	line := terminal.getBufferedLine(pos.Line)
 	if line == nil {
-		for pos.Line >= len(terminal.lines) {
-			terminal.lines = append(terminal.lines, NewLine())
-		}
-		line = terminal.getBufferedLine(pos.Line)
-		if line == nil {
-			panic(fmt.Errorf("Impossible?"))
-		}
+
+		return fmt.Errorf("Impossible?")
+
 	}
 
 	for pos.Col >= len(line.Cells) {
