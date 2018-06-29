@@ -64,6 +64,8 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			gui.capslock = !gui.capslock
 		case glfw.KeyEnter:
 			gui.terminal.Write([]byte{0x0a})
+		case glfw.KeyBackspace:
+			gui.terminal.Write([]byte{0x08})
 		default:
 			if key >= 0x41 && key <= 0x5a { // A-Z, normalise to lower
 				key += 0x20

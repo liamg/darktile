@@ -259,6 +259,11 @@ func (terminal *Terminal) Read() error {
 					terminal.newLine()
 				case 0x0d:
 					terminal.position.Col = 0
+				case 0x08:
+					// backspace
+					terminal.position.Col--
+				case 0x07:
+					// @todo ring bell
 				default:
 					// render character at current location
 					//		fmt.Printf("%s\n", string([]byte{b}))
