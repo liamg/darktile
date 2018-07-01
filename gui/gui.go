@@ -64,6 +64,8 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 		gui.font.ResizeWindow(float32(width), float32(height))
 	}
 
+	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
+
 	scaleMin, scaleMax := float32(1.0), float32(1.1)
 	text := v41.NewText(gui.font, scaleMin, scaleMax)
 	text.SetString("A")
@@ -98,12 +100,7 @@ func (gui *GUI) updateTexts() {
 
 			c, err := gui.terminal.GetCellAtPos(terminal.Position{Line: row, Col: col})
 
-			if err != nil || c == nil {
-				gui.cells[row][col].Hide()
-				continue
-			}
-
-			if c.IsHidden() {
+			if err != nil || c == nil || c.IsHidden() {
 				gui.cells[row][col].Hide()
 				continue
 			}
@@ -113,6 +110,13 @@ func (gui *GUI) updateTexts() {
 			gui.cells[row][col].SetRune(c.GetRune())
 			gui.cells[row][col].Show()
 
+			if gui.terminal.GetPosition().Col == col && gui.terminal.GetPosition().Line == row {
+				gui.cells[row][col].SetBgColour(
+					gui.config.ColourScheme.Cursor[0],
+					gui.config.ColourScheme.Cursor[1],
+					gui.config.ColourScheme.Cursor[2],
+				)
+			}
 		}
 	}
 }
@@ -134,7 +138,7 @@ func (gui *GUI) createTexts() {
 				x := ((float32(col) * gui.charWidth) - (float32(gui.width) / 2)) + (gui.charWidth / 2)
 				y := -(((float32(row) * gui.charHeight) - (float32(gui.height) / 2)) + (gui.charHeight / 2))
 
-				cells[row] = append(cells[row], gui.NewCell(gui.font, x, y, gui.charWidth, gui.charHeight, gui.colourAttr))
+				cells[row] = append(cells[row], gui.NewCell(gui.font, x, y, gui.charWidth, gui.charHeight, gui.colourAttr, gui.config.ColourScheme.DefaultBg))
 			}
 		}
 	}
@@ -171,8 +175,8 @@ func (gui *GUI) Render() error {
 	gl.BindFragDataLocation(program, 0, gl.Str("outColour\x00"))
 
 	gui.logger.Debugf("Loading font...")
-	//gui.font, err = gui.loadFont("/usr/share/fonts/nerd-fonts-complete/ttf/Roboto Mono Nerd Font Complete.ttf", 12)
-	if err := gui.loadFont("./fonts/CamingoCode-Regular.ttf", 12); err != nil {
+	if err := gui.loadFont("/usr/share/fonts/nerd-fonts-complete/ttf/Roboto Mono Nerd Font Complete.ttf", 12); err != nil {
+		//if err := gui.loadFont("./fonts/CamingoCode-Regular.ttf", 12); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
@@ -202,51 +206,60 @@ func (gui *GUI) Render() error {
 	text.SetColor(mgl32.Vec3{1, 0, 0})
 	text.SetPosition(mgl32.Vec2{0, 0})
 
-	ticker := time.NewTicker(time.Second)
+	ticker := time.NewTicker(time.Millisecond * 100)
 	defer ticker.Stop()
 
 	//gl.Disable(gl.MULTISAMPLE)
 	// stop smoothing fonts
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
-	updateRequired := false
+	updateRequired := 0
 
 	gui.logger.Debugf("Starting render...")
 
+	gl.UseProgram(program)
+
 	// todo set bg colour
-	//bgColour := gui.terminal.colourScheme.DefaultBgColor
-	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
+	//bgColour :=
+	gl.ClearColor(
+		gui.config.ColourScheme.DefaultBg[0],
+		gui.config.ColourScheme.DefaultBg[1],
+		gui.config.ColourScheme.DefaultBg[2],
+		1.0,
+	)
 
 	for !gui.window.ShouldClose() {
 
-		updateRequired = false
+		if updateRequired > 0 {
 
-	CheckUpdate:
-		for {
-			select {
-			case <-updateChan:
-				updateRequired = true
-			case <-ticker.C:
-				text.SetString(fmt.Sprintf("%dx%d", gui.cols, gui.rows))
-				updateRequired = true
-			default:
-				break CheckUpdate
+			updateRequired--
+
+		} else {
+		CheckUpdate:
+			for {
+				select {
+				case <-updateChan:
+					updateRequired = 2
+				case <-ticker.C:
+					text.SetString(fmt.Sprintf("%dx%d@%d,%d", gui.cols, gui.rows, gui.terminal.GetPosition().Col, gui.terminal.GetPosition().Line))
+					updateRequired = 2
+				default:
+					break CheckUpdate
+				}
 			}
 		}
 
 		gl.UseProgram(program)
 
-		if updateRequired {
-
-			gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
+		if updateRequired > 0 {
 
 			gui.updateTexts()
 
 			// Render the string.
 			gui.window.SetTitle(gui.terminal.GetTitle())
 
+			//gl.ClearColor(0.5, 0.5, 0.5, 1.0)
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
 			cols, rows := gui.getTermSize()
 
 			for row := 0; row < rows; row++ {
@@ -257,16 +270,16 @@ func (gui *GUI) Render() error {
 
 			for row := 0; row < rows; row++ {
 				for col := 0; col < cols; col++ {
-
 					gui.cells[row][col].DrawText()
 				}
 			}
 
-			text.Draw()
+			// debug to show co-ords
+			//text.Draw()
 		}
 
 		glfw.PollEvents()
-		if updateRequired {
+		if updateRequired > 0 {
 			gui.window.SwapBuffers()
 		}
 	}
@@ -286,11 +299,12 @@ func (gui *GUI) loadFont(path string, scale int32) error {
 
 	runeRanges := make(gltext.RuneRanges, 0)
 	runeRanges = append(runeRanges, gltext.RuneRange{Low: 32, High: 127})
-	/*runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x3000, High: 0x3030})
-	runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x3040, High: 0x309f})
-	runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x30a0, High: 0x30ff})
-	runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x4e00, High: 0x9faf})
-	runeRanges = append(runeRanges, gltext.RuneRange{Low: 0xff00, High: 0xffef})
+	/*
+		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x0, High: 0x3030})
+		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x3040, High: 0x309f})
+		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x30a0, High: 0x30ff})
+		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x4e00, High: 0x9faf})
+		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0xff00, High: 0xffef})
 	*/
 
 	runesPerRow := fixed.Int26_6(128)

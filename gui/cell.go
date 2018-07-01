@@ -14,14 +14,16 @@ type Cell struct {
 	colourAttr uint32
 	points     []float32
 	colour     [3]float32
+	hidden     bool
 }
 
-func (gui *GUI) NewCell(font *v41.Font, x float32, y float32, w float32, h float32, colourAttr uint32) Cell {
+func (gui *GUI) NewCell(font *v41.Font, x float32, y float32, w float32, h float32, colourAttr uint32, bgColour [3]float32) Cell {
 	cell := Cell{
 		text:       v41.NewText(font, 1.0, 1.1),
 		colourAttr: colourAttr,
 	}
 
+	cell.colour = bgColour
 	cell.text.SetPosition(mgl32.Vec2{x, y})
 
 	x = (x - (w / 2)) / (float32(gui.width) / 2)
@@ -97,12 +99,17 @@ func (cell *Cell) makeVao() {
 }
 
 func (cell *Cell) DrawBg() {
+	if cell.hidden {
+		return
+	}
 	gl.BindVertexArray(cell.vao)
 	gl.DrawArrays(gl.TRIANGLES, 0, 6)
 }
 
 func (cell *Cell) DrawText() {
-
+	if cell.hidden {
+		return
+	}
 	if cell.text != nil {
 		cell.text.Draw()
 	}
@@ -110,20 +117,21 @@ func (cell *Cell) DrawText() {
 }
 
 func (cell *Cell) Show() {
-	if cell.text != nil {
-		cell.text.Show()
-	}
+	cell.hidden = false
 }
 
 func (cell *Cell) Hide() {
-	if cell.text != nil {
-		cell.text.Hide()
-	}
+	cell.hidden = true
 }
 
 func (cell *Cell) SetRune(r rune) {
 	if cell.text != nil {
-		cell.text.SetString(string(r))
+		if r == '%' {
+			cell.text.SetString("%%")
+		} else {
+			cell.text.SetString(string(r))
+		}
+
 	}
 }
 

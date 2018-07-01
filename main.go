@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 
 	"gitlab.com/liamg/raft/config"
@@ -11,10 +12,33 @@ import (
 	"go.uber.org/zap"
 )
 
-func main() {
+func loadConfig() config.Config {
 
-	// parse this
-	conf := config.Config{DebugMode: true}
+	home := os.Getenv("HOME")
+	if home == "" {
+		return config.DefaultConfig
+	}
+
+	places := []string{
+		fmt.Sprintf("%s/.raft.yml", home),
+		fmt.Sprintf("%s/.raft/config.yml", home),
+		fmt.Sprintf("%s/.config/raft/config.yml", home),
+	}
+
+	for _, place := range places {
+		if b, err := ioutil.ReadFile(place); err == nil {
+			if c, err := config.Parse(b); err == nil {
+				return *c
+			} else {
+				fmt.Printf("Invalid config at %s: %s\n", place, err)
+			}
+		}
+	}
+
+	return config.DefaultConfig
+}
+
+func getLogger(conf config.Config) (*zap.SugaredLogger, error) {
 
 	var logger *zap.Logger
 	var err error
@@ -24,30 +48,35 @@ func main() {
 		logger, err = zap.NewProduction()
 	}
 	if err != nil {
-		fmt.Printf("Failed to create logger: %s", err)
+		return nil, fmt.Errorf("Failed to create logger: %s", err)
+	}
+	return logger.Sugar(), nil
+}
+
+func main() {
+
+	// parse this
+	conf := loadConfig()
+
+	logger, err := getLogger(conf)
+	if err != nil {
+		fmt.Printf("Failed to create logger: %s\n", err)
 		os.Exit(1)
 	}
-	sugaredLogger := logger.Sugar()
-	defer sugaredLogger.Sync()
+	defer logger.Sync()
 
-	sugaredLogger.Infof("Allocationg pty...")
+	logger.Infof("Allocating pty...")
 	pty, err := pty.NewPtyWithShell()
 	if err != nil {
-		sugaredLogger.Fatalf("Failed to allocate pty: %s", err)
+		logger.Fatalf("Failed to allocate pty: %s", err)
 	}
 
-	sugaredLogger.Infof("Creating terminal...")
-	terminal := terminal.New(pty, sugaredLogger, terminal.DefaultColourScheme)
-	/*
-		go func() {
-			time.Sleep(time.Second * 1)
-			terminal.Write([]byte("tput cols && tput lines\n"))
-			terminal.Write([]byte("ls -la\n"))
-		}()
-	*/
+	logger.Infof("Creating terminal...")
+	terminal := terminal.New(pty, logger, conf.ColourScheme)
 
-	g := gui.New(conf, terminal, sugaredLogger)
+	g := gui.New(conf, terminal, logger)
 	if err := g.Render(); err != nil {
-		sugaredLogger.Fatalf("Render error: %s", err)
+		logger.Fatalf("Render error: %s", err)
 	}
+
 }

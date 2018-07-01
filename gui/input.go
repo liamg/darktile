@@ -14,10 +14,23 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 
 		switch true {
 		case mods&glfw.ModControl > 0:
-			switch key {
-			case glfw.KeyC: // ctrl^c
-				gui.logger.Debugf("Sending CTRL^C")
-				gui.terminal.Write([]byte{0x3}) // send EOT
+
+			if mods&glfw.ModAlt > 0 {
+				// ctrl + alt +
+				switch key {
+				case glfw.KeyV:
+					// todo handle both these errors
+					if buf, err := gui.window.GetClipboardString(); err == nil {
+						_ = gui.terminal.Write([]byte(buf))
+					}
+				}
+			} else {
+				// ctrl +
+				switch key {
+				case glfw.KeyC: // ctrl^c
+					gui.logger.Debugf("Sending CTRL^C")
+					gui.terminal.Write([]byte{0x3}) // send EOT
+				}
 			}
 		}
 

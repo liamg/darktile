@@ -1,6 +1,7 @@
 package terminal
 
 type ColourScheme struct {
+	Cursor         [3]float32
 	DefaultFg      [3]float32
 	BlackFg        [3]float32
 	RedFg          [3]float32
@@ -38,6 +39,7 @@ type ColourScheme struct {
 }
 
 var DefaultColourScheme = ColourScheme{
+	Cursor: [3]float32{0.8, 0.8, 0.8},
 	//fg
 	DefaultFg:      [3]float32{1, 1, 1},
 	BlackFg:        [3]float32{0, 0, 0},

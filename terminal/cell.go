@@ -16,6 +16,15 @@ type CellAttributes struct {
 	Hidden    bool
 }
 
+func (terminal *Terminal) NewCell() Cell {
+	return Cell{
+		attr: CellAttributes{
+			FgColour: terminal.colourScheme.DefaultFg,
+			BgColour: terminal.colourScheme.DefaultBg,
+		},
+	}
+}
+
 func (cell *Cell) GetRune() rune {
 	return cell.r
 }
