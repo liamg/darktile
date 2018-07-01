@@ -21,10 +21,11 @@ Ensure you have your latest graphics card drivers installed before use.
 | ANSI escape codes | 50%  |
 | UTF-8 input       | 90%  | No copy + paste as yet 
 | UTF-8 output      | ✘    |
-| Copy/paste        | ✘    |
+| Copy/paste        | 50%  | Paste working, no mouse interaction for copy
 | Customisable colour schemes | ✔ | Complete, but the config file has no entry for this yet 
 | Config file       | 5%   |
 | Scrolling         | 50%  | Infinite buffer implemented, need GUI scrollbar & render updates
+| Mouse interaction | ✘    | 
 | Sweet render effects | ✘ | 
 ||||
 
@@ -48,3 +49,10 @@ debug: False
 The following options are available:
 | Name          | Type    | Description
 | debug         | bool    | Enables debug logging
+
+## Keyboard Shortcuts
+
+| Operation | Key(s)              |
+|-----------|---------------------|
+| Paste     | ctrl + alt + v
+|||
