@@ -49,41 +49,6 @@ func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredL
 
 // inspired by https://kylewbanks.com/blog/tutorial-opengl-with-golang-part-1-hello-opengl
 
-func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-
-	caps := gui.capslock
-
-	if mods&glfw.ModShift > 0 {
-		caps = !caps
-	}
-
-	if action == glfw.Repeat || action == glfw.Press {
-
-		switch key {
-		case glfw.KeyCapsLock:
-			gui.capslock = !gui.capslock
-		case glfw.KeyEnter:
-			gui.terminal.Write([]byte{0x0a})
-		case glfw.KeyBackspace:
-			gui.terminal.Write([]byte{0x08})
-		default:
-			if key >= 0x41 && key <= 0x5a { // A-Z, normalise to lower
-				key += 0x20
-			}
-			if key >= 0x61 && key <= 0x7a { // a-z
-				if caps {
-					key -= 0x20
-				}
-			}
-			gui.terminal.Write([]byte{byte(key)})
-		}
-
-		//gui.logger.Debugf("Key pressed: 0x%X %q", key, string([]byte{byte(key)}))
-		//gui.terminal.Write([]byte{byte(scancode)})
-	}
-
-}
-
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
@@ -213,6 +178,7 @@ func (gui *GUI) Render() error {
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
+	gui.window.SetCharCallback(gui.char)
 	w, h := gui.window.GetSize()
 	gui.resize(gui.window, w, h)
 
@@ -227,13 +193,11 @@ func (gui *GUI) Render() error {
 	})
 	go gui.terminal.Read()
 
-	scaleMin, scaleMax := float32(1.0), float32(1.1)
-	text := v41.NewText(gui.font, scaleMin, scaleMax)
+	text := v41.NewText(gui.font, 1.0, 1.1)
 	text.SetString("")
 	text.SetColor(mgl32.Vec3{1, 0, 0})
 	text.SetPosition(mgl32.Vec2{0, 0})
 
-	frames := 0
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
@@ -257,8 +221,7 @@ func (gui *GUI) Render() error {
 			case <-updateChan:
 				updateRequired = true
 			case <-ticker.C:
-				text.SetString(fmt.Sprintf("%d fps | %dx%d", frames, gui.cols, gui.rows))
-				frames = 0
+				text.SetString(fmt.Sprintf("%dx%d", gui.cols, gui.rows))
 				updateRequired = true
 			default:
 				break CheckUpdate
@@ -287,11 +250,10 @@ func (gui *GUI) Render() error {
 			text.Draw()
 		}
 
-		frames++
-
 		glfw.PollEvents()
-		gui.window.SwapBuffers()
-
+		if updateRequired {
+			gui.window.SwapBuffers()
+		}
 	}
 
 	gui.logger.Debugf("Stopping render...")
