@@ -37,7 +37,7 @@ func main() {
 	}
 
 	sugaredLogger.Infof("Creating terminal...")
-	terminal := terminal.New(pty, sugaredLogger)
+	terminal := terminal.New(pty, sugaredLogger, terminal.DefaultColourScheme)
 	/*
 		go func() {
 			time.Sleep(time.Second * 1)

@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"strconv"
+	"strings"
 	"sync"
 	"syscall"
 	"unsafe"
@@ -12,14 +13,17 @@ import (
 )
 
 type Terminal struct {
-	lines    []Line   // lines, where 0 is earliest, n is latest
-	position Position // line and col
-	lock     sync.Mutex
-	pty      *os.File
-	logger   *zap.SugaredLogger
-	title    string
-	onUpdate []func()
-	size     Winsize
+	lines           []Line   // lines, where 0 is earliest, n is latest
+	position        Position // line and col
+	lock            sync.Mutex
+	pty             *os.File
+	logger          *zap.SugaredLogger
+	title           string
+	onUpdate        []func()
+	size            Winsize
+	colourScheme    ColourScheme
+	cellAttr        CellAttributes
+	defaultCellAttr CellAttributes
 }
 
 type Line struct {
@@ -84,14 +88,23 @@ type Position struct {
 	Col  int
 }
 
-func New(pty *os.File, logger *zap.SugaredLogger) *Terminal {
+func New(pty *os.File, logger *zap.SugaredLogger, colourScheme ColourScheme) *Terminal {
+
+	defaultCellAttr := CellAttributes{
+		FgColour: colourScheme.DefaultFg,
+		BgColour: colourScheme.DefaultBg,
+	}
+
 	return &Terminal{
 		lines: []Line{
 			NewLine(),
 		},
-		pty:      pty,
-		logger:   logger,
-		onUpdate: []func(){},
+		pty:             pty,
+		logger:          logger,
+		onUpdate:        []func(){},
+		cellAttr:        defaultCellAttr,
+		defaultCellAttr: defaultCellAttr,
+		colourScheme:    colourScheme,
 	}
 }
 
@@ -225,6 +238,42 @@ func (terminal *Terminal) Read() error {
 						}
 					case byte('m'):
 						// SGR: colour and shit
+						sgr := string(params)
+						sgrParams := strings.Split(sgr, ";")
+						for i := range sgrParams {
+							param := sgrParams[i]
+							switch param {
+							case "0":
+								terminal.cellAttr = terminal.defaultCellAttr
+							case "1":
+								terminal.cellAttr.Bold = true
+							case "2":
+								terminal.cellAttr.Dim = true
+							case "4":
+								terminal.cellAttr.Underline = true
+							case "5":
+								terminal.cellAttr.Blink = true
+							case "7":
+								terminal.cellAttr.Reverse = true
+							case "8":
+								terminal.cellAttr.Hidden = true
+							case "21":
+								terminal.cellAttr.Bold = false
+							case "22":
+								terminal.cellAttr.Dim = false
+							case "24":
+								terminal.cellAttr.Underline = false
+							case "25":
+								terminal.cellAttr.Blink = false
+							case "27":
+								terminal.cellAttr.Reverse = false
+							case "28":
+								terminal.cellAttr.Hidden = false
+							case "39":
+
+							}
+						}
+						terminal.logger.Debugf("SGR params %#v intermediate %#v", params, intermediate)
 					default:
 						b = <-buffer
 						terminal.logger.Debugf("Unknown CSI control sequence: 0x%02X (%s)", final, string([]byte{final}))
@@ -251,6 +300,8 @@ func (terminal *Terminal) Read() error {
 					default:
 						terminal.logger.Debugf("Unknown OSC control sequence: 0x%02X", b)
 					}
+				case byte('c'):
+					terminal.logger.Errorf("RIS not yet supported")
 				default:
 					terminal.logger.Debugf("Unknown control sequence: 0x%02X", b)
 				}
@@ -285,6 +336,7 @@ func (terminal *Terminal) Read() error {
 		n, err := terminal.pty.Read(readBytes)
 		if err != nil {
 			terminal.logger.Errorf("Failed to read from pty: %s", err)
+			return err
 		}
 		if len(readBytes) > 0 {
 			readBytes = readBytes[:n]
@@ -355,6 +407,7 @@ func (terminal *Terminal) setRuneAtPos(pos Position, r rune) error {
 		line.Cells = append(line.Cells, Cell{})
 	}
 
+	line.Cells[pos.Col].attr = terminal.cellAttr
 	line.Cells[pos.Col].r = r
 	return nil
 }

@@ -1,11 +1,19 @@
 package terminal
 
-import "github.com/go-gl/mathgl/mgl32"
-
 type Cell struct {
-	r         rune
-	wrapper   bool
-	isWrapped bool
+	r    rune
+	attr CellAttributes
+}
+
+type CellAttributes struct {
+	FgColour  [3]float32
+	BgColour  [3]float32
+	Bold      bool
+	Dim       bool
+	Underline bool
+	Blink     bool
+	Reverse   bool
+	Hidden    bool
 }
 
 func (cell *Cell) GetRune() rune {
@@ -13,28 +21,19 @@ func (cell *Cell) GetRune() rune {
 }
 
 func (cell *Cell) IsHidden() bool {
-	return cell.r == 0
+	return cell.attr.Hidden
 }
 
-func (cell *Cell) GetColour() (r float32, g float32, b float32) {
-
-	if cell.wrapper {
-		return 0, 1, 0
+func (cell *Cell) GetFgColour() (r float32, g float32, b float32) {
+	if cell.attr.Reverse {
+		return cell.attr.BgColour[0], cell.attr.BgColour[1], cell.attr.BgColour[2]
 	}
-
-	if cell.isWrapped {
-		return 1, 1, 0
-	}
-
-	if cell.IsHidden() {
-		return 0, 0, 1
-	}
-
-	return 1, 1, 1
-
+	return cell.attr.FgColour[0], cell.attr.FgColour[1], cell.attr.FgColour[2]
 }
 
-func (cell *Cell) GetColourVec() mgl32.Vec3 {
-	r, g, b := cell.GetColour()
-	return mgl32.Vec3{r, g, b}
+func (cell *Cell) GetBgColour() (r float32, g float32, b float32) {
+	if cell.attr.Reverse {
+		return cell.attr.FgColour[0], cell.attr.FgColour[1], cell.attr.FgColour[2]
+	}
+	return cell.attr.BgColour[0], cell.attr.BgColour[1], cell.attr.BgColour[2]
 }

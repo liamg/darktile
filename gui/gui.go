@@ -31,7 +31,7 @@ type GUI struct {
 	cells      [][]Cell
 	cols       int
 	rows       int
-	capslock   bool
+	colourAttr uint32
 }
 
 func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
@@ -63,7 +63,6 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	if gui.font != nil {
 		gui.font.ResizeWindow(float32(width), float32(height))
 	}
-	gl.Viewport(0, 0, int32(width), int32(height))
 
 	scaleMin, scaleMax := float32(1.0), float32(1.1)
 	text := v41.NewText(gui.font, scaleMin, scaleMax)
@@ -105,18 +104,12 @@ func (gui *GUI) updateTexts() {
 			}
 
 			if c.IsHidden() {
-
 				gui.cells[row][col].Hide()
-
-				// debug
-				//gui.texts[row][col].SetColor(c.GetColourVec())
-				//gui.texts[row][col].SetString("?")
-				//gui.texts[row][col].Show()
-				// end debug
 				continue
 			}
 
-			gui.cells[row][col].SetColour(c.GetColour())
+			gui.cells[row][col].SetFgColour(c.GetFgColour())
+			gui.cells[row][col].SetBgColour(c.GetBgColour())
 			gui.cells[row][col].SetRune(c.GetRune())
 			gui.cells[row][col].Show()
 
@@ -141,7 +134,7 @@ func (gui *GUI) createTexts() {
 				x := ((float32(col) * gui.charWidth) - (float32(gui.width) / 2)) + (gui.charWidth / 2)
 				y := -(((float32(row) * gui.charHeight) - (float32(gui.height) / 2)) + (gui.charHeight / 2))
 
-				cells[row] = append(cells[row], NewCell(gui.font, x, y, gui.charWidth, gui.charHeight))
+				cells[row] = append(cells[row], gui.NewCell(gui.font, x, y, gui.charWidth, gui.charHeight, gui.colourAttr))
 			}
 		}
 	}
@@ -149,6 +142,10 @@ func (gui *GUI) createTexts() {
 	gui.cells = cells
 
 	gui.updateTexts()
+}
+
+func (gui *GUI) Close() {
+	gui.window.SetShouldClose(true)
 }
 
 func (gui *GUI) Render() error {
@@ -170,6 +167,9 @@ func (gui *GUI) Render() error {
 		return fmt.Errorf("Failed to initialise OpenGL: %s", err)
 	}
 
+	gui.colourAttr = uint32(gl.GetAttribLocation(program, gl.Str("inColour\x00")))
+	gl.BindFragDataLocation(program, 0, gl.Str("outColour\x00"))
+
 	gui.logger.Debugf("Loading font...")
 	//gui.font, err = gui.loadFont("/usr/share/fonts/nerd-fonts-complete/ttf/Roboto Mono Nerd Font Complete.ttf", 12)
 	if err := gui.loadFont("./fonts/CamingoCode-Regular.ttf", 12); err != nil {
@@ -182,8 +182,6 @@ func (gui *GUI) Render() error {
 	w, h := gui.window.GetSize()
 	gui.resize(gui.window, w, h)
 
-	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
-
 	gui.logger.Debugf("Starting pty read handling...")
 
 	updateChan := make(chan bool, 1024)
@@ -191,7 +189,13 @@ func (gui *GUI) Render() error {
 	gui.terminal.OnUpdate(func() {
 		updateChan <- true
 	})
-	go gui.terminal.Read()
+	go func() {
+		err := gui.terminal.Read()
+		if err != nil {
+			gui.logger.Errorf("Read from pty failed: %s", err)
+		}
+		gui.Close()
+	}()
 
 	text := v41.NewText(gui.font, 1.0, 1.1)
 	text.SetString("")
@@ -209,6 +213,8 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Starting render...")
 
+	// todo set bg colour
+	//bgColour := gui.terminal.colourScheme.DefaultBgColor
 	gl.ClearColor(0.1, 0.1, 0.1, 1.0)
 
 	for !gui.window.ShouldClose() {
@@ -232,6 +238,8 @@ func (gui *GUI) Render() error {
 
 		if updateRequired {
 
+			gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
+
 			gui.updateTexts()
 
 			// Render the string.
@@ -243,7 +251,14 @@ func (gui *GUI) Render() error {
 
 			for row := 0; row < rows; row++ {
 				for col := 0; col < cols; col++ {
-					gui.cells[row][col].Draw()
+					gui.cells[row][col].DrawBg()
+				}
+			}
+
+			for row := 0; row < rows; row++ {
+				for col := 0; col < cols; col++ {
+
+					gui.cells[row][col].DrawText()
 				}
 			}
 
@@ -320,7 +335,21 @@ func (gui *GUI) createProgram() (uint32, error) {
 	}
 	gui.logger.Infof("OpenGL version %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
+	gui.logger.Debugf("Compiling shaders...")
+
+	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
+	if err != nil {
+		return 0, err
+	}
+
+	fragmentShader, err := compileShader(fragmentShaderSource, gl.FRAGMENT_SHADER)
+	if err != nil {
+		return 0, err
+	}
+
 	prog := gl.CreateProgram()
+	gl.AttachShader(prog, vertexShader)
+	gl.AttachShader(prog, fragmentShader)
 	gl.LinkProgram(prog)
 
 	return prog, nil
