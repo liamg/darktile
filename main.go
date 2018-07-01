@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	"time"
 
 	"gitlab.com/liamg/raft/config"
 	"gitlab.com/liamg/raft/gui"
@@ -34,25 +33,21 @@ func main() {
 	sugaredLogger.Infof("Allocationg pty...")
 	pty, err := pty.NewPtyWithShell()
 	if err != nil {
-		panic(err)
+		sugaredLogger.Fatalf("Failed to allocate pty: %s", err)
 	}
 
 	sugaredLogger.Infof("Creating terminal...")
 	terminal := terminal.New(pty, sugaredLogger)
-
-	go func() {
-		time.Sleep(time.Second * 1)
-		terminal.Write([]byte("tput cols && tput lines\n"))
-		terminal.Write([]byte("ls -la\n"))
-	}()
+	/*
+		go func() {
+			time.Sleep(time.Second * 1)
+			terminal.Write([]byte("tput cols && tput lines\n"))
+			terminal.Write([]byte("ls -la\n"))
+		}()
+	*/
 
 	g := gui.New(conf, terminal, sugaredLogger)
 	if err := g.Render(); err != nil {
 		sugaredLogger.Fatalf("Render error: %s", err)
 	}
-
-	//go io.Copy(pty, os.Stdin)
-	//io.Copy(os.Stdout, pty)
-
-	//	return pty, err
 }
