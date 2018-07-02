@@ -48,9 +48,9 @@ debug: False
 
 The following options are available:
 
-| Name          | Type    | Description            |
-|---------------|---------|------------------------|
-| debug         | bool    | Enables debug logging 
+| Name          | Type    | Default |Description            |
+|---------------|---------|---------|-----------------------|
+| debug         | bool    | False   | Enables debug logging 
 
 ## Keyboard Shortcuts
 
