@@ -211,7 +211,7 @@ func (gui *GUI) Render() error {
 
 	//gl.Disable(gl.MULTISAMPLE)
 	// stop smoothing fonts
-	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	//gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
 	updateRequired := 0
 

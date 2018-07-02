@@ -11,7 +11,7 @@ const (
 	vertexShaderSource = `
 		#version 410
 		in vec3 vp;
-		attribute vec3 inColour;
+		in vec3 inColour;
 		smooth out vec3 theColour;
 		void main() {
 			gl_Position = vec4(vp, 1.0);
