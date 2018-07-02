@@ -110,7 +110,7 @@ func (gui *GUI) updateTexts() {
 			gui.cells[row][col].SetRune(c.GetRune())
 			gui.cells[row][col].Show()
 
-			if gui.terminal.GetPosition().Col == col && gui.terminal.GetPosition().Line == row {
+			if gui.terminal.IsCursorVisible() && gui.terminal.GetPosition().Col == col && gui.terminal.GetPosition().Line == row {
 				gui.cells[row][col].SetBgColour(
 					gui.config.ColourScheme.Cursor[0],
 					gui.config.ColourScheme.Cursor[1],
@@ -175,8 +175,8 @@ func (gui *GUI) Render() error {
 	gl.BindFragDataLocation(program, 0, gl.Str("outColour\x00"))
 
 	gui.logger.Debugf("Loading font...")
-	if err := gui.loadFont("/usr/share/fonts/nerd-fonts-complete/ttf/Roboto Mono Nerd Font Complete.ttf", 12); err != nil {
-		//if err := gui.loadFont("./fonts/CamingoCode-Regular.ttf", 12); err != nil {
+	//if err := gui.loadFont("/usr/share/fonts/nerd-fonts-complete/ttf/Roboto Mono Nerd Font Complete.ttf", 12); err != nil {
+	if err := gui.loadFont("./fonts/Roboto.ttf", 12); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
@@ -241,7 +241,17 @@ func (gui *GUI) Render() error {
 				case <-updateChan:
 					updateRequired = 2
 				case <-ticker.C:
-					text.SetString(fmt.Sprintf("%dx%d@%d,%d", gui.cols, gui.rows, gui.terminal.GetPosition().Col, gui.terminal.GetPosition().Line))
+					ca := gui.terminal.GetCellAttributes()
+					text.SetString(
+						fmt.Sprintf(
+							"%dx%d@%d,%d reverse=%t",
+							gui.cols,
+							gui.rows,
+							gui.terminal.GetPosition().Col,
+							gui.terminal.GetPosition().Line,
+							ca.Reverse,
+						),
+					)
 					updateRequired = 2
 				default:
 					break CheckUpdate
@@ -275,7 +285,7 @@ func (gui *GUI) Render() error {
 			}
 
 			// debug to show co-ords
-			//text.Draw()
+			text.Draw()
 		}
 
 		glfw.PollEvents()

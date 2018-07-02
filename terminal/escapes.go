@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"strconv"
+	"strings"
 )
 
 func (terminal *Terminal) processInput(buffer chan rune) {
@@ -16,23 +17,24 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 			switch b {
 			case 0x5b: // CSI: Control Sequence Introducer ]
 				var final rune
-				params := []string{}
+				param := ""
+				intermediate := ""
 			CSI:
 				for {
 					b = <-buffer
-					param := ""
 					switch true {
 					case b >= 0x30 && b <= 0x3F:
 						param = param + string(b)
 					case b >= 0x20 && b <= 0x2F:
-						params = append(params, param)
-						param = ""
+						//intermediate? useful?
+						intermediate += string(b)
 					case b >= 0x40 && b <= 0x7e:
-						params = append(params, param)
 						final = b
 						break CSI
 					}
 				}
+
+				params := strings.Split(param, ";")
 
 				switch final {
 				case 'A':
@@ -156,6 +158,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						terminal.position.Col = x - 1
 						terminal.position.Line = y - 1
 					}
+
 				case 'J':
 
 					n := "0"
@@ -215,7 +218,12 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 
 					switch n {
 					case "0", "":
-						terminal.ClearToEndOfLine()
+						line := terminal.getBufferedLine(terminal.position.Line)
+						if line != nil {
+							if terminal.position.Col < len(line.Cells) {
+								line.Cells = line.Cells[:terminal.position.Col]
+							}
+						}
 					case "1":
 						line := terminal.getBufferedLine(terminal.position.Line)
 						if line != nil {
@@ -231,12 +239,13 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 					default:
 						terminal.logger.Errorf("Unsupported EL: %s", n)
 					}
+
 				case 'm':
 					// SGR: colour and shit
 					for i := range params {
 						param := params[i]
 						switch param {
-						case "0":
+						case "0", "":
 							terminal.cellAttr = terminal.defaultCellAttr
 						case "1":
 							terminal.cellAttr.Bold = true
@@ -330,13 +339,23 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 							terminal.cellAttr.BgColour = terminal.colourScheme.LightCyanBg
 						case "107":
 							terminal.cellAttr.BgColour = terminal.colourScheme.WhiteBg
+						default:
 
+							terminal.logger.Errorf("Unknown SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
 						}
+
+						terminal.logger.Debugf("SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
 					}
 
 				default:
-					b = <-buffer
-					terminal.logger.Errorf("Unknown CSI control sequence: 0x%02X (%s)", final, string(final))
+					switch param + intermediate + string(final) {
+					case "?25h":
+						terminal.showCursor()
+					case "?25l":
+						terminal.hideCursor()
+					default:
+						terminal.logger.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
+					}
 				}
 			case 0x5d: // OSC: Operating System Command
 				b = <-buffer
@@ -364,7 +383,12 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 				terminal.logger.Errorf("RIS not yet supported")
 			case rune(')'), rune('('):
 				b = <-buffer
-				terminal.logger.Debugf("Ignoring character set control code )%s", string(b))
+				// todo charset changes
+				//terminal.logger.Debugf("Ignoring character set control code )%s", string(b))
+			case '>':
+				// numeric char selection @todo
+			case '=':
+				//alternate char selection @todo
 			default:
 				terminal.logger.Errorf("Unknown control sequence: 0x%02X [%s]", b, string(b))
 			}

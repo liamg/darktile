@@ -34,6 +34,7 @@ func (cell *Cell) IsHidden() bool {
 }
 
 func (cell *Cell) GetFgColour() (r float32, g float32, b float32) {
+
 	if cell.attr.Reverse {
 		return cell.attr.BgColour[0], cell.attr.BgColour[1], cell.attr.BgColour[2]
 	}
@@ -41,6 +42,7 @@ func (cell *Cell) GetFgColour() (r float32, g float32, b float32) {
 }
 
 func (cell *Cell) GetBgColour() (r float32, g float32, b float32) {
+
 	if cell.attr.Reverse {
 		return cell.attr.FgColour[0], cell.attr.FgColour[1], cell.attr.FgColour[2]
 	}

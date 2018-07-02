@@ -23,6 +23,7 @@ type Terminal struct {
 	colourScheme    ColourScheme
 	cellAttr        CellAttributes
 	defaultCellAttr CellAttributes
+	cursorVisible   bool
 }
 
 type Line struct {
@@ -107,6 +108,10 @@ func New(pty *os.File, logger *zap.SugaredLogger, colourScheme ColourScheme) *Te
 	}
 }
 
+func (terminal *Terminal) GetCellAttributes() CellAttributes {
+	return terminal.cellAttr
+}
+
 func (terminal *Terminal) OnUpdate(handler func()) {
 	terminal.onUpdate = append(terminal.onUpdate, handler)
 }
@@ -119,6 +124,18 @@ func (terminal *Terminal) triggerOnUpdate() {
 
 func (terminal *Terminal) getPosition() Position {
 	return terminal.position
+}
+
+func (terminal *Terminal) IsCursorVisible() bool {
+	return terminal.cursorVisible
+}
+
+func (terminal *Terminal) showCursor() {
+	terminal.cursorVisible = true
+}
+
+func (terminal *Terminal) hideCursor() {
+	terminal.cursorVisible = false
 }
 
 func (terminal *Terminal) incrementPosition() {
@@ -152,19 +169,6 @@ func (terminal *Terminal) GetTitle() string {
 func (terminal *Terminal) Write(data []byte) error {
 	_, err := terminal.pty.Write(data)
 	return err
-}
-
-func (terminal *Terminal) ClearToEndOfLine() {
-
-	position := terminal.getPosition()
-
-	line := terminal.getBufferedLine(position.Line)
-	if line != nil {
-		if position.Col < len(line.Cells) {
-			line.Cells = line.Cells[:position.Col]
-		}
-	}
-
 }
 
 // we have thousands of lines of output. if the terminal is X lines high, we just want to lookat the most recent X lines to render (unless scroll etc)
