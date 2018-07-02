@@ -47,6 +47,7 @@ debug: False
 ```
 
 The following options are available:
+
 | Name          | Type    | Description            |
 |---------------|---------|------------------------|
 | debug         | bool    | Enables debug logging 
