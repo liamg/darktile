@@ -13,26 +13,26 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ## Planned Features
 
-| Feature           | Done | Notes |
-|-------------------|------|-------|
-| Pty allocation    | ✔    | Linux only so far
-| OpenGL rendering  | ✔    |
-| Resizing/content reordering | ✔ | 
-| ANSI escape codes | 50%  |
-| UTF-8 input       | 90%  | No copy + paste as yet 
-| UTF-8 output      | ✘    |
-| Copy/paste        | 50%  | Paste working, no mouse interaction for copy
-| Customisable colour schemes | ✔ | Complete, but the config file has no entry for this yet 
-| Config file       | 5%   |
-| Scrolling         | 50%  | Infinite buffer implemented, need GUI scrollbar & render updates
-| Mouse interaction | ✘    | 
-| Sweet render effects | ✘ | 
+| Feature                     | Done | Notes |
+|-----------------------------|------|-------|
+| Pty allocation              | ✔    | Needs work for other platforms
+| OpenGL rendering            | ✔    |
+| Resizing/content reordering | ✔    | 
+| ANSI escape codes           | ~    | Most of these are handled now
+| UTF-8 input                 | ✔    | 
+| UTF-8 output                | ✔    | Works as long as the font in use supports the relevant characters.
+| Copy/paste                  | ~    | Paste working, no mouse interaction for copy
+| Customisable colour schemes | ✔    | Complete, but the config file has no entry for this yet 
+| Config file                 | ~    | Minimal options atm
+| Scrolling                   | ✘    | Infinite buffer implemented, need GUI scrollbar & render updates
+| Mouse interaction           | ✘    | 
+| Sweet render effects        | ✘    | 
 ||||
 
 ## Platform Support
 
-| Platform | Supported
-|----------|------------
+| Platform | Supported  |
+|----------|------------|
 | Linux    | ✔
 | MacOSX   | ✘ (nearly)
 | Windows  | ✘
@@ -47,8 +47,9 @@ debug: False
 ```
 
 The following options are available:
-| Name          | Type    | Description
-| debug         | bool    | Enables debug logging
+| Name          | Type    | Description            |
+|---------------|---------|------------------------|
+| debug         | bool    | Enables debug logging 
 
 ## Keyboard Shortcuts
 
