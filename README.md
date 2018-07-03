@@ -43,7 +43,7 @@ Ensure you have your latest graphics card drivers installed before use.
 | UTF-8 output                | ✔    | Works as long as the font in use supports the relevant characters.
 | Copy/paste                  |      | Paste working, no mouse interaction for copy
 | Customisable colour schemes | ✔    | Complete, but the config file has no entry for this yet 
-| Config file                 |      | Minimal options atm
+| Config file                 | ✔    | Minimal options atm
 | Scrolling                   |      | Infinite buffer implemented, need GUI scrollbar & render updates
 | Mouse interaction           |      | 
 | Sweet render effects        |      | 
@@ -63,9 +63,17 @@ The following options are available:
 |---------------|---------|---------|-----------------------|
 | debug         | bool    | False   | Enables debug logging 
 
+
+## Flags
+
+| Name            | Type    | Default |Description            |
+|-----------------|---------|---------|-----------------------|
+| --debug         | bool    | False   | Enables debug logging |
+| --ignore-config | bool    | False   | Ignores user config files and uses defaults
+
 ## Keyboard Shortcuts
 
 | Operation | Key(s)              |
 |-----------|---------------------|
 | Paste     | ctrl + alt + v
-|||
+

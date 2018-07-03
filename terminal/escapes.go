@@ -394,9 +394,9 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 				default:
 					terminal.logger.Errorf("Unknown OSC control sequence: 0x%02X", b)
 				}
-			case rune('c'):
+			case 'c':
 				terminal.logger.Errorf("RIS not yet supported")
-			case rune(')'), rune('('):
+			case ')', '(':
 				b = <-buffer
 				// todo charset changes
 				//terminal.logger.Debugf("Ignoring character set control code )%s", string(b))
@@ -424,12 +424,19 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 			case 0x08:
 				// backspace
 				terminal.position.Col--
+				if terminal.position.Col < 0 {
+					terminal.position.Col = 0
+				}
 			case 0x07:
 				// @todo ring bell
 			default:
 				// render character at current location
 				//		fmt.Printf("%s\n", string([]byte{b}))
-				terminal.writeRune(b)
+				if b >= 0x20 {
+					terminal.writeRune(b)
+				} else {
+					terminal.logger.Error("Non-readable rune received: 0x%X", b)
+				}
 			}
 
 		}

@@ -1,6 +1,7 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"io/ioutil"
 	"os"
@@ -12,7 +13,19 @@ import (
 	"go.uber.org/zap"
 )
 
-func loadConfig() config.Config {
+func getConfig() config.Config {
+	ignore := false
+	flag.BoolVar(&ignore, "ignore-config", ignore, "Ignore user config files and use defauls")
+	if ignore {
+		return config.DefaultConfig
+	}
+	conf := loadConfigFile()
+	flag.BoolVar(&conf.DebugMode, "debug", conf.DebugMode, "Enable debug logging")
+	flag.Parse()
+	return conf
+}
+
+func loadConfigFile() config.Config {
 
 	home := os.Getenv("HOME")
 	if home == "" {
@@ -56,7 +69,7 @@ func getLogger(conf config.Config) (*zap.SugaredLogger, error) {
 func main() {
 
 	// parse this
-	conf := loadConfig()
+	conf := getConfig()
 
 	logger, err := getLogger(conf)
 	if err != nil {

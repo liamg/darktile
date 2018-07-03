@@ -13,8 +13,10 @@ type Cell struct {
 	cv         uint32
 	colourAttr uint32
 	points     []float32
-	colour     [3]float32
+	bgColour   [3]float32
+	fgColour   [3]float32
 	hidden     bool
+	r          rune
 }
 
 func (gui *GUI) NewCell(font *v41.Font, x float32, y float32, w float32, h float32, colourAttr uint32, bgColour [3]float32) Cell {
@@ -23,7 +25,7 @@ func (gui *GUI) NewCell(font *v41.Font, x float32, y float32, w float32, h float
 		colourAttr: colourAttr,
 	}
 
-	cell.colour = bgColour
+	cell.bgColour = bgColour
 	cell.text.SetPosition(mgl32.Vec2{x, y})
 
 	x = (x - (w / 2)) / (float32(gui.width) / 2)
@@ -45,19 +47,34 @@ func (gui *GUI) NewCell(font *v41.Font, x float32, y float32, w float32, h float
 
 }
 
-func (cell *Cell) SetFgColour(r, g, b float32) {
+func (cell *Cell) SetRune(r rune) {
+	if cell.r == r {
+		return
+	}
 	if cell.text != nil {
+		if r == '%' {
+			cell.text.SetString("%%")
+		} else {
+			cell.text.SetString(string(r))
+		}
+	}
+	cell.r = r
+}
+
+func (cell *Cell) SetFgColour(r, g, b float32) {
+	if cell.text != nil && (cell.fgColour[0] != r || cell.fgColour[1] != g || cell.fgColour[2] != b) {
+		cell.fgColour = [3]float32{r, g, b}
 		cell.text.SetColor(mgl32.Vec3{r, g, b})
 	}
 }
 
 func (cell *Cell) SetBgColour(r float32, g float32, b float32) {
 
-	if cell.colour[0] == r && cell.colour[1] == g && cell.colour[2] == b {
+	if cell.bgColour[0] == r && cell.bgColour[1] == g && cell.bgColour[2] == b {
 		return
 	}
 
-	cell.colour = [3]float32{r, g, b}
+	cell.bgColour = [3]float32{r, g, b}
 	cell.Clean()
 	cell.makeVao()
 }
@@ -83,12 +100,12 @@ func (cell *Cell) makeVao() {
 	gl.GenBuffers(1, &cell.cv)
 	gl.BindBuffer(gl.ARRAY_BUFFER, cell.cv)
 	triColor := []float32{
-		cell.colour[0], cell.colour[1], cell.colour[2],
-		cell.colour[0], cell.colour[1], cell.colour[2],
-		cell.colour[0], cell.colour[1], cell.colour[2],
-		cell.colour[0], cell.colour[1], cell.colour[2],
-		cell.colour[0], cell.colour[1], cell.colour[2],
-		cell.colour[0], cell.colour[1], cell.colour[2],
+		cell.bgColour[0], cell.bgColour[1], cell.bgColour[2],
+		cell.bgColour[0], cell.bgColour[1], cell.bgColour[2],
+		cell.bgColour[0], cell.bgColour[1], cell.bgColour[2],
+		cell.bgColour[0], cell.bgColour[1], cell.bgColour[2],
+		cell.bgColour[0], cell.bgColour[1], cell.bgColour[2],
+		cell.bgColour[0], cell.bgColour[1], cell.bgColour[2],
 	}
 	gl.BufferData(gl.ARRAY_BUFFER, len(triColor)*4, gl.Ptr(triColor), gl.STATIC_DRAW)
 	gl.EnableVertexAttribArray(cell.colourAttr)
@@ -122,17 +139,6 @@ func (cell *Cell) Show() {
 
 func (cell *Cell) Hide() {
 	cell.hidden = true
-}
-
-func (cell *Cell) SetRune(r rune) {
-	if cell.text != nil {
-		if r == '%' {
-			cell.text.SetString("%%")
-		} else {
-			cell.text.SetString(string(r))
-		}
-
-	}
 }
 
 func (cell *Cell) Release() {

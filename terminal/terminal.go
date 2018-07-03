@@ -179,7 +179,7 @@ func (terminal *Terminal) getBufferedLine(line int) *Line {
 		line = len(terminal.lines) - int(terminal.size.Height) + line
 	}
 
-	if line >= len(terminal.lines) {
+	if line < 0 || line >= len(terminal.lines) {
 		return nil
 	}
 
@@ -327,6 +327,9 @@ func (terminal *Terminal) SetSize(newCols int, newLines int) error {
 			if terminal.position.Line >= len(terminal.lines) {
 				terminal.position.Line = len(terminal.lines) - 1
 			}
+		}
+		if terminal.position.Line < 0 {
+			terminal.position.Line = 0
 		}
 
 	}
