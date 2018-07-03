@@ -291,7 +291,7 @@ func (terminal *Terminal) SetSize(newCols int, newLines int) error {
 						terminal.position.Line++
 					} else if terminal.getPosition().Line == l {
 						if terminal.getPosition().Col >= newCols {
-							terminal.position.Line++
+							//terminal.position.Line++
 						}
 					}
 				}
@@ -309,7 +309,7 @@ func (terminal *Terminal) SetSize(newCols int, newLines int) error {
 								// remove line
 								terminal.lines = append(terminal.lines[:l+1], terminal.lines[l+2:]...)
 								if terminal.getPosition().Line >= l+1 {
-									terminal.position.Line--
+									//terminal.position.Line--
 								}
 							}
 						}
@@ -318,6 +318,17 @@ func (terminal *Terminal) SetSize(newCols int, newLines int) error {
 			}
 
 		}
+
+		if terminal.position.Line >= newLines {
+			terminal.position.Line = newLines - 1
+		} else {
+			linesFromEnd := oldLines - terminal.position.Line
+			terminal.position.Line = newLines - linesFromEnd
+			if terminal.position.Line >= len(terminal.lines) {
+				terminal.position.Line = len(terminal.lines) - 1
+			}
+		}
+
 	}
 
 	terminal.size.Width = uint16(newCols)
