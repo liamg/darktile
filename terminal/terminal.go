@@ -105,6 +105,7 @@ func New(pty *os.File, logger *zap.SugaredLogger, colourScheme ColourScheme) *Te
 		cellAttr:        defaultCellAttr,
 		defaultCellAttr: defaultCellAttr,
 		colourScheme:    colourScheme,
+		cursorVisible:   true,
 	}
 }
 
@@ -244,10 +245,6 @@ func (terminal *Terminal) setRuneAtPos(pos Position, r rune) error {
 	if int(terminal.size.Width) <= pos.Col {
 		terminal.logger.Errorf("Col %d does not exist", pos.Col)
 		return fmt.Errorf("Col %d does not exist", pos.Col)
-	}
-
-	if pos.Line == 0 && pos.Col == 0 {
-		fmt.Printf("\n\nSetting %d %d to %q\n\n\n", pos.Line, pos.Col, string(r))
 	}
 
 	for terminal.position.Line >= len(terminal.lines) {

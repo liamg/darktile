@@ -15,7 +15,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 		if b == 0x1b { // if the byte is an escape character, read the next byte to determine which one
 			b = <-buffer
 			switch b {
-			case 0x5b: // CSI: Control Sequence Introducer ]
+			case '[': // CSI: Control Sequence Introducer [
 				var final rune
 				param := ""
 				intermediate := ""
@@ -61,7 +61,12 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						}
 					}
 
-					terminal.position.Line += distance
+					_, h := terminal.GetSize()
+					if terminal.position.Line+distance >= h {
+						terminal.position.Line = h - 1
+					} else {
+						terminal.position.Line += distance
+					}
 				case 'C':
 
 					distance := 1
@@ -167,6 +172,23 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 					}
 
 					switch n {
+
+					case "1":
+						line := terminal.getBufferedLine(terminal.position.Line)
+						if line != nil {
+							for i := 0; i <= terminal.position.Col; i++ {
+								if i < len(line.Cells) {
+									line.Cells[i].r = ' '
+								}
+							}
+						}
+						for i := 0; i < terminal.position.Line; i++ {
+							line := terminal.getBufferedLine(i)
+							if line != nil {
+								line.Cells = []Cell{}
+							}
+						}
+
 					case "0", "":
 						line := terminal.getBufferedLine(terminal.position.Line)
 						if line != nil {
@@ -179,19 +201,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 								line.Cells = []Cell{}
 							}
 						}
-					case "1":
-						line := terminal.getBufferedLine(terminal.position.Line)
-						if line != nil {
-							for i := 0; i < terminal.position.Col; i++ {
-								line.Cells[i].r = 0
-							}
-						}
-						for i := 0; i < terminal.position.Line; i++ {
-							line := terminal.getBufferedLine(i)
-							if line != nil {
-								line.Cells = []Cell{}
-							}
-						}
+
 					case "2":
 						_, h := terminal.GetSize()
 						for i := 0; i < h; i++ {
@@ -206,6 +216,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						terminal.lines = []Line{}
 						terminal.position.Col = 0
 						terminal.position.Line = 0
+
 					default:
 						terminal.logger.Errorf("Unknown CSI ED sequence: %s", n)
 					}
@@ -217,19 +228,19 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 					}
 
 					switch n {
-					case "0", "":
-						line := terminal.getBufferedLine(terminal.position.Line)
-						if line != nil {
-							if terminal.position.Col < len(line.Cells) {
-								line.Cells = line.Cells[:terminal.position.Col]
-							}
-						}
 					case "1":
 						line := terminal.getBufferedLine(terminal.position.Line)
 						if line != nil {
-							for i := 0; i < terminal.position.Col; i++ {
-								line.Cells[i].r = 0
+							for i := 0; i <= terminal.position.Col; i++ {
+								if i < len(line.Cells) {
+									line.Cells[i].r = ' '
+								}
 							}
+						}
+					case "0", "":
+						line := terminal.getBufferedLine(terminal.position.Line)
+						if line != nil {
+							line.Cells = line.Cells[:terminal.position.Col]
 						}
 					case "2":
 						line := terminal.getBufferedLine(terminal.position.Line)
@@ -247,17 +258,17 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						switch param {
 						case "0", "":
 							terminal.cellAttr = terminal.defaultCellAttr
-						case "1":
+						case "1", "01":
 							terminal.cellAttr.Bold = true
-						case "2":
+						case "2", "02":
 							terminal.cellAttr.Dim = true
-						case "4":
+						case "4", "04":
 							terminal.cellAttr.Underline = true
-						case "5":
+						case "5", "05":
 							terminal.cellAttr.Blink = true
-						case "7":
+						case "7", "07":
 							terminal.cellAttr.Reverse = true
-						case "8":
+						case "8", "08":
 							terminal.cellAttr.Hidden = true
 						case "21":
 							terminal.cellAttr.Bold = false
@@ -288,7 +299,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						case "36":
 							terminal.cellAttr.FgColour = terminal.colourScheme.CyanFg
 						case "37":
-							terminal.cellAttr.FgColour = terminal.colourScheme.LightGreyFg
+							terminal.cellAttr.FgColour = terminal.colourScheme.WhiteFg
 						case "90":
 							terminal.cellAttr.FgColour = terminal.colourScheme.DarkGreyFg
 						case "91":
@@ -322,7 +333,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						case "46":
 							terminal.cellAttr.BgColour = terminal.colourScheme.CyanBg
 						case "47":
-							terminal.cellAttr.BgColour = terminal.colourScheme.LightGreenBg
+							terminal.cellAttr.BgColour = terminal.colourScheme.WhiteBg
 						case "100":
 							terminal.cellAttr.BgColour = terminal.colourScheme.DarkGreyBg
 						case "101":
@@ -344,7 +355,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 							terminal.logger.Errorf("Unknown SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
 						}
 
-						terminal.logger.Debugf("SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
+						//terminal.logger.Debugf("SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
 					}
 
 				default:
@@ -353,6 +364,10 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						terminal.showCursor()
 					case "?25l":
 						terminal.hideCursor()
+					case "?12h":
+						// todo enable cursor blink
+					case "?12l":
+						// todo disable cursor blink
 					default:
 						terminal.logger.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
 					}
@@ -396,12 +411,14 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 
 			switch b {
 			case 0x0a:
-				terminal.position.Line++
+
 				_, h := terminal.GetSize()
-				if terminal.position.Line >= h {
-					terminal.position.Line--
+				if terminal.position.Line+1 >= h {
+					terminal.lines = append(terminal.lines, NewLine())
+				} else {
+					terminal.position.Line++
 				}
-				terminal.lines = append(terminal.lines, NewLine())
+
 			case 0x0d:
 				terminal.position.Col = 0
 			case 0x08:

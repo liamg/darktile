@@ -100,7 +100,13 @@ func (gui *GUI) updateTexts() {
 
 			c, err := gui.terminal.GetCellAtPos(terminal.Position{Line: row, Col: col})
 
-			if err != nil || c == nil || c.IsHidden() {
+			if err != nil {
+				//gui.logger.Errorf("Failed to get cell: %s", err)
+				gui.cells[row][col].Hide()
+				continue
+			}
+
+			if c == nil || c.IsHidden() {
 				gui.cells[row][col].Hide()
 				continue
 			}
@@ -176,7 +182,7 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Loading font...")
 	//if err := gui.loadFont("/usr/share/fonts/nerd-fonts-complete/ttf/Roboto Mono Nerd Font Complete.ttf", 12); err != nil {
-	if err := gui.loadFont("./fonts/Roboto.ttf", 12); err != nil {
+	if err := gui.loadFont("./fonts/Roboto.ttf", 13); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
