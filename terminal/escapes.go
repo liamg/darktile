@@ -256,7 +256,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 					for i := range params {
 						param := params[i]
 						switch param {
-						case "0", "":
+						case "00", "0", "":
 							terminal.cellAttr = terminal.defaultCellAttr
 						case "1", "01":
 							terminal.cellAttr.Bold = true
