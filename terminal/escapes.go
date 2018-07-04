@@ -5,6 +5,17 @@ import (
 	"strings"
 )
 
+// Wish list here: http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
+
+type TerminalCharSet int
+
+const (
+	C0 TerminalCharSet = iota
+	C1
+	C2
+	C3
+)
+
 func (terminal *Terminal) processInput(buffer chan rune) {
 
 	// https://en.wikipedia.org/wiki/ANSI_escape_code
@@ -136,7 +147,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 					if len(params) > 0 {
 						var err error
 						distance, err = strconv.Atoi(params[0])
-						if err != nil {
+						if err != nil || params[0] == "" {
 							distance = 1
 						}
 					}
@@ -149,20 +160,20 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 					if len(params) == 2 {
 						var err error
 						if params[0] != "" {
-							x, err = strconv.Atoi(string(params[0]))
-							if err != nil {
-								x = 1
-							}
-						}
-						if params[1] != "" {
-							y, err = strconv.Atoi(string(params[y]))
+							y, err = strconv.Atoi(string(params[0]))
 							if err != nil {
 								y = 1
 							}
 						}
-						terminal.position.Col = x - 1
-						terminal.position.Line = y - 1
+						if params[1] != "" {
+							x, err = strconv.Atoi(string(params[1]))
+							if err != nil {
+								x = 1
+							}
+						}
 					}
+					terminal.position.Col = x - 1
+					terminal.position.Line = y - 1
 
 				case 'J':
 
@@ -173,6 +184,18 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 
 					switch n {
 
+					case "0", "":
+						line := terminal.getBufferedLine(terminal.position.Line)
+						if line != nil {
+							line.Cells = line.Cells[:terminal.position.Col]
+						}
+						_, h := terminal.GetSize()
+						for i := terminal.position.Line + 1; i < h; i++ {
+							line := terminal.getBufferedLine(i)
+							if line != nil {
+								line.Cells = []Cell{}
+							}
+						}
 					case "1":
 						line := terminal.getBufferedLine(terminal.position.Line)
 						if line != nil {
@@ -189,19 +212,6 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 							}
 						}
 
-					case "0", "":
-						line := terminal.getBufferedLine(terminal.position.Line)
-						if line != nil {
-							line.Cells = line.Cells[:terminal.position.Col]
-						}
-						_, h := terminal.GetSize()
-						for i := terminal.position.Line + 1; i < h; i++ {
-							line := terminal.getBufferedLine(i)
-							if line != nil {
-								line.Cells = []Cell{}
-							}
-						}
-
 					case "2":
 						_, h := terminal.GetSize()
 						for i := 0; i < h; i++ {
@@ -210,12 +220,8 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 								line.Cells = []Cell{}
 							}
 						}
-						terminal.position.Col = 0
-						terminal.position.Line = 0
 					case "3":
 						terminal.lines = []Line{}
-						terminal.position.Col = 0
-						terminal.position.Line = 0
 
 					default:
 						terminal.logger.Errorf("Unknown CSI ED sequence: %s", n)
@@ -228,6 +234,11 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 					}
 
 					switch n {
+					case "0", "":
+						line := terminal.getBufferedLine(terminal.position.Line)
+						if line != nil {
+							line.Cells = line.Cells[:terminal.position.Col]
+						}
 					case "1":
 						line := terminal.getBufferedLine(terminal.position.Line)
 						if line != nil {
@@ -236,11 +247,6 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 									line.Cells[i].r = ' '
 								}
 							}
-						}
-					case "0", "":
-						line := terminal.getBufferedLine(terminal.position.Line)
-						if line != nil {
-							line.Cells = line.Cells[:terminal.position.Col]
 						}
 					case "2":
 						line := terminal.getBufferedLine(terminal.position.Line)
@@ -355,7 +361,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 							terminal.logger.Errorf("Unknown SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
 						}
 
-						//terminal.logger.Debugf("SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
+						terminal.logger.Debugf("SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
 					}
 
 				default:
@@ -371,7 +377,9 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 					default:
 						terminal.logger.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
 					}
+
 				}
+				terminal.logger.Debugf("Received CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
 			case 0x5d: // OSC: Operating System Command
 				b = <-buffer
 				switch b {
@@ -381,12 +389,11 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						title := []rune{}
 						for {
 							b = <-buffer
-							if b == 0x07 {
+							if b == 0x07 || b == 0x5c { // 0x07 -> BELL, 0x5c -> ST (\)
 								break
 							}
 							title = append(title, b)
 						}
-						terminal.logger.Debugf("Terminal title set to: %s", string(title))
 						terminal.title = string(title)
 					} else {
 						terminal.logger.Errorf("Invalid OSC 0 control sequence: 0x%02X", b)
@@ -396,10 +403,38 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 				}
 			case 'c':
 				terminal.logger.Errorf("RIS not yet supported")
-			case ')', '(':
+			case '(':
 				b = <-buffer
-				// todo charset changes
-				//terminal.logger.Debugf("Ignoring character set control code )%s", string(b))
+				switch b {
+				case 'A': //uk @todo handle these?
+					terminal.charSet = C0
+				case 'B': //us
+					terminal.charSet = C0
+				}
+			case ')':
+				b = <-buffer
+				switch b {
+				case 'A': //uk @todo handle these?
+					terminal.charSet = C1
+				case 'B': //us
+					terminal.charSet = C1
+				}
+			case '*':
+				b = <-buffer
+				switch b {
+				case 'A': //uk @todo handle these?
+					terminal.charSet = C2
+				case 'B': //us
+					terminal.charSet = C2
+				}
+			case '+':
+				b = <-buffer
+				switch b {
+				case 'A': //uk @todo handle these?
+					terminal.charSet = C3
+				case 'B': //us
+					terminal.charSet = C3
+				}
 			case '>':
 				// numeric char selection @todo
 			case '=':

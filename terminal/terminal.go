@@ -24,6 +24,7 @@ type Terminal struct {
 	cellAttr        CellAttributes
 	defaultCellAttr CellAttributes
 	cursorVisible   bool
+	charSet         TerminalCharSet
 }
 
 type Line struct {
