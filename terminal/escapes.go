@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"fmt"
 	"strconv"
 	"strings"
 )
@@ -20,7 +21,10 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 
 	// https://en.wikipedia.org/wiki/ANSI_escape_code
 
+	lineOverflow := false
+
 	for {
+
 		b := <-buffer
 
 		if b == 0x1b { // if the byte is an escape character, read the next byte to determine which one
@@ -201,7 +205,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						if line != nil {
 							for i := 0; i <= terminal.position.Col; i++ {
 								if i < len(line.Cells) {
-									line.Cells[i].r = ' '
+									line.Cells[i].r = 0
 								}
 							}
 						}
@@ -244,7 +248,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 						if line != nil {
 							for i := 0; i <= terminal.position.Col; i++ {
 								if i < len(line.Cells) {
-									line.Cells[i].r = ' '
+									line.Cells[i].r = 0
 								}
 							}
 						}
@@ -361,7 +365,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 							terminal.logger.Errorf("Unknown SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
 						}
 
-						terminal.logger.Debugf("SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
+						//terminal.logger.Debugf("SGR control sequence: (ESC[%s%s%s)", param, intermediate, string(final))
 					}
 
 				default:
@@ -439,10 +443,35 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 				// numeric char selection @todo
 			case '=':
 				//alternate char selection @todo
+			case '?':
+				pm := ""
+				for {
+					b = <-buffer
+					switch b {
+					case 'h':
+						switch pm {
+						default:
+							terminal.logger.Errorf("Unknown private code ESC?%sh", pm)
+						}
+					case 'l':
+						switch pm {
+						default:
+							terminal.logger.Errorf("Unknown private code ESC?%sl", pm)
+						}
+					default:
+						pm += string(b)
+					}
+				}
 			default:
 				terminal.logger.Errorf("Unknown control sequence: 0x%02X [%s]", b, string(b))
 			}
 		} else {
+
+			fmt.Printf("%s", string(b))
+
+			if b != 0x0d {
+				lineOverflow = false
+			}
 
 			switch b {
 			case 0x0a:
@@ -455,7 +484,13 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 				}
 
 			case 0x0d:
+				if terminal.position.Col == 0 && terminal.position.Line > 0 && lineOverflow {
+					terminal.position.Line--
+					terminal.logger.Debugf("Swallowing forced new line for CR")
+					lineOverflow = false
+				}
 				terminal.position.Col = 0
+
 			case 0x08:
 				// backspace
 				terminal.position.Col--
@@ -469,6 +504,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 				//		fmt.Printf("%s\n", string([]byte{b}))
 				if b >= 0x20 {
 					terminal.writeRune(b)
+					lineOverflow = terminal.position.Col == 0
 				} else {
 					terminal.logger.Error("Non-readable rune received: 0x%X", b)
 				}

@@ -52,6 +52,7 @@ func (cell *Cell) SetRune(r rune) {
 		return
 	}
 	if cell.text != nil {
+		cell.text.SetColor(mgl32.Vec3{cell.fgColour[0], cell.fgColour[1], cell.fgColour[2]})
 		if r == '%' {
 			cell.text.SetString("%%")
 		} else {
@@ -64,7 +65,6 @@ func (cell *Cell) SetRune(r rune) {
 func (cell *Cell) SetFgColour(r, g, b float32) {
 	if cell.text != nil && (cell.fgColour[0] != r || cell.fgColour[1] != g || cell.fgColour[2] != b) {
 		cell.fgColour = [3]float32{r, g, b}
-		cell.text.SetColor(mgl32.Vec3{r, g, b})
 	}
 }
 
@@ -75,7 +75,7 @@ func (cell *Cell) SetBgColour(r float32, g float32, b float32) {
 	}
 
 	cell.bgColour = [3]float32{r, g, b}
-	cell.Clean()
+	//cell.Clean()
 	cell.makeVao()
 }
 

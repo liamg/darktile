@@ -142,16 +142,7 @@ func (terminal *Terminal) hideCursor() {
 
 func (terminal *Terminal) incrementPosition() {
 	position := terminal.getPosition()
-	if position.Col+1 >= int(terminal.size.Width) {
-		position.Line++
-		_, h := terminal.GetSize()
-		if position.Line >= h {
-			position.Line--
-		}
-		position.Col = 0
-	} else {
-		position.Col++
-	}
+	position.Col++
 	terminal.SetPosition(position)
 }
 
@@ -206,7 +197,20 @@ func (terminal *Terminal) Read() error {
 }
 
 func (terminal *Terminal) writeRune(r rune) {
-	terminal.setRuneAtPos(terminal.position, r)
+	w, h := terminal.GetSize()
+	wrap := false
+	if terminal.position.Col >= w {
+		terminal.position.Col = 0
+		terminal.position.Line++
+		wrap = true
+		for terminal.position.Line >= h {
+			terminal.position.Line--
+			line := NewLine()
+			line.wrapped = true
+			terminal.lines = append(terminal.lines, line)
+		}
+	}
+	terminal.setRuneAtPos(terminal.position, r, wrap)
 	terminal.incrementPosition()
 
 }
@@ -241,7 +245,7 @@ func (terminal *Terminal) GetCellAtPos(pos Position) (*Cell, error) {
 	return &line.Cells[pos.Col], nil
 }
 
-func (terminal *Terminal) setRuneAtPos(pos Position, r rune) error {
+func (terminal *Terminal) setRuneAtPos(pos Position, r rune, wrap bool) error {
 
 	if int(terminal.size.Width) <= pos.Col {
 		terminal.logger.Errorf("Col %d does not exist", pos.Col)
@@ -249,7 +253,9 @@ func (terminal *Terminal) setRuneAtPos(pos Position, r rune) error {
 	}
 
 	for terminal.position.Line >= len(terminal.lines) {
-		terminal.lines = append(terminal.lines, NewLine())
+		nl := NewLine()
+		nl.wrapped = wrap
+		terminal.lines = append(terminal.lines, nl)
 	}
 
 	line := terminal.getBufferedLine(pos.Line)

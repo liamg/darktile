@@ -112,7 +112,6 @@ func (gui *GUI) updateTexts() {
 			}
 
 			gui.cells[row][col].SetFgColour(c.GetFgColour())
-			gui.cells[row][col].SetBgColour(c.GetBgColour())
 			gui.cells[row][col].SetRune(c.GetRune())
 			gui.cells[row][col].Show()
 
@@ -122,6 +121,8 @@ func (gui *GUI) updateTexts() {
 					gui.config.ColourScheme.Cursor[1],
 					gui.config.ColourScheme.Cursor[2],
 				)
+			} else {
+				gui.cells[row][col].SetBgColour(c.GetBgColour())
 			}
 		}
 	}
