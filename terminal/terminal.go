@@ -140,13 +140,14 @@ func (terminal *Terminal) hideCursor() {
 }
 
 func (terminal *Terminal) incrementPosition() {
-	position := terminal.getPosition()
-	position.Col++
-	terminal.SetPosition(position)
+	terminal.SetPosition(terminal.position.Col+1, terminal.position.Line)
 }
 
-func (terminal *Terminal) SetPosition(position Position) {
-	terminal.position = position
+func (terminal *Terminal) SetPosition(col int, line int) {
+	terminal.position = Position{
+		Col:  col,
+		Line: line,
+	}
 }
 
 func (terminal *Terminal) GetPosition() Position {
@@ -224,7 +225,7 @@ func (terminal *Terminal) Clear() {
 	for i := 0; i < int(terminal.size.Height); i++ {
 		terminal.lines = append(terminal.lines, NewLine())
 	}
-	terminal.SetPosition(Position{Line: 0, Col: 0})
+	terminal.SetPosition(0, 0)
 }
 
 func (terminal *Terminal) GetCellAtPos(pos Position) (*Cell, error) {
