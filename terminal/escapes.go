@@ -1,7 +1,6 @@
 package terminal
 
 import (
-	"fmt"
 	"strconv"
 	"strings"
 )
@@ -9,13 +8,6 @@ import (
 // Wish list here: http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
 
 type TerminalCharSet int
-
-const (
-	C0 TerminalCharSet = iota
-	C1
-	C2
-	C3
-)
 
 func (terminal *Terminal) processInput(buffer chan rune) {
 
@@ -411,33 +403,33 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 				b = <-buffer
 				switch b {
 				case 'A': //uk @todo handle these?
-					terminal.charSet = C0
+					//terminal.charSet = C0
 				case 'B': //us
-					terminal.charSet = C0
+					//terminal.charSet = C0
 				}
 			case ')':
 				b = <-buffer
 				switch b {
 				case 'A': //uk @todo handle these?
-					terminal.charSet = C1
+					//terminal.charSet = C1
 				case 'B': //us
-					terminal.charSet = C1
+					//terminal.charSet = C1
 				}
 			case '*':
 				b = <-buffer
 				switch b {
 				case 'A': //uk @todo handle these?
-					terminal.charSet = C2
+					//terminal.charSet = C2
 				case 'B': //us
-					terminal.charSet = C2
+					//terminal.charSet = C2
 				}
 			case '+':
 				b = <-buffer
 				switch b {
 				case 'A': //uk @todo handle these?
-					terminal.charSet = C3
+					//terminal.charSet = C3
 				case 'B': //us
-					terminal.charSet = C3
+					//terminal.charSet = C3
 				}
 			case '>':
 				// numeric char selection @todo
@@ -467,7 +459,7 @@ func (terminal *Terminal) processInput(buffer chan rune) {
 			}
 		} else {
 
-			fmt.Printf("%s", string(b))
+			//fmt.Printf("%s", string(b))
 
 			if b != 0x0d {
 				lineOverflow = false

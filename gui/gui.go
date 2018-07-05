@@ -248,15 +248,13 @@ func (gui *GUI) Render() error {
 				case <-updateChan:
 					updateRequired = 2
 				case <-ticker.C:
-					ca := gui.terminal.GetCellAttributes()
 					text.SetString(
 						fmt.Sprintf(
-							"%dx%d@%d,%d reverse=%t",
+							"%dx%d@%d,%d",
 							gui.cols,
 							gui.rows,
 							gui.terminal.GetPosition().Col,
 							gui.terminal.GetPosition().Line,
-							ca.Reverse,
 						),
 					)
 					updateRequired = 2

@@ -24,7 +24,6 @@ type Terminal struct {
 	cellAttr        CellAttributes
 	defaultCellAttr CellAttributes
 	cursorVisible   bool
-	charSet         TerminalCharSet
 }
 
 type Line struct {
@@ -208,6 +207,11 @@ func (terminal *Terminal) writeRune(r rune) {
 			line := NewLine()
 			line.wrapped = true
 			terminal.lines = append(terminal.lines, line)
+		}
+	} else {
+		for terminal.position.Line >= h {
+			terminal.position.Line--
+			//terminal.lines = append(terminal.lines, NewLine())
 		}
 	}
 	terminal.setRuneAtPos(terminal.position, r, wrap)
