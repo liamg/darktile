@@ -6,7 +6,6 @@ package v41
 
 import (
 	"fmt"
-
 	"github.com/4ydx/gltext"
 	"github.com/go-gl/gl/v4.1-core/gl"
 	"github.com/go-gl/mathgl/mgl32"

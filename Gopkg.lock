@@ -4,16 +4,13 @@
 [[projects]]
   branch = "master"
   name = "github.com/4ydx/gltext"
-  packages = [
-    ".",
-    "v4.1"
-  ]
+  packages = [".","v4.1"]
   revision = "0cb49edd9bd9c90f54449abdf2efc7d2efdb97b3"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-gl/gl"
-  packages = ["v4.1-core/gl"]
+  packages = ["all-core/gl","v4.1-core/gl"]
   revision = "68e2537930806bfcee1b92a0e14b4e9b8bb3a3e3"
 
 [[projects]]
@@ -31,12 +28,14 @@
 [[projects]]
   branch = "master"
   name = "github.com/golang/freetype"
-  packages = [
-    ".",
-    "raster",
-    "truetype"
-  ]
+  packages = [".","raster","truetype"]
   revision = "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4"
+
+[[projects]]
+  branch = "master"
+  name = "github.com/liamg/glfont"
+  packages = ["."]
+  revision = "35ed3188e0013938f3ce8689683b860e0d541a81"
 
 [[projects]]
   name = "go.uber.org/atomic"
@@ -52,30 +51,25 @@
 
 [[projects]]
   name = "go.uber.org/zap"
-  packages = [
-    ".",
-    "buffer",
-    "internal/bufferpool",
-    "internal/color",
-    "internal/exit",
-    "zapcore"
-  ]
+  packages = [".","buffer","internal/bufferpool","internal/color","internal/exit","zapcore"]
   revision = "eeedf312bc6c57391d84767a4cd413f02a917974"
   version = "v1.8.0"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/image"
-  packages = [
-    "font",
-    "math/f32",
-    "math/fixed"
-  ]
+  packages = ["font","math/f32","math/fixed"]
   revision = "cc896f830cedae125428bc9fe1b0362aa91b3fb1"
+
+[[projects]]
+  name = "gopkg.in/yaml.v2"
+  packages = ["."]
+  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
+  version = "v2.2.1"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "6752dfb5751d4f015868f731be16bec66e1161565b63a1add70eff54ee37e387"
+  inputs-digest = "cada05adb016189abf9f8ac73433a11b5687a4dea45e655a9e320ab5c13e43fe"
   solver-name = "gps-cdcl"
   solver-version = 1

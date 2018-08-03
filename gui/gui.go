@@ -3,47 +3,48 @@ package gui
 import (
 	"fmt"
 	"math"
-	"os"
 	"runtime"
 	"time"
 
-	"github.com/4ydx/gltext"
-	v41 "github.com/4ydx/gltext/v4.1"
-	"github.com/go-gl/gl/v4.1-core/gl"
+	"github.com/liamg/glfont"
+
+	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"github.com/go-gl/mathgl/mgl32"
 	"gitlab.com/liamg/raft/config"
 	"gitlab.com/liamg/raft/terminal"
 	"go.uber.org/zap"
-	"golang.org/x/image/math/fixed"
 )
 
 type GUI struct {
-	window     *glfw.Window
-	logger     *zap.SugaredLogger
-	config     config.Config
-	font       *v41.Font
-	terminal   *terminal.Terminal
-	width      int
-	height     int
-	charWidth  float32
-	charHeight float32
-	cells      [][]Cell
-	cols       int
-	rows       int
-	colourAttr uint32
+	window          *glfw.Window
+	logger          *zap.SugaredLogger
+	config          config.Config
+	terminal        *terminal.Terminal
+	width           int //window width in pixels
+	height          int //window height in pixels
+	charWidth       float32
+	charHeight      float32
+	cells           [][]Cell
+	cols            int
+	rows            int
+	colourAttr      uint32
+	font            *glfont.Font
+	fontScale       int32
+	verticalPadding float32
 }
 
 func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
 
 	//logger.
 	return &GUI{
-		config:   config,
-		logger:   logger,
-		width:    600,
-		height:   300,
-		terminal: terminal,
-		cells:    [][]Cell{},
+		config:          config,
+		logger:          logger,
+		width:           600,
+		height:          300,
+		terminal:        terminal,
+		cells:           [][]Cell{},
+		fontScale:       12.0,
+		verticalPadding: 6.0,
 	}
 }
 
@@ -61,19 +62,18 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	gui.width = width
 	gui.height = height
 	if gui.font != nil {
-		gui.font.ResizeWindow(float32(width), float32(height))
+		gui.font.UpdateResolution((width), (height))
 	}
 
 	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
 
-	scaleMin, scaleMax := float32(1.0), float32(1.1)
-	text := v41.NewText(gui.font, scaleMin, scaleMax)
-	text.SetString("A")
-	gui.charWidth, gui.charHeight = text.Width(), text.Height()
-	text.Release()
+	gui.charWidth, gui.charHeight = gui.font.Width(1, "A"), gui.font.Height(1, "A")+gui.verticalPadding
 
 	gui.cols = int(math.Floor(float64(float32(width) / gui.charWidth)))
 	gui.rows = int(math.Floor(float64(float32(height) / gui.charHeight)))
+
+	//fmt.Printf("%#v\n", gui)
+	//os.Exit(0)
 
 	if err := gui.terminal.SetSize(gui.cols, gui.rows); err != nil {
 		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", gui.cols, gui.rows, err)
@@ -183,7 +183,7 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Loading font...")
 	//if err := gui.loadFont("/usr/share/fonts/nerd-fonts-complete/ttf/Roboto Mono Nerd Font Complete.ttf", 12); err != nil {
-	if err := gui.loadFont("./fonts/Roboto.ttf", 13); err != nil {
+	if err := gui.loadFont("./fonts/Roboto.ttf"); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
@@ -208,17 +208,12 @@ func (gui *GUI) Render() error {
 		gui.Close()
 	}()
 
-	text := v41.NewText(gui.font, 1.0, 1.1)
-	text.SetString("")
-	text.SetColor(mgl32.Vec3{1, 0, 0})
-	text.SetPosition(mgl32.Vec2{0, 0})
-
 	ticker := time.NewTicker(time.Millisecond * 100)
 	defer ticker.Stop()
 
 	//gl.Disable(gl.MULTISAMPLE)
 	// stop smoothing fonts
-	//gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
 	updateRequired := 0
 
@@ -226,8 +221,6 @@ func (gui *GUI) Render() error {
 
 	gl.UseProgram(program)
 
-	// todo set bg colour
-	//bgColour :=
 	gl.ClearColor(
 		gui.config.ColourScheme.DefaultBg[0],
 		gui.config.ColourScheme.DefaultBg[1],
@@ -248,15 +241,16 @@ func (gui *GUI) Render() error {
 				case <-updateChan:
 					updateRequired = 2
 				case <-ticker.C:
-					text.SetString(
-						fmt.Sprintf(
-							"%dx%d@%d,%d",
-							gui.cols,
-							gui.rows,
-							gui.terminal.GetPosition().Col,
-							gui.terminal.GetPosition().Line,
-						),
-					)
+					/*
+						text.SetString(
+							fmt.Sprintf(
+								"%dx%d@%d,%d",
+								gui.cols,
+								gui.rows,
+								gui.terminal.GetPosition().Col,
+								gui.terminal.GetPosition().Line,
+							),
+						)*/
 					updateRequired = 2
 				default:
 					break CheckUpdate
@@ -289,8 +283,9 @@ func (gui *GUI) Render() error {
 				}
 			}
 
-			// debug to show co-ords
-			text.Draw()
+			gui.font.SetColor(1.0, 0.0, 0.0, 1.0) //r,g,b,a font color
+			gui.font.Printf(0, 0, 1, "TEST")      //x,y,scale,string,printf args
+
 		}
 
 		glfw.PollEvents()
@@ -304,35 +299,11 @@ func (gui *GUI) Render() error {
 
 }
 
-func (gui *GUI) loadFont(path string, scale int32) error {
-
-	fd, err := os.Open(path)
+func (gui *GUI) loadFont(path string) error {
+	font, err := glfont.LoadFont("./fonts/Roboto.ttf", gui.fontScale, gui.width, gui.height)
 	if err != nil {
-		return err
+		return fmt.Errorf("LoadFont: %v", err)
 	}
-	defer fd.Close()
-
-	runeRanges := make(gltext.RuneRanges, 0)
-	runeRanges = append(runeRanges, gltext.RuneRange{Low: 32, High: 127})
-	/*
-		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x0, High: 0x3030})
-		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x3040, High: 0x309f})
-		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x30a0, High: 0x30ff})
-		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0x4e00, High: 0x9faf})
-		runeRanges = append(runeRanges, gltext.RuneRange{Low: 0xff00, High: 0xffef})
-	*/
-
-	runesPerRow := fixed.Int26_6(128)
-	conf, err := gltext.NewTruetypeFontConfig(fd, fixed.Int26_6(scale), runeRanges, runesPerRow)
-	if err != nil {
-		return err
-	}
-
-	font, err := v41.NewFont(conf)
-	if err != nil {
-		return err
-	}
-	font.ResizeWindow(float32(gui.width), float32(gui.height))
 	gui.font = font
 	return nil
 }
