@@ -2,7 +2,9 @@ package terminal
 
 import (
 	"bufio"
+	"context"
 	"fmt"
+	"io"
 	"os"
 	"sync"
 	"syscall"
@@ -184,16 +186,24 @@ func (terminal *Terminal) Read() error {
 	buffer := make(chan rune, 0xffff)
 
 	reader := bufio.NewReader(terminal.pty)
+	ctx, cancel := context.WithCancel(context.Background())
+	defer cancel()
 
-	go terminal.processInput(buffer)
+	go terminal.processInput(ctx, buffer)
 	for {
 		r, size, err := reader.ReadRune()
 		if err != nil {
+			if err == io.EOF {
+				break
+			}
 			return err
 		} else if size > 0 {
 			buffer <- r
 		}
 	}
+
+	//clean exit
+	return nil
 }
 
 func (terminal *Terminal) writeRune(r rune) {

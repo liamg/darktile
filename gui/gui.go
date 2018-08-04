@@ -283,8 +283,8 @@ func (gui *GUI) Render() error {
 				}
 			}
 
-			gui.font.SetColor(1.0, 0.0, 0.0, 1.0) //r,g,b,a font color
-			gui.font.Printf(0, 0, 1, "TEST")      //x,y,scale,string,printf args
+			gui.font.SetColor(1, 0.2, 0.2, 0.5)
+			gui.font.Printf(50, 50, 2, "Position=%#v", gui.terminal.GetPosition())
 
 		}
 

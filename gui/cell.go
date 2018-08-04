@@ -118,7 +118,7 @@ func (cell *Cell) DrawBg() {
 }
 
 func (cell *Cell) DrawText() {
-	if cell.hidden {
+	if cell.hidden || cell.r == ' ' {
 		return
 	}
 	if cell.font != nil {
