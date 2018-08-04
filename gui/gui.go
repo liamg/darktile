@@ -265,7 +265,8 @@ func (gui *GUI) Render() error {
 			gui.updateTexts()
 
 			// Render the string.
-			gui.window.SetTitle(gui.terminal.GetTitle())
+			// @todo uncommentbut dont run all of the time... - perhaps use onTitleChange event from terminal?
+			//gui.window.SetTitle(gui.terminal.GetTitle())
 
 			//gl.ClearColor(0.5, 0.5, 0.5, 1.0)
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
@@ -284,7 +285,7 @@ func (gui *GUI) Render() error {
 			}
 
 			gui.font.SetColor(1, 0.2, 0.2, 0.5)
-			gui.font.Printf(50, 50, 2, "Position=%#v", gui.terminal.GetPosition())
+			gui.font.Printf(100, 300, 1.5, "%#v %s", gui.terminal.GetPosition(), gui.terminal.GetLineString())
 
 		}
 

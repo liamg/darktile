@@ -261,8 +261,7 @@ CSI:
 			}
 		}
 
-		// @todo delete n cells at position
-		_ = n
+		_ = terminal.delete(n)
 
 	default:
 		switch param + intermediate + string(final) {

@@ -1,7 +1,8 @@
 package terminal
 
 var ansiSequenceMap = map[rune]escapeSequenceHandler{
-	'[': csiHandler,
+	'[':  csiHandler,
+	0x5d: oscHandler,
 }
 
 func ansiHandler(buffer chan rune, terminal *Terminal) error {
@@ -14,27 +15,7 @@ func ansiHandler(buffer chan rune, terminal *Terminal) error {
 	}
 
 	switch b {
-	case 0x5d: // OSC: Operating System Command
-		b = <-buffer
-		switch b {
-		case rune('0'):
-			b = <-buffer
-			if b == rune(';') {
-				title := []rune{}
-				for {
-					b = <-buffer
-					if b == 0x07 || b == 0x5c { // 0x07 -> BELL, 0x5c -> ST (\)
-						break
-					}
-					title = append(title, b)
-				}
-				terminal.title = string(title)
-			} else {
-				terminal.logger.Errorf("Invalid OSC 0 control sequence: 0x%02X", b)
-			}
-		default:
-			terminal.logger.Errorf("Unknown OSC control sequence: 0x%02X", b)
-		}
+
 	case 'c':
 		terminal.logger.Errorf("RIS not yet supported")
 	case '(':
