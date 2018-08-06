@@ -285,7 +285,7 @@ func (gui *GUI) Render() error {
 			}
 
 			gui.font.SetColor(1, 0.2, 0.2, 0.5)
-			gui.font.Printf(100, 300, 1.5, "%#v %s", gui.terminal.GetPosition(), gui.terminal.GetLineString())
+			gui.font.Printf(100, 300, 1.5, "%#v", gui.terminal.GetPosition())
 
 		}
 

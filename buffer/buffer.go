@@ -1,6 +1,8 @@
 package buffer
 
 import (
+	"fmt"
+
 	"github.com/sirupsen/logrus"
 )
 
@@ -22,6 +24,18 @@ func NewBuffer(viewCols uint16, viewLines uint16) *Buffer {
 	}
 	b.ResizeView(viewCols, viewLines)
 	return b
+}
+
+func (buffer *Buffer) attachDisplayChangeHandler(handler func()) {
+
+}
+
+func (buffer *Buffer) attachLineChangeHandler(handler func(line uint16)) {
+
+}
+
+func (buffer *Buffer) attachCellChangeHandler(handler func(col uint16, line uint16)) {
+
 }
 
 // Column returns cursor column
@@ -173,6 +187,71 @@ func (buffer *Buffer) Clear() {
 		buffer.lines = append(buffer.lines, newLine())
 	}
 	buffer.SetPosition(0, 0)
+}
+
+func (buffer *Buffer) getCurrentLine() (*Line, error) {
+
+	if int(buffer.RawLine()) < len(buffer.lines) {
+		return &buffer.lines[buffer.RawLine()], nil
+	}
+
+	return nil, fmt.Errorf("Line %d does not exist", buffer.cursorY)
+}
+
+func (buffer *Buffer) EraseLine() {
+	line, err := buffer.getCurrentLine()
+	if err != nil {
+		return
+	}
+	line.cells = []Cell{}
+}
+
+func (buffer *Buffer) EraseLineToCursor() {
+	line, err := buffer.getCurrentLine()
+	if err != nil {
+		return
+	}
+	for i := 0; i <= int(buffer.cursorX); i++ {
+		if i < len(line.cells) {
+			line.cells[i].erase()
+		}
+	}
+}
+
+func (buffer *Buffer) EraseLineAfterCursor() {
+	line, err := buffer.getCurrentLine()
+	if err != nil {
+		return
+	}
+	for i := int(buffer.cursorX + 1); i < len(line.cells); i++ {
+		line.cells[i].erase()
+	}
+}
+
+func (buffer *Buffer) EraseDisplayAfterCursor() {
+	line, err := buffer.getCurrentLine()
+	if err != nil {
+		return
+	}
+	line.cells = line.cells[:buffer.cursorX]
+	for i := int(buffer.RawLine() + 1); i < buffer.Height(); i++ {
+		if i < len(buffer.lines) {
+			buffer.lines[i].cells = []Cell{}
+		}
+	}
+}
+
+func (buffer *Buffer) EraseDisplayToCursor() {
+	line, err := buffer.getCurrentLine()
+	if err != nil {
+		return
+	}
+	line.cells = line.cells[buffer.cursorX+1:]
+	for i := 0; i < int(buffer.RawLine()); i++ {
+		if i < len(buffer.lines) {
+			buffer.lines[i].cells = []Cell{}
+		}
+	}
 }
 
 func (buffer *Buffer) ResizeView(width uint16, height uint16) {

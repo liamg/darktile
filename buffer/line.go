@@ -23,3 +23,27 @@ func (line *Line) String() string {
 	}
 	return string(runes)
 }
+
+// @todo test these (ported from legacy) ------------------
+func (line *Line) CutCellsAfter(n int) []Cell {
+	cut := line.cells[n:]
+	line.cells = line.cells[:n]
+	return cut
+}
+
+func (line *Line) CutCellsFromBeginning(n int) []Cell {
+	if n > len(line.cells) {
+		n = len(line.cells)
+	}
+	cut := line.cells[:n]
+	line.cells = line.cells[n:]
+	return cut
+}
+
+func (line *Line) CutCellsFromEnd(n int) []Cell {
+	cut := line.cells[len(line.cells)-n:]
+	line.cells = line.cells[:len(line.cells)-n]
+	return cut
+}
+
+// -------------------------------------------------------

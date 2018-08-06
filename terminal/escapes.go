@@ -19,8 +19,6 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 
 	// https://en.wikipedia.org/wiki/ANSI_escape_code
 
-	lineOverflow := false
-
 	for {
 
 		select {
@@ -41,41 +39,24 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 		}
 
 		if b != 0x0d {
-			lineOverflow = false
+			//lineOverflow = false
 		}
 
 		switch b {
 		case 0x0a:
-
-			_, h := terminal.GetSize()
-			if terminal.position.Line+1 >= h {
-				terminal.lines = append(terminal.lines, NewLine())
-			} else {
-				terminal.position.Line++
-			}
-
+			terminal.buffer.NewLine()
 		case 0x0d:
-			if terminal.position.Col == 0 && terminal.position.Line > 0 && lineOverflow {
-				terminal.position.Line--
-				terminal.logger.Debugf("Swallowing forced new line for CR")
-				lineOverflow = false
-			}
-			terminal.position.Col = 0
-
+			terminal.buffer.SetPosition(0, terminal.buffer.CursorLine())
 		case 0x08:
 			// backspace
-			terminal.position.Col--
-			if terminal.position.Col < 0 {
-				terminal.position.Col = 0
-			}
+			terminal.buffer.MovePosition(-1, 0)
 		case 0x07:
 			// @todo ring bell
 		default:
 			// render character at current location
 			//		fmt.Printf("%s\n", string([]byte{b}))
 			if b >= 0x20 {
-				terminal.writeRune(b)
-				lineOverflow = terminal.position.Col == 0
+				terminal.buffer.Write(b)
 			} else {
 				terminal.logger.Error("Non-readable rune received: 0x%X", b)
 			}

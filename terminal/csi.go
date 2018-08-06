@@ -8,6 +8,9 @@ import (
 
 var csiSequenceMap = map[rune]csiSequenceHandler{
 	'm': sgrSequenceHandler,
+	'P': csiDeleteHandler,
+	'J': csiEraseInDisplayHandler,
+	'K': csiEraseInLineHandler,
 }
 
 type csiSequenceHandler func(params []string, intermediate string, terminal *Terminal) error
@@ -168,101 +171,6 @@ CSI:
 		terminal.position.Col = x - 1
 		terminal.position.Line = y - 1
 
-	case 'J':
-
-		n := "0"
-		if len(params) > 0 {
-			n = params[0]
-		}
-
-		switch n {
-
-		case "0", "":
-			line := terminal.getBufferedLine(terminal.position.Line)
-			if line != nil {
-				line.Cells = line.Cells[:terminal.position.Col]
-			}
-			_, h := terminal.GetSize()
-			for i := terminal.position.Line + 1; i < h; i++ {
-				line := terminal.getBufferedLine(i)
-				if line != nil {
-					line.Cells = []Cell{}
-				}
-			}
-		case "1":
-			line := terminal.getBufferedLine(terminal.position.Line)
-			if line != nil {
-				for i := 0; i <= terminal.position.Col; i++ {
-					if i < len(line.Cells) {
-						line.Cells[i].r = 0
-					}
-				}
-			}
-			for i := 0; i < terminal.position.Line; i++ {
-				line := terminal.getBufferedLine(i)
-				if line != nil {
-					line.Cells = []Cell{}
-				}
-			}
-
-		case "2":
-			_, h := terminal.GetSize()
-			for i := 0; i < h; i++ {
-				line := terminal.getBufferedLine(i)
-				if line != nil {
-					line.Cells = []Cell{}
-				}
-			}
-		case "3":
-			terminal.lines = []Line{}
-
-		default:
-			return fmt.Errorf("Unknown CSI ED sequence: %s", n)
-		}
-
-	case 'K': // K - EOL - Erase to end of line
-		n := "0"
-		if len(params) > 0 {
-			n = params[0]
-		}
-
-		switch n {
-		case "0", "":
-			line := terminal.getBufferedLine(terminal.position.Line)
-			if line != nil {
-				line.Cells = line.Cells[:terminal.position.Col]
-			}
-		case "1":
-			line := terminal.getBufferedLine(terminal.position.Line)
-			if line != nil {
-				for i := 0; i <= terminal.position.Col; i++ {
-					if i < len(line.Cells) {
-						line.Cells[i].r = 0
-					}
-				}
-			}
-		case "2":
-			line := terminal.getBufferedLine(terminal.position.Line)
-			if line != nil {
-				line.Cells = []Cell{}
-			}
-		default:
-			return fmt.Errorf("Unsupported EL: %s", n)
-		}
-
-	case 'P': // delete
-
-		n := 1
-		if len(params) >= 1 {
-			var err error
-			n, err = strconv.Atoi(params[0])
-			if err != nil {
-				n = 1
-			}
-		}
-
-		_ = terminal.delete(n)
-
 	default:
 		switch param + intermediate + string(final) {
 		case "?25h":
@@ -279,5 +187,63 @@ CSI:
 
 	}
 	//terminal.logger.Debugf("Received CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
+	return nil
+}
+
+func csiDeleteHandler(params []string, intermediate string, terminal *Terminal) error {
+	n := 1
+	if len(params) >= 1 {
+		var err error
+		n, err = strconv.Atoi(params[0])
+		if err != nil {
+			n = 1
+		}
+	}
+	_ = n
+	return nil
+}
+
+// CSI Ps J
+func csiEraseInDisplayHandler(params []string, intermediate string, terminal *Terminal) error {
+	n := "0"
+	if len(params) > 0 {
+		n = params[0]
+	}
+
+	switch n {
+
+	case "0", "":
+		terminal.buffer.EraseDisplayAfterCursor()
+	case "1":
+		terminal.buffer.EraseDisplayToCursor()
+	case "2":
+		terminal.Clear()
+	case "3":
+		terminal.Clear()
+
+	default:
+		return fmt.Errorf("Unsupported ED: CSI %s J", n)
+	}
+
+	return nil
+}
+
+// CSI Ps K
+func csiEraseInLineHandler(params []string, intermediate string, terminal *Terminal) error {
+	n := "0"
+	if len(params) > 0 {
+		n = params[0]
+	}
+
+	switch n {
+	case "0", "": //erase adter cursor
+		terminal.buffer.EraseLineAfterCursor()
+	case "1": // erase to cursor inclusive
+		terminal.buffer.EraseLineToCursor()
+	case "2": // erase entire
+		terminal.buffer.EraseLine()
+	default:
+		return fmt.Errorf("Unsupported EL: CSI %s K", n)
+	}
 	return nil
 }

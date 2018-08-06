@@ -21,7 +21,11 @@ func newCell() Cell {
 	return Cell{}
 }
 
+func (cell *Cell) erase() {
+	cell.setRune(0)
+}
+
 func (cell *Cell) setRune(r rune) {
 	cell.r = r
-	cell.hasContent = true
+	cell.hasContent = r > 0
 }
