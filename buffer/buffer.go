@@ -2,8 +2,6 @@ package buffer
 
 import (
 	"fmt"
-
-	"github.com/sirupsen/logrus"
 )
 
 type Buffer struct {
@@ -46,7 +44,7 @@ func (buffer *Buffer) GetCell(viewCol int, viewRow int) *Cell {
 	return &line.cells[viewCol]
 }
 
-func (buffer *Buffer) attachDisplayChangeHandler(handler chan bool) {
+func (buffer *Buffer) AttachDisplayChangeHandler(handler chan bool) {
 	if buffer.displayChangeHandlers == nil {
 		buffer.displayChangeHandlers = []chan bool{}
 	}
@@ -57,7 +55,10 @@ func (buffer *Buffer) attachDisplayChangeHandler(handler chan bool) {
 func (buffer *Buffer) emitDisplayChange() {
 	for _, channel := range buffer.displayChangeHandlers {
 		go func(c chan bool) {
-			c <- true
+			select {
+			case c <- true:
+			default:
+			}
 		}(channel)
 	}
 }
@@ -132,44 +133,64 @@ func (buffer *Buffer) Write(runes ...rune) {
 
 func (buffer *Buffer) incrementCursorPosition() {
 
-	if buffer.CursorColumn()+1 < buffer.Width() {
+	defer buffer.emitDisplayChange()
+
+	if buffer.CursorColumn()+1 < buffer.Width() { // if not at end of line
+
 		buffer.cursorX++
-	} else {
-		if buffer.cursorY == buffer.viewHeight-1 { // if we're on the last line, we can't move the cursor down, we have to move the buffer up, i.e. add a new line
+
+	} else { // we're at the end of the current line
+
+		if buffer.cursorY == buffer.viewHeight-1 {
+			// if we're on the last line, we can't move the cursor down, we have to move the buffer up, i.e. add a new line
+
 			line := newLine()
 			line.setWrapped(true)
 			buffer.lines = append(buffer.lines, line)
 			buffer.cursorX = 0
+
 		} else {
+			// if we're not on the bottom line...
+
 			buffer.cursorX = 0
-			if buffer.Height() < int(buffer.ViewHeight()) {
+			buffer.cursorY++
+
+			_, err := buffer.getCurrentLine()
+			if err != nil {
 				line := newLine()
 				line.setWrapped(true)
 				buffer.lines = append(buffer.lines, line)
-				buffer.cursorY++
-			} else {
-				// @todo test this branch
-				line := &buffer.lines[buffer.RawLine()]
-				line.setWrapped(true)
 			}
+
 		}
 	}
 }
 
 func (buffer *Buffer) CarriageReturn() {
+
+	defer buffer.emitDisplayChange()
+
 	line, err := buffer.getCurrentLine()
 	if err != nil {
+		// @todo check this...
 		buffer.cursorX = 0
 		return
 	}
 	if buffer.cursorX == 0 && line.wrapped {
 		buffer.cursorY--
+		if len(line.cells) == 0 {
+			rawLine := int(buffer.RawLine())
+			buffer.lines = append(buffer.lines[:rawLine], buffer.lines[rawLine+1:]...)
+		}
 	} else {
 		buffer.cursorX = 0
 	}
 }
 
 func (buffer *Buffer) NewLine() {
+
+	defer buffer.emitDisplayChange()
+
 	// if we're at the beginning of a line which wrapped from the previous one, and we need a new line, we can effectively not add a new line, and set the current one to non-wrapped
 	if buffer.cursorX == 0 {
 		line := &buffer.lines[buffer.RawLine()]
@@ -190,25 +211,45 @@ func (buffer *Buffer) NewLine() {
 
 func (buffer *Buffer) MovePosition(x int16, y int16) {
 
+	var toX uint16
+	var toY uint16
+
 	if int16(buffer.cursorX)+x < 0 {
-		x = -int16(buffer.cursorX)
+		toX = 0
+	} else {
+		toX = uint16(int16(buffer.cursorX) + x)
 	}
 
 	if int16(buffer.cursorY)+y < 0 {
-		y = -int16(buffer.cursorY)
+		toY = 0
+	} else {
+		toY = uint16(int16(buffer.cursorY) + y)
 	}
 
-	buffer.SetPosition(uint16(int16(buffer.cursorX)+x), uint16(int16(buffer.cursorY)+y))
+	buffer.SetPosition(toX, toY)
+}
+
+func (buffer *Buffer) ShowCursor() {
+
+}
+
+func (buffer *Buffer) HideCursor() {
+
+}
+
+func (buffer *Buffer) SetCursorBlink(enabled bool) {
+
 }
 
 func (buffer *Buffer) SetPosition(col uint16, line uint16) {
+	defer buffer.emitDisplayChange()
 	if col >= buffer.ViewWidth() {
 		col = buffer.ViewWidth() - 1
-		logrus.Errorf("Cannot set cursor position: column %d is outside of the current view width (%d columns)", col, buffer.ViewWidth())
+		//logrus.Errorf("Cannot set cursor position: column %d is outside of the current view width (%d columns)", col, buffer.ViewWidth())
 	}
 	if line >= buffer.ViewHeight() {
 		line = buffer.ViewHeight() - 1
-		logrus.Errorf("Cannot set cursor position: line %d is outside of the current view height (%d lines)", line, buffer.ViewHeight())
+		//logrus.Errorf("Cannot set cursor position: line %d is outside of the current view height (%d lines)", line, buffer.ViewHeight())
 	}
 	buffer.cursorX = col
 	buffer.cursorY = line
@@ -227,10 +268,11 @@ func (buffer *Buffer) GetVisibleLines() []Line {
 // tested to here
 
 func (buffer *Buffer) Clear() {
+	defer buffer.emitDisplayChange()
 	for i := 0; i < int(buffer.ViewHeight()); i++ {
 		buffer.lines = append(buffer.lines, newLine())
 	}
-	buffer.SetPosition(0, 0)
+	buffer.SetPosition(0, 0) // do we need to set position?
 }
 
 func (buffer *Buffer) getCurrentLine() (*Line, error) {
@@ -243,6 +285,7 @@ func (buffer *Buffer) getCurrentLine() (*Line, error) {
 }
 
 func (buffer *Buffer) EraseLine() {
+	defer buffer.emitDisplayChange()
 	line, err := buffer.getCurrentLine()
 	if err != nil {
 		return
@@ -251,6 +294,7 @@ func (buffer *Buffer) EraseLine() {
 }
 
 func (buffer *Buffer) EraseLineToCursor() {
+	defer buffer.emitDisplayChange()
 	line, err := buffer.getCurrentLine()
 	if err != nil {
 		return
@@ -263,42 +307,52 @@ func (buffer *Buffer) EraseLineToCursor() {
 }
 
 func (buffer *Buffer) EraseLineAfterCursor() {
+	defer buffer.emitDisplayChange()
 	line, err := buffer.getCurrentLine()
 	if err != nil {
 		return
 	}
-	for i := int(buffer.cursorX + 1); i < len(line.cells); i++ {
-		line.cells[i].erase()
+
+	max := int(buffer.cursorX + 1)
+	if max > len(line.cells) {
+		max = len(line.cells)
 	}
+
+	line.cells = line.cells[:max]
 }
 
 func (buffer *Buffer) EraseDisplayAfterCursor() {
+	defer buffer.emitDisplayChange()
 	line, err := buffer.getCurrentLine()
 	if err != nil {
 		return
 	}
 	line.cells = line.cells[:buffer.cursorX]
-	for i := int(buffer.RawLine() + 1); i < buffer.Height(); i++ {
-		if i < len(buffer.lines) {
-			buffer.lines[i].cells = []Cell{}
+	for i := buffer.cursorY + 1; i < buffer.ViewHeight(); i++ {
+		rawLine := buffer.convertViewLineToRawLine(i)
+		if int(rawLine) < len(buffer.lines) {
+			buffer.lines[int(rawLine)].cells = []Cell{}
 		}
 	}
 }
 
 func (buffer *Buffer) EraseDisplayToCursor() {
+	defer buffer.emitDisplayChange()
 	line, err := buffer.getCurrentLine()
 	if err != nil {
 		return
 	}
 	line.cells = line.cells[buffer.cursorX+1:]
-	for i := 0; i < int(buffer.RawLine()); i++ {
-		if i < len(buffer.lines) {
-			buffer.lines[i].cells = []Cell{}
+	for i := uint16(0); i < buffer.cursorY; i++ {
+		rawLine := buffer.convertViewLineToRawLine(i)
+		if int(rawLine) < len(buffer.lines) {
+			buffer.lines[int(rawLine)].cells = []Cell{}
 		}
 	}
 }
 
 func (buffer *Buffer) ResizeView(width uint16, height uint16) {
+	defer buffer.emitDisplayChange()
 	buffer.viewWidth = width
 	buffer.viewHeight = height
 

@@ -34,8 +34,7 @@ func loadConfigFile() config.Config {
 
 	places := []string{
 		fmt.Sprintf("%s/.raft.yml", home),
-		fmt.Sprintf("%s/.raft/config.yml", home),
-		fmt.Sprintf("%s/.config/raft/config.yml", home),
+		fmt.Sprintf("%s/.config/raft.yml", home),
 	}
 
 	for _, place := range places {

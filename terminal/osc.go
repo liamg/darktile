@@ -16,7 +16,7 @@ func oscHandler(buffer chan rune, terminal *Terminal) error {
 				}
 				title = append(title, b)
 			}
-			terminal.title = string(title)
+			terminal.SetTitle(string(title))
 		} else {
 			return fmt.Errorf("Invalid OSC 0 control sequence: 0x%02X", b)
 		}

@@ -9,7 +9,7 @@ import (
 )
 
 func TestOffsets(t *testing.T) {
-	b := NewBuffer(10, 8)
+	b := NewBuffer(10, 8, CellAttributes{})
 	test := "hellothere\nhellothere\nhellothere\nhellothere\nhellothere\nhellothere\nhellothere\nhellothere\nhellothere\nhellothere\nhellothere\nhellothere\n?"
 	b.Write([]rune(test)...)
 	assert.Equal(t, uint16(10), b.ViewWidth())
@@ -19,7 +19,7 @@ func TestOffsets(t *testing.T) {
 }
 
 func TestBufferCreation(t *testing.T) {
-	b := NewBuffer(10, 20)
+	b := NewBuffer(10, 20, CellAttributes{})
 	assert.Equal(t, uint16(10), b.Width())
 	assert.Equal(t, uint16(20), b.ViewHeight())
 	assert.Equal(t, uint16(0), b.CursorColumn())
@@ -29,7 +29,7 @@ func TestBufferCreation(t *testing.T) {
 
 func TestBufferCursorIncrement(t *testing.T) {
 
-	b := NewBuffer(5, 4)
+	b := NewBuffer(5, 4, CellAttributes{})
 	b.incrementCursorPosition()
 	require.Equal(t, uint16(1), b.CursorColumn())
 	require.Equal(t, uint16(0), b.CursorLine())
@@ -76,7 +76,7 @@ func TestBufferCursorIncrement(t *testing.T) {
 }
 func TestBufferWrite(t *testing.T) {
 
-	b := NewBuffer(5, 20)
+	b := NewBuffer(5, 20, CellAttributes{})
 
 	assert.Equal(t, uint16(0), b.CursorColumn())
 	assert.Equal(t, uint16(0), b.CursorLine())
@@ -110,7 +110,7 @@ func TestBufferWrite(t *testing.T) {
 }
 
 func TestWritingNewLineAsFirstRuneOnWrappedLine(t *testing.T) {
-	b := NewBuffer(3, 20)
+	b := NewBuffer(3, 20, CellAttributes{})
 	b.Write('a', 'b', 'c')
 	assert.Equal(t, uint16(0), b.cursorX)
 	b.Write(0x0a)
@@ -124,7 +124,7 @@ func TestWritingNewLineAsFirstRuneOnWrappedLine(t *testing.T) {
 }
 
 func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
-	b := NewBuffer(3, 20)
+	b := NewBuffer(3, 20, CellAttributes{})
 	b.Write('a', 'b', 'c', 'd')
 	b.Write(0x0a)
 	b.Write('e', 'f')
@@ -143,7 +143,7 @@ func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
 
 func TestSetPosition(t *testing.T) {
 
-	b := NewBuffer(120, 80)
+	b := NewBuffer(120, 80, CellAttributes{})
 	assert.Equal(t, 0, int(b.CursorColumn()))
 	assert.Equal(t, 0, int(b.CursorLine()))
 	b.SetPosition(60, 10)
@@ -159,7 +159,7 @@ func TestSetPosition(t *testing.T) {
 }
 
 func TestMovePosition(t *testing.T) {
-	b := NewBuffer(120, 80)
+	b := NewBuffer(120, 80, CellAttributes{})
 	assert.Equal(t, 0, int(b.CursorColumn()))
 	assert.Equal(t, 0, int(b.CursorLine()))
 	b.MovePosition(-1, -1)
@@ -181,7 +181,7 @@ func TestMovePosition(t *testing.T) {
 
 func TestVisibleLines(t *testing.T) {
 
-	b := NewBuffer(80, 10)
+	b := NewBuffer(80, 10, CellAttributes{})
 	b.Write([]rune("hello 1\n")...)
 	b.Write([]rune("hello 2\n")...)
 	b.Write([]rune("hello 3\n")...)
@@ -205,7 +205,7 @@ func TestVisibleLines(t *testing.T) {
 }
 
 func TestClearWithoutFullView(t *testing.T) {
-	b := NewBuffer(80, 10)
+	b := NewBuffer(80, 10, CellAttributes{})
 	b.Write([]rune("hello 1\n")...)
 	b.Write([]rune("hello 2\n")...)
 	b.Write([]rune("hello 3")...)
@@ -217,7 +217,7 @@ func TestClearWithoutFullView(t *testing.T) {
 }
 
 func TestClearWithFullView(t *testing.T) {
-	b := NewBuffer(80, 5)
+	b := NewBuffer(80, 5, CellAttributes{})
 	b.Write([]rune("hello 1\n")...)
 	b.Write([]rune("hello 2\n")...)
 	b.Write([]rune("hello 3\n")...)
@@ -233,7 +233,32 @@ func TestClearWithFullView(t *testing.T) {
 	}
 }
 
+func TestCarriageReturn(t *testing.T) {
+	b := NewBuffer(80, 20, CellAttributes{})
+	b.Write([]rune("hello!\rsecret")...)
+	lines := b.GetVisibleLines()
+	assert.Equal(t, "secret", lines[0].String())
+}
+
+func TestCarriageReturnOnWrappedLine(t *testing.T) {
+	b := NewBuffer(80, 6, CellAttributes{})
+	b.Write([]rune("hello!\rsecret")...)
+	lines := b.GetVisibleLines()
+	assert.Equal(t, "secret", lines[0].String())
+}
+
+func TestCarriageReturnOnOverWrappedLine(t *testing.T) {
+	b := NewBuffer(6, 10, CellAttributes{})
+	b.Write([]rune("hello there!\rsecret sauce")...)
+	lines := b.GetVisibleLines()
+	require.Equal(t, 4, len(lines))
+	assert.Equal(t, "hello ", lines[0].String())
+	assert.Equal(t, "secret", lines[1].String())
+	assert.Equal(t, " sauce", lines[2].String())
+	assert.Equal(t, "", lines[3].String())
+}
+
 func TestResizeView(t *testing.T) {
-	b := NewBuffer(80, 20)
+	b := NewBuffer(80, 20, CellAttributes{})
 	b.ResizeView(40, 10)
 }

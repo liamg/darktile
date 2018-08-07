@@ -116,11 +116,6 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Starting pty read handling...")
 
-	updateChan := make(chan bool, 1024)
-
-	gui.terminal.OnUpdate(func() {
-		updateChan <- true
-	})
 	go func() {
 		err := gui.terminal.Read()
 		if err != nil {
@@ -128,9 +123,6 @@ func (gui *GUI) Render() error {
 		}
 		gui.Close()
 	}()
-
-	ticker := time.NewTicker(time.Millisecond * 100)
-	defer ticker.Stop()
 
 	gui.logger.Debugf("Starting render...")
 
@@ -142,7 +134,7 @@ func (gui *GUI) Render() error {
 	//gl.DepthFunc(gl.LESS)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
-	glfw.SwapInterval(1)
+	//glfw.SwapInterval(1)
 
 	gl.ClearColor(
 		gui.config.ColourScheme.DefaultBg[0],
@@ -151,26 +143,61 @@ func (gui *GUI) Render() error {
 		1.0,
 	)
 
+	changeChan := make(chan bool, 1)
+	titleChan := make(chan bool, 1)
+
+	gui.terminal.AttachTitleChangeHandler(titleChan)
+	gui.terminal.AttachDisplayChangeHandler(changeChan)
+
+	frames := 0
+	frameCount := 0
+	fps := 0
+	ticker := time.NewTicker(time.Second)
+	defer ticker.Stop()
+
 	for !gui.window.ShouldClose() {
+
+		select {
+
+		case <-changeChan:
+			frames = 2
+			gui.logger.Sync()
+		case <-titleChan:
+			gui.window.SetTitle(gui.terminal.GetTitle())
+		case <-ticker.C:
+			fps = frameCount
+			frameCount = 0
+		default:
+		}
 
 		gl.UseProgram(program)
 
-		// Render the string.
-		// @todo uncommentbut dont run all of the time... - perhaps use onTitleChange event from terminal?
-		//gui.window.SetTitle(gui.terminal.GetTitle())
+		if gui.config.Rendering.AlwaysRepaint || frames > 0 {
 
-		//gl.ClearColor(0.5, 0.5, 0.5, 1.0)
-		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-		cols, rows := gui.getTermSize()
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+			cols, rows := gui.getTermSize()
 
-		for row := 0; row < rows; row++ {
-			for col := 0; col < cols; col++ {
-				gui.renderer.DrawCell(gui.terminal.GetCell(col, row), col, row)
+			for row := 0; row < rows; row++ {
+				for col := 0; col < cols; col++ {
+					gui.renderer.DrawCell(gui.terminal.GetCell(col, row), col, row)
+				}
 			}
+
+			gui.font.SetColor(1, 0.5, 0.5, 0.5)
+			fpsData := ""
+			if gui.config.Rendering.AlwaysRepaint {
+				fpsData = fmt.Sprintf("%d FPS", fps)
+			}
+			gui.font.Print(10, float32(gui.height-20), 1.5, fmt.Sprintf("%s", fpsData))
 		}
 
 		glfw.PollEvents()
-		gui.window.SwapBuffers()
+
+		if gui.config.Rendering.AlwaysRepaint || frames > 0 {
+			frameCount++
+			gui.window.SwapBuffers()
+			frames--
+		}
 	}
 
 	gui.logger.Debugf("Stopping render...")

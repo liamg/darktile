@@ -22,11 +22,18 @@ func newCell() Cell {
 }
 
 func (cell *Cell) Rune() rune {
+	if cell.r == 0 {
+		return '~'
+	}
 	return cell.r
 }
 
 func (cell *Cell) Fg() [3]float32 {
-	return cell.attr.FgColour
+	if cell.r == 0 {
+		return [3]float32{0.5, 0.5, 0.5}
+	}
+	return [3]float32{0.9, 0.9, 0.9} // @todo fix this
+	//return cell.attr.FgColour
 }
 
 func (cell *Cell) Bg() [3]float32 {

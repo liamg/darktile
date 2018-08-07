@@ -53,11 +53,7 @@ CSI:
 				distance = 1
 			}
 		}
-		if terminal.position.Line-distance >= 0 {
-			terminal.position.Line -= distance
-		} else {
-			terminal.position.Line = 0
-		}
+		terminal.buffer.MovePosition(0, -int16(distance))
 	case 'B':
 		distance := 1
 		if len(params) > 0 {
@@ -68,12 +64,7 @@ CSI:
 			}
 		}
 
-		_, h := terminal.GetSize()
-		if terminal.position.Line+distance >= h {
-			terminal.position.Line = h - 1
-		} else {
-			terminal.position.Line += distance
-		}
+		terminal.buffer.MovePosition(0, int16(distance))
 	case 'C':
 
 		distance := 1
@@ -85,11 +76,7 @@ CSI:
 			}
 		}
 
-		terminal.position.Col += distance
-		w, _ := terminal.GetSize()
-		if terminal.position.Col >= w {
-			terminal.position.Col = w - 1
-		}
+		terminal.buffer.MovePosition(int16(distance), 0)
 
 	case 'D':
 
@@ -102,10 +89,7 @@ CSI:
 			}
 		}
 
-		terminal.position.Col -= distance
-		if terminal.position.Col < 0 {
-			terminal.position.Col = 0
-		}
+		terminal.buffer.MovePosition(-int16(distance), 0)
 
 	case 'E':
 		distance := 1
@@ -117,8 +101,8 @@ CSI:
 			}
 		}
 
-		terminal.position.Line += distance
-		terminal.position.Col = 0
+		terminal.buffer.MovePosition(0, int16(distance))
+		terminal.buffer.SetPosition(0, terminal.buffer.CursorLine())
 
 	case 'F':
 
@@ -130,12 +114,8 @@ CSI:
 				distance = 1
 			}
 		}
-		if terminal.position.Line-distance >= 0 {
-			terminal.position.Line -= distance
-		} else {
-			terminal.position.Line = 0
-		}
-		terminal.position.Col = 0
+		terminal.buffer.MovePosition(0, -int16(distance))
+		terminal.buffer.SetPosition(0, terminal.buffer.CursorLine())
 
 	case 'G':
 
@@ -148,7 +128,7 @@ CSI:
 			}
 		}
 
-		terminal.position.Col = distance - 1 // 1 based to 0 based
+		terminal.buffer.SetPosition(uint16(distance-1), terminal.buffer.CursorLine())
 
 	case 'H', 'f':
 
@@ -168,19 +148,19 @@ CSI:
 				}
 			}
 		}
-		terminal.position.Col = x - 1
-		terminal.position.Line = y - 1
+
+		terminal.buffer.SetPosition(uint16(x-1), uint16(y-1))
 
 	default:
 		switch param + intermediate + string(final) {
 		case "?25h":
-			terminal.showCursor()
+			terminal.buffer.ShowCursor()
 		case "?25l":
-			terminal.hideCursor()
+			terminal.buffer.HideCursor()
 		case "?12h":
-			// todo enable cursor blink
+			terminal.buffer.SetCursorBlink(true)
 		case "?12l":
-			// todo disable cursor blink
+			terminal.buffer.SetCursorBlink(false)
 		default:
 			return fmt.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
 		}

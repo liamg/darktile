@@ -38,15 +38,11 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 			continue
 		}
 
-		if b != 0x0d {
-			//lineOverflow = false
-		}
-
 		switch b {
 		case 0x0a:
 			terminal.buffer.NewLine()
 		case 0x0d:
-			terminal.buffer.SetPosition(0, terminal.buffer.CursorLine())
+			terminal.buffer.CarriageReturn()
 		case 0x08:
 			// backspace
 			terminal.buffer.MovePosition(-1, 0)
@@ -62,6 +58,5 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 			}
 		}
 
-		terminal.triggerOnUpdate()
 	}
 }

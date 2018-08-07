@@ -16,15 +16,13 @@ import (
 
 type Terminal struct {
 	buffer        *buffer.Buffer
-	position      Position // line and col
 	lock          sync.Mutex
 	pty           *os.File
 	logger        *zap.SugaredLogger
 	title         string
-	onUpdate      []func()
 	size          Winsize
 	colourScheme  ColourScheme
-	cursorVisible bool
+	titleHandlers []chan bool
 }
 
 type Line struct {
@@ -53,9 +51,8 @@ func New(pty *os.File, logger *zap.SugaredLogger, colourScheme ColourScheme) *Te
 		}),
 		pty:           pty,
 		logger:        logger,
-		onUpdate:      []func(){},
 		colourScheme:  colourScheme,
-		cursorVisible: true,
+		titleHandlers: []chan bool{},
 	}
 }
 
@@ -63,49 +60,29 @@ func (terminal *Terminal) GetCell(col int, row int) *buffer.Cell {
 	return terminal.buffer.GetCell(col, row)
 }
 
-func (terminal *Terminal) OnUpdate(handler func()) {
-	terminal.onUpdate = append(terminal.onUpdate, handler)
+func (terminal *Terminal) AttachDisplayChangeHandler(handler chan bool) {
+	terminal.buffer.AttachDisplayChangeHandler(handler)
 }
 
-func (terminal *Terminal) triggerOnUpdate() {
-	for _, handler := range terminal.onUpdate {
-		go handler()
+func (terminal *Terminal) AttachTitleChangeHandler(handler chan bool) {
+	terminal.titleHandlers = append(terminal.titleHandlers, handler)
+}
+
+func (terminal *Terminal) emitTitleChange() {
+	for _, h := range terminal.titleHandlers {
+		go func(c chan bool) {
+			c <- true
+		}(h)
 	}
-}
-
-func (terminal *Terminal) getPosition() Position {
-	return terminal.position
-}
-
-func (terminal *Terminal) IsCursorVisible() bool {
-	return terminal.cursorVisible
-}
-
-func (terminal *Terminal) showCursor() {
-	terminal.cursorVisible = true
-}
-
-func (terminal *Terminal) hideCursor() {
-	terminal.cursorVisible = false
-}
-
-func (terminal *Terminal) incrementPosition() {
-	terminal.SetPosition(terminal.position.Col+1, terminal.position.Line)
-}
-
-func (terminal *Terminal) SetPosition(col int, line int) {
-	terminal.position = Position{
-		Col:  col,
-		Line: line,
-	}
-}
-
-func (terminal *Terminal) GetPosition() Position {
-	return terminal.position
 }
 
 func (terminal *Terminal) GetTitle() string {
 	return terminal.title
+}
+
+func (terminal *Terminal) SetTitle(title string) {
+	terminal.title = title
+	terminal.emitTitleChange()
 }
 
 // Write sends data, i.e. locally typed keystrokes to the pty
