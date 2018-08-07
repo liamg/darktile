@@ -21,6 +21,18 @@ func newCell() Cell {
 	return Cell{}
 }
 
+func (cell *Cell) Rune() rune {
+	return cell.r
+}
+
+func (cell *Cell) Fg() [3]float32 {
+	return cell.attr.FgColour
+}
+
+func (cell *Cell) Bg() [3]float32 {
+	return cell.attr.BgColour
+}
+
 func (cell *Cell) erase() {
 	cell.setRune(0)
 }

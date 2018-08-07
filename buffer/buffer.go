@@ -7,35 +7,59 @@ import (
 )
 
 type Buffer struct {
-	lines      []Line
-	cursorX    uint16
-	cursorY    uint16
-	viewHeight uint16
-	viewWidth  uint16
-	cursorAttr CellAttributes
+	lines                 []Line
+	cursorX               uint16
+	cursorY               uint16
+	viewHeight            uint16
+	viewWidth             uint16
+	cursorAttr            CellAttributes
+	displayChangeHandlers []chan bool
 }
 
 // NewBuffer creates a new terminal buffer
-func NewBuffer(viewCols uint16, viewLines uint16) *Buffer {
+func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 	b := &Buffer{
-		cursorX: 0,
-		cursorY: 0,
-		lines:   []Line{},
+		cursorX:    0,
+		cursorY:    0,
+		lines:      []Line{},
+		cursorAttr: attr,
 	}
 	b.ResizeView(viewCols, viewLines)
 	return b
 }
 
-func (buffer *Buffer) attachDisplayChangeHandler(handler func()) {
-
+func (buffer *Buffer) CursorAttr() *CellAttributes {
+	return &buffer.cursorAttr
 }
 
-func (buffer *Buffer) attachLineChangeHandler(handler func(line uint16)) {
+func (buffer *Buffer) GetCell(viewCol int, viewRow int) *Cell {
 
+	rawLine := buffer.convertViewLineToRawLine(uint16(viewRow))
+
+	if viewCol < 0 || rawLine < 0 || int(rawLine) >= len(buffer.lines) {
+		return nil
+	}
+	line := &buffer.lines[rawLine]
+	if viewCol >= len(line.cells) {
+		return nil
+	}
+	return &line.cells[viewCol]
 }
 
-func (buffer *Buffer) attachCellChangeHandler(handler func(col uint16, line uint16)) {
+func (buffer *Buffer) attachDisplayChangeHandler(handler chan bool) {
+	if buffer.displayChangeHandlers == nil {
+		buffer.displayChangeHandlers = []chan bool{}
+	}
 
+	buffer.displayChangeHandlers = append(buffer.displayChangeHandlers, handler)
+}
+
+func (buffer *Buffer) emitDisplayChange() {
+	for _, channel := range buffer.displayChangeHandlers {
+		go func(c chan bool) {
+			c <- true
+		}(channel)
+	}
 }
 
 // Column returns cursor column
@@ -50,11 +74,15 @@ func (buffer *Buffer) CursorLine() uint16 {
 
 // translates the cursor line to the raw buffer line
 func (buffer *Buffer) RawLine() uint64 {
+	return buffer.convertViewLineToRawLine(buffer.cursorY)
+}
+
+func (buffer *Buffer) convertViewLineToRawLine(viewLine uint16) uint64 {
 	rawHeight := buffer.Height()
 	if int(buffer.viewHeight) > rawHeight {
-		return uint64(buffer.cursorY)
+		return uint64(viewLine)
 	}
-	return uint64(int(buffer.cursorY) + (rawHeight - int(buffer.viewHeight)))
+	return uint64(int(viewLine) + (rawHeight - int(buffer.viewHeight)))
 }
 
 // Width returns the width of the buffer in columns
@@ -87,6 +115,9 @@ func (buffer *Buffer) Write(runes ...rune) {
 		if r == 0x0a {
 			buffer.NewLine()
 			continue
+		} else if r == 0x0d {
+			buffer.CarriageReturn()
+			continue
 		}
 		line := &buffer.lines[buffer.RawLine()]
 		for int(buffer.CursorColumn()) >= len(line.cells) {
@@ -117,11 +148,24 @@ func (buffer *Buffer) incrementCursorPosition() {
 				buffer.lines = append(buffer.lines, line)
 				buffer.cursorY++
 			} else {
-				panic("no test for this yet - not sure if possible?")
+				// @todo test this branch
 				line := &buffer.lines[buffer.RawLine()]
 				line.setWrapped(true)
 			}
 		}
+	}
+}
+
+func (buffer *Buffer) CarriageReturn() {
+	line, err := buffer.getCurrentLine()
+	if err != nil {
+		buffer.cursorX = 0
+		return
+	}
+	if buffer.cursorX == 0 && line.wrapped {
+		buffer.cursorY--
+	} else {
+		buffer.cursorX = 0
 	}
 }
 

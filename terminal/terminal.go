@@ -15,18 +15,16 @@ import (
 )
 
 type Terminal struct {
-	buffer          *buffer.Buffer
-	position        Position // line and col
-	lock            sync.Mutex
-	pty             *os.File
-	logger          *zap.SugaredLogger
-	title           string
-	onUpdate        []func()
-	size            Winsize
-	colourScheme    ColourScheme
-	cellAttr        CellAttributes
-	defaultCellAttr CellAttributes
-	cursorVisible   bool
+	buffer        *buffer.Buffer
+	position      Position // line and col
+	lock          sync.Mutex
+	pty           *os.File
+	logger        *zap.SugaredLogger
+	title         string
+	onUpdate      []func()
+	size          Winsize
+	colourScheme  ColourScheme
+	cursorVisible bool
 }
 
 type Line struct {
@@ -48,25 +46,21 @@ type Position struct {
 
 func New(pty *os.File, logger *zap.SugaredLogger, colourScheme ColourScheme) *Terminal {
 
-	defaultCellAttr := CellAttributes{
-		FgColour: colourScheme.DefaultFg,
-		BgColour: colourScheme.DefaultBg,
-	}
-
 	return &Terminal{
-		buffer:          buffer.NewBuffer(0, 0),
-		pty:             pty,
-		logger:          logger,
-		onUpdate:        []func(){},
-		cellAttr:        defaultCellAttr,
-		defaultCellAttr: defaultCellAttr,
-		colourScheme:    colourScheme,
-		cursorVisible:   true,
+		buffer: buffer.NewBuffer(0, 0, buffer.CellAttributes{
+			FgColour: colourScheme.DefaultFg,
+			BgColour: colourScheme.DefaultBg,
+		}),
+		pty:           pty,
+		logger:        logger,
+		onUpdate:      []func(){},
+		colourScheme:  colourScheme,
+		cursorVisible: true,
 	}
 }
 
-func (terminal *Terminal) GetCellAttributes() CellAttributes {
-	return terminal.cellAttr
+func (terminal *Terminal) GetCell(col int, row int) *buffer.Cell {
+	return terminal.buffer.GetCell(col, row)
 }
 
 func (terminal *Terminal) OnUpdate(handler func()) {

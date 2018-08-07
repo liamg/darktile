@@ -2,15 +2,15 @@
 
 
 [[projects]]
-  branch = "master"
-  name = "github.com/4ydx/gltext"
-  packages = [".","v4.1"]
-  revision = "0cb49edd9bd9c90f54449abdf2efc7d2efdb97b3"
+  name = "github.com/davecgh/go-spew"
+  packages = ["spew"]
+  revision = "346938d642f2ec3594ed81d874461961cd0faa76"
+  version = "v1.1.0"
 
 [[projects]]
   branch = "master"
   name = "github.com/go-gl/gl"
-  packages = ["all-core/gl","v4.1-core/gl"]
+  packages = ["all-core/gl"]
   revision = "68e2537930806bfcee1b92a0e14b4e9b8bb3a3e3"
 
 [[projects]]
@@ -21,14 +21,12 @@
 
 [[projects]]
   branch = "master"
-  name = "github.com/go-gl/mathgl"
-  packages = ["mgl32"]
-  revision = "5ab0e04e1f55a10f3a71b1fccc60ca2ee9a0bc02"
-
-[[projects]]
-  branch = "master"
   name = "github.com/golang/freetype"
-  packages = [".","raster","truetype"]
+  packages = [
+    ".",
+    "raster",
+    "truetype"
+  ]
   revision = "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4"
 
 [[projects]]
@@ -36,6 +34,27 @@
   name = "github.com/liamg/glfont"
   packages = ["."]
   revision = "35ed3188e0013938f3ce8689683b860e0d541a81"
+
+[[projects]]
+  name = "github.com/pmezard/go-difflib"
+  packages = ["difflib"]
+  revision = "792786c7400a136282c1664665ae0a8db921c6c2"
+  version = "v1.0.0"
+
+[[projects]]
+  name = "github.com/sirupsen/logrus"
+  packages = ["."]
+  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
+  version = "v1.0.6"
+
+[[projects]]
+  name = "github.com/stretchr/testify"
+  packages = [
+    "assert",
+    "require"
+  ]
+  revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
+  version = "v1.2.2"
 
 [[projects]]
   name = "go.uber.org/atomic"
@@ -51,15 +70,40 @@
 
 [[projects]]
   name = "go.uber.org/zap"
-  packages = [".","buffer","internal/bufferpool","internal/color","internal/exit","zapcore"]
+  packages = [
+    ".",
+    "buffer",
+    "internal/bufferpool",
+    "internal/color",
+    "internal/exit",
+    "zapcore"
+  ]
   revision = "eeedf312bc6c57391d84767a4cd413f02a917974"
   version = "v1.8.0"
 
 [[projects]]
   branch = "master"
+  name = "golang.org/x/crypto"
+  packages = ["ssh/terminal"]
+  revision = "80fca2ff14a3fb7db622c9a5462f8ce9ea026cba"
+
+[[projects]]
+  branch = "master"
   name = "golang.org/x/image"
-  packages = ["font","math/f32","math/fixed"]
+  packages = [
+    "font",
+    "math/fixed"
+  ]
   revision = "cc896f830cedae125428bc9fe1b0362aa91b3fb1"
+
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/sys"
+  packages = [
+    "unix",
+    "windows"
+  ]
+  revision = "2be389f392cd91df245b41638f818a1c041f0c08"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -70,6 +114,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "cada05adb016189abf9f8ac73433a11b5687a4dea45e655a9e320ab5c13e43fe"
+  inputs-digest = "daf5ce2c1e746bca8cea5b8a0b0e29c2d9301376296dbcba50269ade6c89d8ff"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -2,7 +2,6 @@ package gui
 
 import (
 	"fmt"
-	"math"
 	"runtime"
 	"time"
 
@@ -16,35 +15,28 @@ import (
 )
 
 type GUI struct {
-	window          *glfw.Window
-	logger          *zap.SugaredLogger
-	config          config.Config
-	terminal        *terminal.Terminal
-	width           int //window width in pixels
-	height          int //window height in pixels
-	charWidth       float32
-	charHeight      float32
-	cells           [][]Cell
-	cols            int
-	rows            int
-	colourAttr      uint32
-	font            *glfont.Font
-	fontScale       int32
-	verticalPadding float32
+	window     *glfw.Window
+	logger     *zap.SugaredLogger
+	config     config.Config
+	terminal   *terminal.Terminal
+	width      int //window width in pixels
+	height     int //window height in pixels
+	font       *glfont.Font
+	fontScale  int32
+	renderer   Renderer
+	colourAttr uint32
 }
 
 func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
 
 	//logger.
 	return &GUI{
-		config:          config,
-		logger:          logger,
-		width:           600,
-		height:          300,
-		terminal:        terminal,
-		cells:           [][]Cell{},
-		fontScale:       12.0,
-		verticalPadding: 6.0,
+		config:    config,
+		logger:    logger,
+		width:     600,
+		height:    300,
+		terminal:  terminal,
+		fontScale: 13.0,
 	}
 }
 
@@ -53,106 +45,32 @@ func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredL
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
-	if width == gui.width && height == gui.height {
-		return
-	}
-
 	gui.logger.Debugf("GUI resize to %dx%d", width, height)
 
 	gui.width = width
 	gui.height = height
+
 	if gui.font != nil {
 		gui.font.UpdateResolution((width), (height))
 	}
 
 	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
 
-	gui.charWidth, gui.charHeight = gui.font.Width(1, "A"), gui.font.Height(1, "A")+gui.verticalPadding
+	gui.renderer.SetArea(0, 0, gui.width, gui.height)
 
-	gui.cols = int(math.Floor(float64(float32(width) / gui.charWidth)))
-	gui.rows = int(math.Floor(float64(float32(height) / gui.charHeight)))
+	cols, rows := gui.renderer.GetTermSize()
 
-	//fmt.Printf("%#v\n", gui)
-	//os.Exit(0)
-
-	if err := gui.terminal.SetSize(gui.cols, gui.rows); err != nil {
-		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", gui.cols, gui.rows, err)
+	if err := gui.terminal.SetSize(cols, rows); err != nil {
+		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", cols, rows, err)
 	}
 
-	gui.createTexts()
 }
 
 func (gui *GUI) getTermSize() (int, int) {
-	return gui.cols, gui.rows
-}
-
-// checks if the terminals cells have been updated, and updates the text objects if needed - only call on OS thread
-func (gui *GUI) updateTexts() {
-
-	// runtime.LockOSThread() ?
-
-	//gui.logger.Debugf("Updating texts...")
-
-	cols, rows := gui.getTermSize()
-
-	for row := 0; row < rows; row++ {
-		for col := 0; col < cols; col++ {
-
-			c, err := gui.terminal.GetCellAtPos(terminal.Position{Line: row, Col: col})
-
-			if err != nil {
-				//gui.logger.Errorf("Failed to get cell: %s", err)
-				gui.cells[row][col].Hide()
-				continue
-			}
-
-			if c == nil || c.IsHidden() {
-				gui.cells[row][col].Hide()
-				continue
-			}
-
-			gui.cells[row][col].SetFgColour(c.GetFgColour())
-			gui.cells[row][col].SetRune(c.GetRune())
-			gui.cells[row][col].Show()
-
-			if gui.terminal.IsCursorVisible() && gui.terminal.GetPosition().Col == col && gui.terminal.GetPosition().Line == row {
-				gui.cells[row][col].SetBgColour(
-					gui.config.ColourScheme.Cursor[0],
-					gui.config.ColourScheme.Cursor[1],
-					gui.config.ColourScheme.Cursor[2],
-				)
-			} else {
-				gui.cells[row][col].SetBgColour(c.GetBgColour())
-			}
-		}
+	if gui.renderer == nil {
+		return 0, 0
 	}
-}
-
-// builds text objects - only call on OS thread
-func (gui *GUI) createTexts() {
-
-	cols, rows := gui.getTermSize()
-
-	cells := [][]Cell{}
-	for row := 0; row < rows; row++ {
-
-		if len(cells) <= row {
-			cells = append(cells, []Cell{})
-		}
-		for col := 0; col < cols; col++ {
-			if len(cells[row]) <= col {
-
-				x := ((float32(col) * gui.charWidth) - (float32(gui.width) / 2)) + (gui.charWidth / 2)
-				y := -(((float32(row) * gui.charHeight) - (float32(gui.height) / 2)) + (gui.charHeight / 2))
-
-				cells[row] = append(cells[row], gui.NewCell(gui.font, x, y, gui.charWidth, gui.charHeight, gui.colourAttr, gui.config.ColourScheme.DefaultBg))
-			}
-		}
-	}
-
-	gui.cells = cells
-
-	gui.updateTexts()
+	return gui.renderer.GetTermSize()
 }
 
 func (gui *GUI) Close() {
@@ -183,9 +101,12 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Loading font...")
 	//if err := gui.loadFont("/usr/share/fonts/nerd-fonts-complete/ttf/Roboto Mono Nerd Font Complete.ttf", 12); err != nil {
+
 	if err := gui.loadFont("./fonts/Roboto.ttf"); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
+
+	gui.renderer = NewOpenGLRenderer(gui.font, gui.fontScale, 0, 0, gui.width, gui.height)
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
@@ -211,15 +132,17 @@ func (gui *GUI) Render() error {
 	ticker := time.NewTicker(time.Millisecond * 100)
 	defer ticker.Stop()
 
-	//gl.Disable(gl.MULTISAMPLE)
-	// stop smoothing fonts
-	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-
-	updateRequired := 0
-
 	gui.logger.Debugf("Starting render...")
 
 	gl.UseProgram(program)
+
+	// stop smoothing fonts
+
+	//gl.Enable(gl.DEPTH_TEST)
+	//gl.DepthFunc(gl.LESS)
+	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+	glfw.SwapInterval(1)
 
 	gl.ClearColor(
 		gui.config.ColourScheme.DefaultBg[0],
@@ -230,69 +153,24 @@ func (gui *GUI) Render() error {
 
 	for !gui.window.ShouldClose() {
 
-		if updateRequired > 0 {
-
-			updateRequired--
-
-		} else {
-		CheckUpdate:
-			for {
-				select {
-				case <-updateChan:
-					updateRequired = 2
-				case <-ticker.C:
-					/*
-						text.SetString(
-							fmt.Sprintf(
-								"%dx%d@%d,%d",
-								gui.cols,
-								gui.rows,
-								gui.terminal.GetPosition().Col,
-								gui.terminal.GetPosition().Line,
-							),
-						)*/
-					updateRequired = 2
-				default:
-					break CheckUpdate
-				}
-			}
-		}
-
 		gl.UseProgram(program)
 
-		if updateRequired > 0 {
+		// Render the string.
+		// @todo uncommentbut dont run all of the time... - perhaps use onTitleChange event from terminal?
+		//gui.window.SetTitle(gui.terminal.GetTitle())
 
-			gui.updateTexts()
+		//gl.ClearColor(0.5, 0.5, 0.5, 1.0)
+		gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		cols, rows := gui.getTermSize()
 
-			// Render the string.
-			// @todo uncommentbut dont run all of the time... - perhaps use onTitleChange event from terminal?
-			//gui.window.SetTitle(gui.terminal.GetTitle())
-
-			//gl.ClearColor(0.5, 0.5, 0.5, 1.0)
-			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-			cols, rows := gui.getTermSize()
-
-			for row := 0; row < rows; row++ {
-				for col := 0; col < cols; col++ {
-					gui.cells[row][col].DrawBg()
-				}
+		for row := 0; row < rows; row++ {
+			for col := 0; col < cols; col++ {
+				gui.renderer.DrawCell(gui.terminal.GetCell(col, row), col, row)
 			}
-
-			for row := 0; row < rows; row++ {
-				for col := 0; col < cols; col++ {
-					gui.cells[row][col].DrawText()
-				}
-			}
-
-			gui.font.SetColor(1, 0.2, 0.2, 0.5)
-			gui.font.Printf(100, 300, 1.5, "%#v", gui.terminal.GetPosition())
-
 		}
 
 		glfw.PollEvents()
-		if updateRequired > 0 {
-			gui.window.SwapBuffers()
-		}
+		gui.window.SwapBuffers()
 	}
 
 	gui.logger.Debugf("Stopping render...")
@@ -301,7 +179,7 @@ func (gui *GUI) Render() error {
 }
 
 func (gui *GUI) loadFont(path string) error {
-	font, err := glfont.LoadFont("./fonts/Roboto.ttf", gui.fontScale, gui.width, gui.height)
+	font, err := glfont.LoadFont(path, gui.fontScale, gui.width, gui.height)
 	if err != nil {
 		return fmt.Errorf("LoadFont: %v", err)
 	}

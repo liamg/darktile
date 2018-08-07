@@ -1,7 +1,6 @@
 package glfont
 
 import (
-	"fmt"
 	"os"
 
 	"github.com/go-gl/gl/all-core/gl"
@@ -74,9 +73,9 @@ func (f *Font) UpdateResolution(windowWidth int, windowHeight int) {
 }
 
 //Printf draws a string to the screen, takes a list of arguments like printf
-func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{}) error {
+func (f *Font) Print(x, y float32, scale float32, text string) error {
 
-	indices := []rune(fmt.Sprintf(fs, argv...))
+	indices := []rune(text)
 
 	if len(indices) == 0 {
 		return nil
@@ -149,7 +148,7 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-		x += float32(ch.advance>>6) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+		x += float32((ch.advance >> 6)) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
 
 	}
 
@@ -163,11 +162,11 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 }
 
 //Width returns the width of a piece of text in pixels
-func (f *Font) Width(scale float32, fs string, argv ...interface{}) float32 {
+func (f *Font) Width(scale float32, text string) float32 {
 
 	var width float32
 
-	indices := []rune(fmt.Sprintf(fs, argv...))
+	indices := []rune(text)
 
 	if len(indices) == 0 {
 		return 0
@@ -191,7 +190,7 @@ func (f *Font) Width(scale float32, fs string, argv ...interface{}) float32 {
 		ch := f.fontChar[runeIndex-lowChar]
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-		width += float32(ch.advance>>6) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+		width += float32((ch.advance >> 6)) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
 
 	}
 
@@ -199,12 +198,12 @@ func (f *Font) Width(scale float32, fs string, argv ...interface{}) float32 {
 }
 
 //Height returns the height of a piece of text in pixels
-func (f *Font) Height(scale float32, fs string, argv ...interface{}) float32 {
+func (f *Font) Height(scale float32, text string) float32 {
 
 	var baseHeight float32
 	var height float32
 
-	indices := []rune(fmt.Sprintf(fs, argv...))
+	indices := []rune(text)
 
 	if len(indices) == 0 {
 		return 0
@@ -219,7 +218,7 @@ func (f *Font) Height(scale float32, fs string, argv ...interface{}) float32 {
 		runeIndex := indices[i]
 
 		if int(runeIndex) == 0x0a {
-			baseHeight += height
+			baseHeight = height
 			height = 0
 		}
 
