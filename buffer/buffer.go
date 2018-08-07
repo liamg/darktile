@@ -361,7 +361,7 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 	if err != nil {
 		return
 	}
-	for i := 0; i < int(buffer.cursorY); i++ {
+	for i := 0; i < int(buffer.cursorX); i++ {
 		line.cells[i].erase()
 	}
 	for i := uint16(0); i < buffer.cursorY; i++ {

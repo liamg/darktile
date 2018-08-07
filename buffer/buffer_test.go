@@ -383,14 +383,15 @@ func TestEraseDisplay(t *testing.T) {
 func TestEraseDisplayToCursor(t *testing.T) {
 	b := NewBuffer(80, 5, CellAttributes{})
 	b.Write([]rune("hello\nasdasd\nthing")...)
-	b.MovePosition(-3, 0)
+	b.MovePosition(-2, 0)
 	b.EraseDisplayToCursor()
 	lines := b.GetVisibleLines()
 	assert.Equal(t, "", lines[0].String())
 	assert.Equal(t, "", lines[1].String())
-	assert.Equal(t, "\x00\x00ing", lines[2].String())
+	assert.Equal(t, "\x00\x00\x00ng", lines[2].String())
 
 }
+
 func TestEraseDisplayAfterCursor(t *testing.T) {
 	b := NewBuffer(80, 5, CellAttributes{})
 	b.Write([]rune("hello\nasdasd\nthings")...)
