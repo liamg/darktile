@@ -10,13 +10,16 @@ import (
 )
 
 func TestOffsets(t *testing.T) {
-	b := NewBuffer(10, 8, CellAttributes{})
-	test := "hellothere\r\nhellothere\r\nhellothere\r\nhellothere\r\nhellothere\r\nhellothere\r\nhellothere\r\nhellothere\r\nhellothere\r\nhellothere\r\nhellothere\r\nhellothere\r\n?"
-	b.Write([]rune(test)...)
+	b := NewBuffer(10, 3, CellAttributes{})
+	b.Write([]rune("hello\r\n")...)
+	b.Write([]rune("hello\r\n")...)
+	b.Write([]rune("hello\r\n")...)
+	b.Write([]rune("hello\r\n")...)
+	b.Write([]rune("hello")...)
 	assert.Equal(t, uint16(10), b.ViewWidth())
 	assert.Equal(t, uint16(10), b.Width())
-	assert.Equal(t, uint16(8), b.ViewHeight())
-	assert.Equal(t, 13, b.Height())
+	assert.Equal(t, uint16(3), b.ViewHeight())
+	assert.Equal(t, 5, b.Height())
 }
 
 func TestBufferCreation(t *testing.T) {
@@ -126,6 +129,15 @@ func TestWritingNewLineAsFirstRuneOnWrappedLine(t *testing.T) {
 
 func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
 	b := NewBuffer(3, 20, CellAttributes{})
+	/*
+		|abc
+		|d
+		|_ef
+		|
+		|
+		|z
+	*/
+
 	b.Write('a', 'b', 'c', 'd')
 	b.Write(0x0a)
 	b.Write('e', 'f')
@@ -136,7 +148,7 @@ func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
 
 	assert.Equal(t, "abc", b.lines[0].String())
 	assert.Equal(t, "d", b.lines[1].String())
-	assert.Equal(t, "ef", b.lines[2].String())
+	assert.Equal(t, "\x00ef", b.lines[2].String())
 	assert.Equal(t, "", b.lines[3].String())
 	assert.Equal(t, "", b.lines[4].String())
 	assert.Equal(t, "z", b.lines[5].String())
@@ -366,9 +378,9 @@ func TestEraseLineAfterCursor(t *testing.T) {
 	b := NewBuffer(80, 5, CellAttributes{})
 	b.Write([]rune("hello, this is a test\r\ndeleted")...)
 	b.MovePosition(-3, 0)
-	b.EraseLineAfterCursor()
+	b.EraseLineFromCursor()
 	assert.Equal(t, "hello, this is a test", b.lines[0].String())
-	assert.Equal(t, "delet", b.lines[1].String())
+	assert.Equal(t, "dele", b.lines[1].String())
 }
 func TestEraseDisplay(t *testing.T) {
 	b := NewBuffer(80, 5, CellAttributes{})
@@ -392,11 +404,11 @@ func TestEraseDisplayToCursor(t *testing.T) {
 
 }
 
-func TestEraseDisplayAfterCursor(t *testing.T) {
+func TestEraseDisplayFromCursor(t *testing.T) {
 	b := NewBuffer(80, 5, CellAttributes{})
 	b.Write([]rune("hello\r\nasdasd\r\nthings")...)
 	b.MovePosition(-3, -1)
-	b.EraseDisplayAfterCursor()
+	b.EraseDisplayFromCursor()
 	lines := b.GetVisibleLines()
 	assert.Equal(t, "hello", lines[0].String())
 	assert.Equal(t, "asd", lines[1].String())

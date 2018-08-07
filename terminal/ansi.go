@@ -1,8 +1,41 @@
 package terminal
 
+// https://www.xfree86.org/4.8.0/ctlseqs.html
+// https://vt100.net/docs/vt100-ug/chapter3.html
+
 var ansiSequenceMap = map[rune]escapeSequenceHandler{
 	'[':  csiHandler,
 	0x5d: oscHandler,
+	'7':  saveCursorHandler,
+	'8':  restoreCursorHandler,
+	'D':  indexHandler,
+	'M':  reverseIndexHandler,
+}
+
+func indexHandler(buffer chan rune, terminal *Terminal) error {
+	// @todo is thus right?
+	// "This sequence causes the active position to move downward one line without changing the column position. If the active position is at the bottom margin, a scroll up is performed."
+	if terminal.buffer.CursorLine() == terminal.buffer.ViewHeight()-1 {
+		terminal.buffer.NewLine()
+		return nil
+	}
+	terminal.buffer.MovePosition(0, 1)
+	return nil
+}
+
+func reverseIndexHandler(buffer chan rune, terminal *Terminal) error {
+	terminal.buffer.MovePosition(0, -1)
+	return nil
+}
+
+func saveCursorHandler(buffer chan rune, terminal *Terminal) error {
+	terminal.buffer.SaveCursor()
+	return nil
+}
+
+func restoreCursorHandler(buffer chan rune, terminal *Terminal) error {
+	terminal.buffer.RestoreCursor()
+	return nil
 }
 
 func ansiHandler(buffer chan rune, terminal *Terminal) error {

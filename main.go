@@ -19,8 +19,11 @@ func getConfig() config.Config {
 	if ignore {
 		return config.DefaultConfig
 	}
+
 	conf := loadConfigFile()
 	flag.BoolVar(&conf.DebugMode, "debug", conf.DebugMode, "Enable debug logging")
+	flag.BoolVar(&conf.Rendering.AlwaysRepaint, "always-repaint", conf.Rendering.AlwaysRepaint, "Always repaint the window, even when no changes have occurred")
+
 	flag.Parse()
 	return conf
 }

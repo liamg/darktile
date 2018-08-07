@@ -195,7 +195,7 @@ func csiEraseInDisplayHandler(params []string, intermediate string, terminal *Te
 	switch n {
 
 	case "0", "":
-		terminal.buffer.EraseDisplayAfterCursor()
+		terminal.buffer.EraseDisplayFromCursor()
 	case "1":
 		terminal.buffer.EraseDisplayToCursor()
 	case "2":
@@ -209,6 +209,7 @@ func csiEraseInDisplayHandler(params []string, intermediate string, terminal *Te
 
 // CSI Ps K
 func csiEraseInLineHandler(params []string, intermediate string, terminal *Terminal) error {
+
 	n := "0"
 	if len(params) > 0 {
 		n = params[0]
@@ -216,7 +217,7 @@ func csiEraseInLineHandler(params []string, intermediate string, terminal *Termi
 
 	switch n {
 	case "0", "": //erase adter cursor
-		terminal.buffer.EraseLineAfterCursor()
+		terminal.buffer.EraseLineFromCursor()
 	case "1": // erase to cursor inclusive
 		terminal.buffer.EraseLineToCursor()
 	case "2": // erase entire
