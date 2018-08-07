@@ -211,9 +211,7 @@ func (buffer *Buffer) NewLine() {
 
 	if buffer.cursorY == buffer.viewHeight-1 {
 		buffer.lines = append(buffer.lines, newLine())
-		buffer.cursorX = 0
 	} else {
-		buffer.cursorX = 0
 		buffer.cursorY++
 	}
 }

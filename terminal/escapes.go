@@ -38,6 +38,8 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 			continue
 		}
 
+		terminal.logger.Debugf("Received character 0x%X: %s", b, string(b))
+
 		switch b {
 		case 0x0a:
 			terminal.buffer.NewLine()
