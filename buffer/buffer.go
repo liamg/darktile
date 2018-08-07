@@ -112,7 +112,6 @@ func (buffer *Buffer) ensureLinesExistToRawHeight() {
 // Write will write a rune to the terminal at the position of the cursor, and increment the cursor position
 func (buffer *Buffer) Write(runes ...rune) {
 	for _, r := range runes {
-		buffer.ensureLinesExistToRawHeight()
 		if r == 0x0a {
 			buffer.NewLine()
 			continue
@@ -120,6 +119,7 @@ func (buffer *Buffer) Write(runes ...rune) {
 			buffer.CarriageReturn()
 			continue
 		}
+		buffer.ensureLinesExistToRawHeight()
 		line := &buffer.lines[buffer.RawLine()]
 		for int(buffer.CursorColumn()) >= len(line.cells) {
 			line.cells = append(line.cells, newCell())
@@ -172,9 +172,11 @@ func (buffer *Buffer) CarriageReturn() {
 
 	line, err := buffer.getCurrentLine()
 	if err != nil {
-		// @todo check this...
-		buffer.cursorX = 0
-		return
+		buffer.ensureLinesExistToRawHeight()
+		line, err = buffer.getCurrentLine()
+		if err != nil {
+			panic(err)
+		}
 	}
 	if buffer.cursorX == 0 && line.wrapped {
 		buffer.cursorY--
@@ -193,7 +195,14 @@ func (buffer *Buffer) NewLine() {
 
 	// if we're at the beginning of a line which wrapped from the previous one, and we need a new line, we can effectively not add a new line, and set the current one to non-wrapped
 	if buffer.cursorX == 0 {
-		line := &buffer.lines[buffer.RawLine()]
+		line, err := buffer.getCurrentLine()
+		if err != nil {
+			buffer.ensureLinesExistToRawHeight()
+			line, err = buffer.getCurrentLine()
+			if err != nil {
+				panic(err)
+			}
+		}
 		if line.wrapped {
 			line.setWrapped(false)
 			return
@@ -321,6 +330,16 @@ func (buffer *Buffer) EraseLineAfterCursor() {
 	line.cells = line.cells[:max]
 }
 
+func (buffer *Buffer) EraseDisplay() {
+	defer buffer.emitDisplayChange()
+	for i := uint16(0); i < (buffer.ViewHeight()); i++ {
+		rawLine := buffer.convertViewLineToRawLine(i)
+		if int(rawLine) < len(buffer.lines) {
+			buffer.lines[int(rawLine)].cells = []Cell{}
+		}
+	}
+}
+
 func (buffer *Buffer) EraseDisplayAfterCursor() {
 	defer buffer.emitDisplayChange()
 	line, err := buffer.getCurrentLine()
@@ -342,7 +361,9 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 	if err != nil {
 		return
 	}
-	line.cells = line.cells[buffer.cursorX+1:]
+	for i := 0; i < int(buffer.cursorY); i++ {
+		line.cells[i].erase()
+	}
 	for i := uint16(0); i < buffer.cursorY; i++ {
 		rawLine := buffer.convertViewLineToRawLine(i)
 		if int(rawLine) < len(buffer.lines) {

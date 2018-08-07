@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"testing"
+	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -258,7 +259,145 @@ func TestCarriageReturnOnOverWrappedLine(t *testing.T) {
 	assert.Equal(t, "", lines[3].String())
 }
 
+func TestCarriageReturnOnLineThatDoesntExist(t *testing.T) {
+	b := NewBuffer(6, 10, CellAttributes{})
+	b.cursorY = 3
+	b.Write('\r')
+	assert.Equal(t, uint16(0), b.cursorX)
+	assert.Equal(t, uint16(3), b.cursorY)
+}
+
 func TestResizeView(t *testing.T) {
 	b := NewBuffer(80, 20, CellAttributes{})
 	b.ResizeView(40, 10)
+}
+
+func TestGetCell(t *testing.T) {
+	b := NewBuffer(80, 20, CellAttributes{})
+	b.Write([]rune("Hello\nthere\nsomething...")...)
+	cell := b.GetCell(8, 2)
+	require.NotNil(t, cell)
+	assert.Equal(t, 'g', cell.Rune())
+}
+
+func TestGetCellWithHistory(t *testing.T) {
+	b := NewBuffer(80, 2, CellAttributes{})
+	b.Write([]rune("Hello\nthere\nsomething...")...)
+	cell := b.GetCell(8, 1)
+	require.NotNil(t, cell)
+	assert.Equal(t, 'g', cell.Rune())
+}
+
+func TestGetCellWithBadCursor(t *testing.T) {
+	b := NewBuffer(80, 2, CellAttributes{})
+	b.Write([]rune("Hello\nthere\nsomething...")...)
+	require.Nil(t, b.GetCell(8, 3))
+	require.Nil(t, b.GetCell(8, -1))
+	require.Nil(t, b.GetCell(-8, 1))
+	require.Nil(t, b.GetCell(90, 0))
+
+}
+
+func TestCursorAttr(t *testing.T) {
+	b := NewBuffer(80, 2, CellAttributes{})
+	assert.Equal(t, &b.cursorAttr, b.CursorAttr())
+}
+
+func TestAttachingHandlers(t *testing.T) {
+	b := NewBuffer(80, 2, CellAttributes{})
+	displayHandler := make(chan bool, 1)
+	b.AttachDisplayChangeHandler(displayHandler)
+	require.Equal(t, 1, len(b.displayChangeHandlers))
+	assert.Equal(t, b.displayChangeHandlers[0], displayHandler)
+}
+
+func TestEmitDisplayHandlers(t *testing.T) {
+	b := NewBuffer(80, 2, CellAttributes{})
+	displayHandler := make(chan bool, 1)
+	b.AttachDisplayChangeHandler(displayHandler)
+	b.emitDisplayChange()
+	time.Sleep(time.Millisecond * 50)
+	ok := false
+	select {
+	case <-displayHandler:
+		ok = true
+	default:
+	}
+	assert.True(t, ok)
+}
+
+func TestCursorPositionQuerying(t *testing.T) {
+	b := NewBuffer(80, 20, CellAttributes{})
+	b.cursorX = 17
+	b.cursorY = 9
+	assert.Equal(t, b.cursorX, b.CursorColumn())
+	assert.Equal(t, b.cursorY, b.CursorLine())
+}
+
+func TestRawPositionQuerying(t *testing.T) {
+	b := NewBuffer(80, 5, CellAttributes{})
+	b.Write([]rune("a\na\na\na\na\na\na\na\na\na")...)
+	b.cursorX = 3
+	b.cursorY = 4
+	assert.Equal(t, uint64(9), b.RawLine())
+}
+
+// CSI 2 K
+func TestEraseLine(t *testing.T) {
+	b := NewBuffer(80, 5, CellAttributes{})
+	b.Write([]rune("hello, this is a test\nthis line should be deleted")...)
+	b.EraseLine()
+	assert.Equal(t, "hello, this is a test", b.lines[0].String())
+	assert.Equal(t, "", b.lines[1].String())
+}
+
+// CSI 1 K
+func TestEraseLineToCursor(t *testing.T) {
+	b := NewBuffer(80, 5, CellAttributes{})
+	b.Write([]rune("hello, this is a test\ndeleted")...)
+	b.MovePosition(-3, 0)
+	b.EraseLineToCursor()
+	assert.Equal(t, "hello, this is a test", b.lines[0].String())
+	assert.Equal(t, "\x00\x00\x00\x00\x00ed", b.lines[1].String())
+}
+
+// CSI 0 K
+func TestEraseLineAfterCursor(t *testing.T) {
+	b := NewBuffer(80, 5, CellAttributes{})
+	b.Write([]rune("hello, this is a test\ndeleted")...)
+	b.MovePosition(-3, 0)
+	b.EraseLineAfterCursor()
+	assert.Equal(t, "hello, this is a test", b.lines[0].String())
+	assert.Equal(t, "delet", b.lines[1].String())
+}
+func TestEraseDisplay(t *testing.T) {
+	b := NewBuffer(80, 5, CellAttributes{})
+	b.Write([]rune("hello\nasdasd\nthing")...)
+	b.MovePosition(2, 1)
+	b.EraseDisplay()
+	lines := b.GetVisibleLines()
+	for _, line := range lines {
+		assert.Equal(t, "", line.String())
+	}
+}
+func TestEraseDisplayToCursor(t *testing.T) {
+	b := NewBuffer(80, 5, CellAttributes{})
+	b.Write([]rune("hello\nasdasd\nthing")...)
+	b.MovePosition(-3, 0)
+	b.EraseDisplayToCursor()
+	lines := b.GetVisibleLines()
+	assert.Equal(t, "", lines[0].String())
+	assert.Equal(t, "", lines[1].String())
+	assert.Equal(t, "\x00\x00ing", lines[2].String())
+
+}
+func TestEraseDisplayAfterCursor(t *testing.T) {
+	b := NewBuffer(80, 5, CellAttributes{})
+	b.Write([]rune("hello\nasdasd\nthings")...)
+	b.MovePosition(-3, -1)
+	b.EraseDisplayAfterCursor()
+	lines := b.GetVisibleLines()
+	assert.Equal(t, "hello", lines[0].String())
+	assert.Equal(t, "asd", lines[1].String())
+	assert.Equal(t, "", lines[2].String())
 }
