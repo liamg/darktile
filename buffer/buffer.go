@@ -182,6 +182,26 @@ func (buffer *Buffer) incrementCursorPosition() {
 	}
 }
 
+func (buffer *Buffer) Backspace() {
+	if buffer.cursorX == 0 {
+		line := buffer.getCurrentLine()
+		if line.wrapped {
+			buffer.MovePosition(int16(buffer.Width()-1), -1)
+			if int(buffer.cursorX) < len(line.cells) {
+				line.cells[buffer.cursorX].erase()
+			}
+		} else {
+			//@todo ring bell or whatever
+		}
+	} else {
+		buffer.MovePosition(-1, 0)
+		line := buffer.getCurrentLine()
+		if int(buffer.cursorX) < len(line.cells) {
+			line.cells[buffer.cursorX].erase()
+		}
+	}
+}
+
 func (buffer *Buffer) CarriageReturn() {
 	defer buffer.emitDisplayChange()
 	buffer.cursorX = 0

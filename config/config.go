@@ -9,6 +9,7 @@ type Config struct {
 	DebugMode    bool `yaml:"debug"`
 	ColourScheme terminal.ColourScheme
 	Rendering    RenderingConfig `yaml:"rendering"`
+	Slomo        bool            `yaml:"slomo"`
 }
 
 type RenderingConfig struct {

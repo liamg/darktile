@@ -22,6 +22,7 @@ func getConfig() config.Config {
 
 	conf := loadConfigFile()
 	flag.BoolVar(&conf.DebugMode, "debug", conf.DebugMode, "Enable debug logging")
+	flag.BoolVar(&conf.Slomo, "slomo", conf.Slomo, "Render in slow motion (useful for debugging)")
 	flag.BoolVar(&conf.Rendering.AlwaysRepaint, "always-repaint", conf.Rendering.AlwaysRepaint, "Always repaint the window, even when no changes have occurred")
 
 	flag.Parse()

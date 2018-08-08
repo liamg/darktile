@@ -11,6 +11,7 @@ import (
 	"unsafe"
 
 	"gitlab.com/liamg/raft/buffer"
+	"gitlab.com/liamg/raft/config"
 	"go.uber.org/zap"
 )
 
@@ -21,8 +22,10 @@ type Terminal struct {
 	logger        *zap.SugaredLogger
 	title         string
 	size          Winsize
-	colourScheme  ColourScheme
+	config        config.Config
 	titleHandlers []chan bool
+	pauseChan     chan bool
+	resumeChan    chan bool
 }
 
 type Line struct {
@@ -42,7 +45,7 @@ type Position struct {
 	Col  int
 }
 
-func New(pty *os.File, logger *zap.SugaredLogger, colourScheme ColourScheme) *Terminal {
+func New(pty *os.File, logger *zap.SugaredLogger, config config.Config) *Terminal {
 
 	return &Terminal{
 		buffer: buffer.NewBuffer(0, 0, buffer.CellAttributes{
@@ -51,8 +54,10 @@ func New(pty *os.File, logger *zap.SugaredLogger, colourScheme ColourScheme) *Te
 		}),
 		pty:           pty,
 		logger:        logger,
-		colourScheme:  colourScheme,
+		config:        config,
 		titleHandlers: []chan bool{},
+		pauseChan:     make(chan bool, 1),
+		resumeChan:    make(chan bool, 1),
 	}
 }
 

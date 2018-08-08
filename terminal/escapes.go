@@ -2,7 +2,6 @@ package terminal
 
 import (
 	"context"
-	"fmt"
 )
 
 // Wish list here: http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
@@ -15,6 +14,20 @@ var escapeSequenceMap = map[rune]escapeSequenceHandler{
 	0x1b: ansiHandler,
 }
 
+func (terminal *Terminal) Suspend() {
+	select {
+	case terminal.pauseChan <- true:
+	default:
+	}
+}
+
+func (terminal *Terminal) Resume() {
+	select {
+	case terminal.resumeChan <- true:
+	default:
+	}
+}
+
 func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 
 	// https://en.wikipedia.org/wiki/ANSI_escape_code
@@ -22,10 +35,17 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 	for {
 
 		select {
+		case <-terminal.pauseChan:
+			// @todo alert user when terminal is suspended
+			terminal.logger.Debugf("Terminal suspended")
+			<-terminal.resumeChan
 		case <-ctx.Done():
 			break
 		default:
 		}
+
+		//if terminal.config.slomo
+		//time.Sleep(time.Millisecond * 100)
 
 		b := <-buffer
 
@@ -33,7 +53,7 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 
 		if ok {
 			if err := handler(buffer, terminal); err != nil {
-				fmt.Errorf("Error handling escape sequence 0x%X: %s", b, err)
+				terminal.logger.Errorf("Error handling escape sequence 0x%X: %s", b, err)
 			}
 			continue
 		}
@@ -47,7 +67,7 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 			terminal.buffer.CarriageReturn()
 		case 0x08:
 			// backspace
-			terminal.buffer.MovePosition(-1, 0)
+			terminal.buffer.Backspace()
 		case 0x07:
 			// @todo ring bell - flash red or some shit?
 		default:

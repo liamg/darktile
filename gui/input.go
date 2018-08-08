@@ -30,6 +30,10 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				case glfw.KeyC: // ctrl^c
 					gui.logger.Debugf("Sending CTRL^C")
 					gui.terminal.Write([]byte{0x3}) // send EOT
+				case glfw.KeyS:
+					gui.terminal.Suspend()
+				case glfw.KeyQ:
+					gui.terminal.Resume()
 				}
 			}
 		}
