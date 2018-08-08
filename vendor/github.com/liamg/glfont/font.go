@@ -1,6 +1,7 @@
 package glfont
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/go-gl/gl/all-core/gl"
@@ -73,9 +74,9 @@ func (f *Font) UpdateResolution(windowWidth int, windowHeight int) {
 }
 
 //Printf draws a string to the screen, takes a list of arguments like printf
-func (f *Font) Print(x, y float32, scale float32, text string) error {
+func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{}) error {
 
-	indices := []rune(text)
+	indices := []rune(fmt.Sprintf(fs, argv...))
 
 	if len(indices) == 0 {
 		return nil
@@ -106,7 +107,7 @@ func (f *Font) Print(x, y float32, scale float32, text string) error {
 
 		//skip runes that are not in font chacter range
 		if int(runeIndex)-int(lowChar) > len(f.fontChar) || runeIndex < lowChar {
-			//fmt.Printf("%c %d\n", runeIndex, runeIndex)
+			fmt.Printf("%c %d\n", runeIndex, runeIndex)
 			continue
 		}
 
@@ -162,11 +163,11 @@ func (f *Font) Print(x, y float32, scale float32, text string) error {
 }
 
 //Width returns the width of a piece of text in pixels
-func (f *Font) Width(scale float32, text string) float32 {
+func (f *Font) Width(scale float32, fs string, argv ...interface{}) float32 {
 
 	var width float32
 
-	indices := []rune(text)
+	indices := []rune(fmt.Sprintf(fs, argv...))
 
 	if len(indices) == 0 {
 		return 0
@@ -182,7 +183,7 @@ func (f *Font) Width(scale float32, text string) float32 {
 
 		//skip runes that are not in font chacter range
 		if int(runeIndex)-int(lowChar) > len(f.fontChar) || runeIndex < lowChar {
-			//fmt.Printf("%c %d\n", runeIndex, runeIndex)
+			fmt.Printf("%c %d\n", runeIndex, runeIndex)
 			continue
 		}
 
@@ -198,12 +199,12 @@ func (f *Font) Width(scale float32, text string) float32 {
 }
 
 //Height returns the height of a piece of text in pixels
-func (f *Font) Height(scale float32, text string) float32 {
+func (f *Font) Width(scale float32, fs string, argv ...interface{}) float32 {
 
 	var baseHeight float32
 	var height float32
 
-	indices := []rune(text)
+	indices := []rune(fmt.Sprintf(fs, argv...))
 
 	if len(indices) == 0 {
 		return 0
@@ -221,7 +222,7 @@ func (f *Font) Height(scale float32, text string) float32 {
 			baseHeight = height
 			height = 0
 		}
-
+		
 		//skip runes that are not in font chacter range
 		if int(runeIndex)-int(lowChar) > len(f.fontChar) || runeIndex < lowChar {
 			continue
@@ -231,8 +232,8 @@ func (f *Font) Height(scale float32, text string) float32 {
 		ch := f.fontChar[runeIndex-lowChar]
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-		if float32(ch.height)*scale > height {
-			height = float32(ch.height) * scale
+		if ch.height * scale > height {
+			height = ch.height * scale
 		}
 
 	}

@@ -42,10 +42,10 @@
   version = "v1.0.0"
 
 [[projects]]
-  name = "github.com/sirupsen/logrus"
+  branch = "master"
+  name = "github.com/riywo/loginshell"
   packages = ["."]
-  revision = "3e01752db0189b9157070a0e1668a620f9a85da2"
-  version = "v1.0.6"
+  revision = "5da3acff02554cee5e8ccb4651cc5a4072f41790"
 
 [[projects]]
   name = "github.com/stretchr/testify"
@@ -83,27 +83,12 @@
 
 [[projects]]
   branch = "master"
-  name = "golang.org/x/crypto"
-  packages = ["ssh/terminal"]
-  revision = "80fca2ff14a3fb7db622c9a5462f8ce9ea026cba"
-
-[[projects]]
-  branch = "master"
   name = "golang.org/x/image"
   packages = [
     "font",
     "math/fixed"
   ]
   revision = "cc896f830cedae125428bc9fe1b0362aa91b3fb1"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/sys"
-  packages = [
-    "unix",
-    "windows"
-  ]
-  revision = "2be389f392cd91df245b41638f818a1c041f0c08"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"
@@ -114,6 +99,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "daf5ce2c1e746bca8cea5b8a0b0e29c2d9301376296dbcba50269ade6c89d8ff"
+  inputs-digest = "2ba92df49de7d74abb3a647555d24d1d872cfee4812e7250fa7d49fb23872053"
   solver-name = "gps-cdcl"
   solver-version = 1
