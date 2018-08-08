@@ -49,7 +49,7 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 			// backspace
 			terminal.buffer.MovePosition(-1, 0)
 		case 0x07:
-			// @todo ring bell
+			// @todo ring bell - flash red or some shit?
 		default:
 			// render character at current location
 			//		fmt.Printf("%s\n", string([]byte{b}))

@@ -76,6 +76,22 @@ func (terminal *Terminal) emitTitleChange() {
 	}
 }
 
+func (terminal *Terminal) GetLogicalCursorX() uint16 {
+	if terminal.buffer.CursorColumn() >= terminal.buffer.Width() {
+		return 0
+	}
+
+	return terminal.buffer.CursorColumn()
+}
+
+func (terminal *Terminal) GetLogicalCursorY() uint16 {
+	if terminal.buffer.CursorColumn() >= terminal.buffer.Width() {
+		return terminal.buffer.CursorLine() + 1
+	}
+
+	return terminal.buffer.CursorLine()
+}
+
 func (terminal *Terminal) GetTitle() string {
 	return terminal.title
 }

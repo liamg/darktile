@@ -31,99 +31,74 @@ func TestBufferCreation(t *testing.T) {
 	assert.NotNil(t, b.lines)
 }
 
-func TestBufferCursorIncrement(t *testing.T) {
+func TestBufferWriteIncrementsCursorCorrectly(t *testing.T) {
 
 	b := NewBuffer(5, 4, CellAttributes{})
-	b.incrementCursorPosition()
+
+	/*01234
+	 |-----
+	0|xxxxx
+	1|
+	2|
+	3|
+	 |-----
+	*/
+
+	b.Write('x')
 	require.Equal(t, uint16(1), b.CursorColumn())
 	require.Equal(t, uint16(0), b.CursorLine())
 
-	b.incrementCursorPosition()
+	b.Write('x')
 	require.Equal(t, uint16(2), b.CursorColumn())
 	require.Equal(t, uint16(0), b.CursorLine())
 
-	b.incrementCursorPosition()
+	b.Write('x')
 	require.Equal(t, uint16(3), b.CursorColumn())
 	require.Equal(t, uint16(0), b.CursorLine())
 
-	b.incrementCursorPosition()
+	b.Write('x')
 	require.Equal(t, uint16(4), b.CursorColumn())
 	require.Equal(t, uint16(0), b.CursorLine())
 
-	b.incrementCursorPosition()
-	require.Equal(t, uint16(0), b.CursorColumn())
+	b.Write('x')
+	require.Equal(t, uint16(5), b.CursorColumn())
+	require.Equal(t, uint16(0), b.CursorLine())
+
+	b.Write('x')
+	require.Equal(t, uint16(1), b.CursorColumn())
 	require.Equal(t, uint16(1), b.CursorLine())
 
-	b.incrementCursorPosition()
-	b.incrementCursorPosition()
-	b.incrementCursorPosition()
-	b.incrementCursorPosition()
-	b.incrementCursorPosition()
-	b.incrementCursorPosition()
-	b.incrementCursorPosition()
-	b.incrementCursorPosition()
-	b.incrementCursorPosition()
-	b.incrementCursorPosition()
+	b.Write('x')
+	require.Equal(t, uint16(2), b.CursorColumn())
+	require.Equal(t, uint16(1), b.CursorLine())
 
-	require.Equal(t, uint16(0), b.CursorColumn())
-	require.Equal(t, uint16(3), b.CursorLine())
-
-	b.Write([]rune("hello\r\n")...)
-	b.Write([]rune("hello\r\n")...)
-	b.Write([]rune("hello\r\n")...)
-	b.Write([]rune("hello\r\n")...)
-	b.Write([]rune("hello\r\n")...)
-	b.Write([]rune("hello")...)
-	b.SetPosition(0, 2)
-	b.incrementCursorPosition()
-
-}
-func TestBufferWrite(t *testing.T) {
-
-	b := NewBuffer(5, 20, CellAttributes{})
-
-	assert.Equal(t, uint16(0), b.CursorColumn())
-	assert.Equal(t, uint16(0), b.CursorLine())
-
-	b.Write('a')
-	assert.Equal(t, uint16(1), b.CursorColumn())
-	assert.Equal(t, uint16(0), b.CursorLine())
-
-	b.Write('b')
-	assert.Equal(t, uint16(2), b.CursorColumn())
-	assert.Equal(t, uint16(0), b.CursorLine())
-
-	b.Write('c')
-	assert.Equal(t, uint16(3), b.CursorColumn())
-	assert.Equal(t, uint16(0), b.CursorLine())
-
-	b.Write('d')
-	assert.Equal(t, uint16(4), b.CursorColumn())
-	assert.Equal(t, uint16(0), b.CursorLine())
-
-	b.Write('e')
-	assert.Equal(t, uint16(0), b.CursorColumn())
-	assert.Equal(t, uint16(1), b.CursorLine())
-
-	b.Write('f')
-	assert.Equal(t, uint16(1), b.CursorColumn())
-	assert.Equal(t, uint16(1), b.CursorLine())
-
-	//b.lines[0].cells[]
+	lines := b.GetVisibleLines()
+	require.Equal(t, 2, len(lines))
+	assert.Equal(t, "xxxxx", lines[0].String())
+	assert.Equal(t, "xx", lines[1].String())
 
 }
 
 func TestWritingNewLineAsFirstRuneOnWrappedLine(t *testing.T) {
 	b := NewBuffer(3, 20, CellAttributes{})
 	b.Write('a', 'b', 'c')
-	assert.Equal(t, uint16(0), b.cursorX)
+	assert.Equal(t, uint16(3), b.cursorX)
+	assert.Equal(t, uint16(0), b.cursorY)
 	b.Write(0x0a)
+	assert.Equal(t, uint16(0), b.cursorX)
+	assert.Equal(t, uint16(1), b.cursorY)
+
 	b.Write('d', 'e', 'f')
+	assert.Equal(t, uint16(3), b.cursorX)
+	assert.Equal(t, uint16(1), b.cursorY)
 	b.Write(0x0a)
 
+	assert.Equal(t, uint16(0), b.cursorX)
+	assert.Equal(t, uint16(2), b.cursorY)
+
+	require.Equal(t, 2, len(b.lines))
 	assert.Equal(t, "abc", b.lines[0].String())
 	assert.Equal(t, "def", b.lines[1].String())
-	assert.Equal(t, "", b.lines[2].String())
 
 }
 
@@ -132,7 +107,7 @@ func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
 	/*
 		|abc
 		|d
-		|_ef
+		|ef
 		|
 		|
 		|z
@@ -148,7 +123,7 @@ func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
 
 	assert.Equal(t, "abc", b.lines[0].String())
 	assert.Equal(t, "d", b.lines[1].String())
-	assert.Equal(t, "\x00ef", b.lines[2].String())
+	assert.Equal(t, "ef", b.lines[2].String())
 	assert.Equal(t, "", b.lines[3].String())
 	assert.Equal(t, "", b.lines[4].String())
 	assert.Equal(t, "z", b.lines[5].String())
@@ -261,14 +236,28 @@ func TestCarriageReturnOnWrappedLine(t *testing.T) {
 }
 
 func TestCarriageReturnOnOverWrappedLine(t *testing.T) {
+
+	/*
+		|hello
+		|secret
+		| sauce
+		|
+		|
+		|
+		|
+		|
+		|
+		|
+	*/
+
 	b := NewBuffer(6, 10, CellAttributes{})
 	b.Write([]rune("hello there!\rsecret sauce")...)
 	lines := b.GetVisibleLines()
-	require.Equal(t, 4, len(lines))
+	require.Equal(t, 3, len(lines))
 	assert.Equal(t, "hello ", lines[0].String())
 	assert.Equal(t, "secret", lines[1].String())
+	assert.True(t, b.lines[1].wrapped)
 	assert.Equal(t, " sauce", lines[2].String())
-	assert.Equal(t, "", lines[3].String())
 }
 
 func TestCarriageReturnOnLineThatDoesntExist(t *testing.T) {
@@ -380,7 +369,7 @@ func TestEraseLineAfterCursor(t *testing.T) {
 	b.MovePosition(-3, 0)
 	b.EraseLineFromCursor()
 	assert.Equal(t, "hello, this is a test", b.lines[0].String())
-	assert.Equal(t, "dele", b.lines[1].String())
+	assert.Equal(t, "dele\x00\x00\x00", b.lines[1].String())
 }
 func TestEraseDisplay(t *testing.T) {
 	b := NewBuffer(80, 5, CellAttributes{})

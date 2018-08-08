@@ -115,12 +115,6 @@ func (buffer *Buffer) ViewHeight() uint16 {
 	return buffer.viewHeight
 }
 
-func (buffer *Buffer) ensureLinesExistToRawHeight() {
-	for int(buffer.RawLine()) >= len(buffer.lines) {
-		buffer.lines = append(buffer.lines, newLine())
-	}
-}
-
 // Write will write a rune to the terminal at the position of the cursor, and increment the cursor position
 func (buffer *Buffer) Write(runes ...rune) {
 	for _, r := range runes {
@@ -131,14 +125,44 @@ func (buffer *Buffer) Write(runes ...rune) {
 			buffer.CarriageReturn()
 			continue
 		}
-		buffer.ensureLinesExistToRawHeight()
-		line := &buffer.lines[buffer.RawLine()]
-		for int(buffer.CursorColumn()) >= len(line.cells) {
-			line.cells = append(line.cells, newCell())
+		line := buffer.getCurrentLine()
+
+		if buffer.CursorColumn() >= buffer.Width() { // if we're after the line, move to next
+			buffer.cursorX = 0
+
+			if buffer.cursorY >= buffer.ViewHeight()-1 {
+				buffer.lines = append(buffer.lines, newLine())
+			} else {
+				buffer.cursorY++
+			}
+
+			//if int(buffer.RawLine()) >= len(buffer.lines) { // if we need to create a new line, set it to wrapped and write to it
+
+			newLine := buffer.getCurrentLine()
+			newLine.setWrapped(true)
+			if len(newLine.cells) == 0 {
+				newLine.cells = []Cell{Cell{}}
+			}
+			cell := &newLine.cells[buffer.CursorColumn()]
+			cell.setRune(r)
+			cell.attr = buffer.cursorAttr
+			//} else {
+			//newLine := &buffer.lines[buffer.RawLine()]
+			//}
+
+			// @todo if next line is wrapped then prepend to it and shuffle characters along line, wrapping to next if necessary
+		} else {
+
+			for int(buffer.CursorColumn()) >= len(line.cells) {
+				line.cells = append(line.cells, newCell())
+			}
+
+			cell := &line.cells[buffer.CursorColumn()]
+			cell.setRune(r)
+			cell.attr = buffer.cursorAttr
+
 		}
-		cell := &line.cells[buffer.CursorColumn()]
-		cell.setRune(r)
-		cell.attr = buffer.cursorAttr
+
 		buffer.incrementCursorPosition()
 	}
 }
@@ -147,78 +171,30 @@ func (buffer *Buffer) incrementCursorPosition() {
 
 	defer buffer.emitDisplayChange()
 
-	if buffer.CursorColumn()+1 < buffer.Width() { // if not at end of line
+	// we can increment one column past the end of the line.
+	// this is effectively the beginning of the next line, except when we \r etc.
+	if buffer.CursorColumn() < buffer.Width() { // if not at end of line
 
 		buffer.cursorX++
 
-	} else { // we're at the end of the current line
-
-		if buffer.cursorY == buffer.viewHeight-1 {
-			// if we're on the last line, we can't move the cursor down, we have to move the buffer up, i.e. add a new line
-
-			line := newLine()
-			line.setWrapped(true)
-			buffer.lines = append(buffer.lines, line)
-			buffer.cursorX = 0
-
-		} else {
-			// if we're not on the bottom line...
-
-			buffer.cursorX = 0
-			buffer.cursorY++
-
-			rawLine := int(buffer.RawLine())
-
-			line := newLine()
-			line.setWrapped(true)
-			buffer.lines = append(append(buffer.lines[:rawLine], line), buffer.lines[rawLine:]...)
-		}
+	} else {
+		panic("bad")
 	}
 }
 
 func (buffer *Buffer) CarriageReturn() {
-
 	defer buffer.emitDisplayChange()
-
-	line, err := buffer.getCurrentLine()
-	if err != nil {
-
-		fmt.Println("Failed to get new line during carriage return")
-
-		buffer.cursorX = 0
-		return
-	}
-
-	if buffer.cursorX == 0 && line.wrapped {
-		if len(line.cells) == 0 {
-			rawLine := int(buffer.RawLine())
-			buffer.lines = append(buffer.lines[:rawLine], buffer.lines[rawLine+1:]...)
-		}
-		buffer.cursorY--
-	} else {
-		buffer.cursorX = 0
-	}
+	buffer.cursorX = 0
 }
 
 func (buffer *Buffer) NewLine() {
-
 	defer buffer.emitDisplayChange()
-
-	// if we're at the beginning of a line which wrapped from the previous one, and we need a new line, we can effectively not add a new line, and set the current one to non-wrapped
-	if buffer.cursorX == 0 {
-		line, err := buffer.getCurrentLine()
-		if err == nil && line != nil && line.wrapped {
-			line.setWrapped(false)
-			return
-		}
-	}
-
-	if buffer.cursorY == buffer.viewHeight-1 {
-		buffer.ensureLinesExistToRawHeight()
+	if buffer.cursorY >= buffer.ViewHeight()-1 {
 		buffer.lines = append(buffer.lines, newLine())
 	} else {
 		buffer.cursorY++
 	}
+	buffer.cursorX = 0
 }
 
 func (buffer *Buffer) MovePosition(x int16, y int16) {
@@ -287,30 +263,36 @@ func (buffer *Buffer) Clear() {
 	buffer.SetPosition(0, 0) // do we need to set position?
 }
 
-func (buffer *Buffer) getCurrentLine() (*Line, error) {
+// creates if necessary
+func (buffer *Buffer) getCurrentLine() *Line {
 
-	if int(buffer.RawLine()) < len(buffer.lines) {
-		return &buffer.lines[buffer.RawLine()], nil
+	if buffer.cursorY >= buffer.ViewHeight() {
+		panic(fmt.Sprintf("cursor is outside of view: %d %d", buffer.cursorX, buffer.cursorY))
 	}
 
-	return nil, fmt.Errorf("Line %d does not exist", buffer.cursorY)
+	if len(buffer.lines) < int(buffer.ViewHeight()) {
+		for int(buffer.cursorY) >= len(buffer.lines) {
+			buffer.lines = append(buffer.lines, newLine())
+		}
+		return &buffer.lines[int(buffer.cursorY)]
+	}
+
+	if int(buffer.RawLine()) < len(buffer.lines) {
+		return &buffer.lines[buffer.RawLine()]
+	}
+
+	panic(fmt.Sprintf("Failed to retrieve line for %d %d", buffer.cursorX, buffer.cursorY))
 }
 
 func (buffer *Buffer) EraseLine() {
 	defer buffer.emitDisplayChange()
-	line, err := buffer.getCurrentLine()
-	if err != nil {
-		return
-	}
+	line := buffer.getCurrentLine()
 	line.cells = []Cell{}
 }
 
 func (buffer *Buffer) EraseLineToCursor() {
 	defer buffer.emitDisplayChange()
-	line, err := buffer.getCurrentLine()
-	if err != nil {
-		return
-	}
+	line := buffer.getCurrentLine()
 	for i := 0; i <= int(buffer.cursorX); i++ {
 		if i < len(line.cells) {
 			line.cells[i].erase()
@@ -320,10 +302,7 @@ func (buffer *Buffer) EraseLineToCursor() {
 
 func (buffer *Buffer) EraseLineFromCursor() {
 	defer buffer.emitDisplayChange()
-	line, err := buffer.getCurrentLine()
-	if err != nil {
-		return
-	}
+	line := buffer.getCurrentLine()
 
 	if line.wrapped && buffer.cursorX == 0 {
 		//panic("wtf")
@@ -334,8 +313,6 @@ func (buffer *Buffer) EraseLineFromCursor() {
 	if max > len(line.cells) {
 		max = len(line.cells)
 	}
-
-	fmt.Printf("Erase line from cursor, cursor is at %d\n", buffer.cursorX)
 
 	for c := int(buffer.cursorX); c < len(line.cells); c++ {
 		line.cells[c].erase()
@@ -354,10 +331,8 @@ func (buffer *Buffer) EraseDisplay() {
 
 func (buffer *Buffer) EraseDisplayFromCursor() {
 	defer buffer.emitDisplayChange()
-	line, err := buffer.getCurrentLine()
-	if err != nil {
-		return
-	}
+	line := buffer.getCurrentLine()
+
 	line.cells = line.cells[:buffer.cursorX]
 	for i := buffer.cursorY + 1; i < buffer.ViewHeight(); i++ {
 		rawLine := buffer.convertViewLineToRawLine(i)
@@ -369,10 +344,8 @@ func (buffer *Buffer) EraseDisplayFromCursor() {
 
 func (buffer *Buffer) EraseDisplayToCursor() {
 	defer buffer.emitDisplayChange()
-	line, err := buffer.getCurrentLine()
-	if err != nil {
-		return
-	}
+	line := buffer.getCurrentLine()
+
 	for i := 0; i < int(buffer.cursorX); i++ {
 		line.cells[i].erase()
 	}

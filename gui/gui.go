@@ -186,7 +186,7 @@ func (gui *GUI) Render() error {
 			gui.font.SetColor(1, 0.5, 0.5, 0.5)
 			fpsData := ""
 			if gui.config.Rendering.AlwaysRepaint {
-				fpsData = fmt.Sprintf("%d FPS", fps)
+				fpsData = fmt.Sprintf("%d FPS | %d,%d", fps, gui.terminal.GetLogicalCursorX(), gui.terminal.GetLogicalCursorY())
 			}
 			gui.font.Print(10, float32(gui.height-20), 1.5, fmt.Sprintf("%s", fpsData))
 		}
