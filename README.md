@@ -54,7 +54,7 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ## Configuration
 
-Raft looks for a config file in the following places: `~/.raft.yml`, `~/.raft/config.yml`, `~/.config/raft/config.yml` (earlier in the list prioritised).
+Raft looks for a config file in the following places: `~/.raft.yml`, `~/.config/raft.yml` (earlier in the list prioritised).
 
 Example config:
 ```
@@ -70,14 +70,15 @@ The following options are available:
 
 ## Flags
 
-| Name            | Type    | Default |Description            |
-|-----------------|---------|---------|-----------------------|
-| --debug         | bool    | False   | Enables debug logging |
-| --ignore-config | bool    | False   | Ignores user config files and uses defaults
+| Name             | Type    | Default |Description            |
+|------------------|---------|---------|-----------------------|
+| --debug          | bool    | False   | Enables debug logging |
+| --ignore-config  | bool    | False   | Ignores user config files and uses defaults
+| --always-repaint | bool    | False   | Redraw the terminal constantly, even when no changes have been made
 
 ## Keyboard Shortcuts
 
 | Operation | Key(s)              |
 |-----------|---------------------|
-| Paste     | ctrl + alt + v
+| Paste     | ctrl + shift + v
 
