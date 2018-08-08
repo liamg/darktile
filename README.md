@@ -1,6 +1,6 @@
-Raft is a terminal emulator utilising OpenGL v4.1.
+Raft is a modern terminal emulator utilising OpenGL.
 
-The project is purely a learning exercise right now.
+The project is experimental at the moment, so you probably won't want to rely on Raft as your main terminal for a while.
 
 Ensure you have your latest graphics card drivers installed before use.
 
@@ -9,10 +9,14 @@ Ensure you have your latest graphics card drivers installed before use.
 - Full unicode support
 - OpenGL rendering
 - Full customisation options
-- 256 colour support
+- True colour support
+- Support for commmon ANSI escape sequences a la xterm
+- Scrollback buffer
 - Clipboard access
 - Clickable URLs
-
+- Resize logic that wraps/unwraps lines _correctly_
+- Bullshit graphical effects
+- Multi platform support
 
 ## Build Dependencies
 
@@ -27,24 +31,24 @@ Ensure you have your latest graphics card drivers installed before use.
 | Platform | Supported  |
 |----------|------------|
 | Linux    | ✔
-| MacOSX   | 
-| Windows  | 
+| MacOSX   | ⏳
+| Windows  | ⏳
 
 
 ## Planned Features
 
 | Feature                     | Done | Notes |
 |-----------------------------|------|-------|
-| Pty allocation              | ✔    | Needs work for other platforms
+| Pty allocation              | ✔    | Needs work for OSX + Windows
 | OpenGL rendering            | ✔    |
-| Resizing/content reordering | ✔    | 
-| ANSI escape codes           |      | Most of these are handled now
+| Resizing/content reordering | ⏳    | 
+| ANSI escape codes           | ⏳    | Most of these are handled now
 | UTF-8 input                 | ✔    | 
 | UTF-8 output                | ✔    | Works as long as the font in use supports the relevant characters.
 | Copy/paste                  |      | Paste working, no mouse interaction for copy
 | Customisable colour schemes | ✔    | Complete, but the config file has no entry for this yet 
-| Config file                 | ✔    | Minimal options atm
-| Scrolling                   |      | Infinite buffer implemented, need GUI scrollbar & render updates
+| Config file                 | ⏳    | Minimal options atm
+| Scrolling                   | ⏳    | Infinite buffer implemented, need GUI scrollbar & render updates
 | Mouse interaction           |      | 
 | Sweet render effects        |      | 
 
