@@ -15,8 +15,8 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 		switch true {
 		case mods&glfw.ModControl > 0:
 
-			if mods&glfw.ModAlt > 0 {
-				// ctrl + alt +
+			if mods&glfw.ModShift > 0 {
+				// ctrl + shift +
 				switch key {
 				case glfw.KeyV:
 					// todo handle both these errors
