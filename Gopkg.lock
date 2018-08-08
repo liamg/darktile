@@ -33,7 +33,7 @@
   branch = "master"
   name = "github.com/liamg/glfont"
   packages = ["."]
-  revision = "35ed3188e0013938f3ce8689683b860e0d541a81"
+  revision = "1409aed3c17da6d28f211c5e5c52e879abb32fbf"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -78,8 +78,8 @@
     "internal/exit",
     "zapcore"
   ]
-  revision = "eeedf312bc6c57391d84767a4cd413f02a917974"
-  version = "v1.8.0"
+  revision = "ff33455a0e382e8a81d14dd7c922020b6b5e7982"
+  version = "v1.9.1"
 
 [[projects]]
   branch = "master"
@@ -88,7 +88,7 @@
     "font",
     "math/fixed"
   ]
-  revision = "cc896f830cedae125428bc9fe1b0362aa91b3fb1"
+  revision = "c73c2afc3b812cdd6385de5a50616511c4a3d458"
 
 [[projects]]
   name = "gopkg.in/yaml.v2"

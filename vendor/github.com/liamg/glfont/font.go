@@ -74,9 +74,9 @@ func (f *Font) UpdateResolution(windowWidth int, windowHeight int) {
 }
 
 //Printf draws a string to the screen, takes a list of arguments like printf
-func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{}) error {
+func (f *Font) Print(x, y float32, scale float32, text string) error {
 
-	indices := []rune(fmt.Sprintf(fs, argv...))
+	indices := []rune(text)
 
 	if len(indices) == 0 {
 		return nil
@@ -163,11 +163,11 @@ func (f *Font) Printf(x, y float32, scale float32, fs string, argv ...interface{
 }
 
 //Width returns the width of a piece of text in pixels
-func (f *Font) Width(scale float32, fs string, argv ...interface{}) float32 {
+func (f *Font) Width(scale float32, text string) float32 {
 
 	var width float32
 
-	indices := []rune(fmt.Sprintf(fs, argv...))
+	indices := []rune(text)
 
 	if len(indices) == 0 {
 		return 0
@@ -199,12 +199,12 @@ func (f *Font) Width(scale float32, fs string, argv ...interface{}) float32 {
 }
 
 //Height returns the height of a piece of text in pixels
-func (f *Font) Width(scale float32, fs string, argv ...interface{}) float32 {
+func (f *Font) Height(scale float32, text string) float32 {
 
 	var baseHeight float32
 	var height float32
 
-	indices := []rune(fmt.Sprintf(fs, argv...))
+	indices := []rune(text)
 
 	if len(indices) == 0 {
 		return 0
@@ -232,8 +232,8 @@ func (f *Font) Width(scale float32, fs string, argv ...interface{}) float32 {
 		ch := f.fontChar[runeIndex-lowChar]
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-		if ch.height * scale > height {
-			height = ch.height * scale
+		if float32(ch.height) * scale > height {
+			height = float32(ch.height) * scale
 		}
 
 	}
