@@ -410,7 +410,7 @@ func TestBackspace(t *testing.T) {
 	b.Backspace()
 	b.Write([]rune("l")...)
 	lines := b.GetVisibleLines()
-	assert.Equal(t, "hell", lines[0].String())
+	assert.Equal(t, "hell\x00", lines[0].String())
 }
 
 func TestBackspaceWithWrap(t *testing.T) {

@@ -113,6 +113,12 @@ func (gui *GUI) Render() error {
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
 	gui.window.SetCharCallback(gui.char)
+	gui.window.SetRefreshCallback(func(w *glfw.Window) {
+		select {
+		case changeChan <- true:
+		default:
+		}
+	})
 	gui.window.SetFocusCallback(func(w *glfw.Window, focused bool) {
 		if focused {
 			select {
@@ -190,12 +196,19 @@ func (gui *GUI) Render() error {
 				}
 			}
 
-			gui.font.SetColor(1, 0.5, 0.5, 0.5)
-			fpsData := ""
-			if gui.config.Rendering.AlwaysRepaint {
-				fpsData = fmt.Sprintf("%d FPS | %d,%d", fps, gui.terminal.GetLogicalCursorX(), gui.terminal.GetLogicalCursorY())
-			}
-			gui.font.Print(10, float32(gui.height-20), 1.5, fmt.Sprintf("%s", fpsData))
+			cx := int(gui.terminal.GetLogicalCursorX())
+			cy := int(gui.terminal.GetLogicalCursorY())
+			gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
+
+			_ = fps
+			/*
+				gui.font.SetColor(1, 0.5, 0.5, 0.5)
+				fpsData := ""
+				if gui.config.Rendering.AlwaysRepaint {
+					fpsData = fmt.Sprintf("%d FPS | %d,%d", fps, gui.terminal.GetLogicalCursorX(), gui.terminal.GetLogicalCursorY())
+				}
+				gui.font.Print(10, float32(gui.height-20), 1.5, fmt.Sprintf("%s", fpsData))
+			*/
 		}
 
 		if gui.config.Rendering.AlwaysRepaint || frames > 0 {
@@ -204,7 +217,7 @@ func (gui *GUI) Render() error {
 			frames--
 		}
 
-		glfw.WaitEventsTimeout(0.02) // every 20ms = 50fps on nothing changing
+		glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
 	}
 
 	gui.logger.Debugf("Stopping render...")

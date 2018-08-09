@@ -13,6 +13,7 @@ import (
 type Renderer interface {
 	SetArea(areaX int, areaY int, areaWidth int, areaHeight int)
 	DrawCell(cell *buffer.Cell, col int, row int)
+	DrawCursor(col int, row int, colour config.Colour)
 	GetTermSize() (int, int)
 }
 
@@ -54,12 +55,13 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 	rect := &rectangle{
 		colour: [3]float32{0, 0, 1},
 		points: []float32{
-			x, y + h, 0,
 			x, y, 0,
-			x + w, y, 0,
 			x, y + h, 0,
 			x + w, y + h, 0,
+
 			x + w, y, 0,
+			x, y, 0,
+			x + w, y + h, 0,
 		},
 		colourAttr: colourAttr,
 	}
@@ -151,7 +153,7 @@ func (r *OpenGLRenderer) SetFontScale(fontScale int32) {
 
 func (r *OpenGLRenderer) SetFont(font *glfont.Font) { // @todo check for monospace and return error if not?
 	r.font = font
-	r.verticalCellPadding = (0.3 * float32(r.fontScale))
+	r.verticalCellPadding = (0.25 * float32(r.fontScale))
 	r.cellWidth = font.Width(1, "X")
 	r.cellHeight = font.Height(1, "X") + (r.verticalCellPadding * 2) // vertical padding
 	r.termCols = int(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
@@ -191,9 +193,34 @@ func (r *OpenGLRenderer) generateRectangles() {
 	}
 }
 
+func (r *OpenGLRenderer) DrawCursor(col int, row int, colour config.Colour) {
+
+	rect, ok := r.rectangles[[2]int{col, row}]
+	if !ok { // probably trying to draw during resize - perhaps add a mutex?
+		return
+	}
+
+	solid := true
+
+	mode := uint32(gl.LINE_LOOP) // gl.TRIANGES for solid cursor
+	points := int32(4)
+
+	if solid {
+		mode = gl.TRIANGLES
+		points = 6
+	}
+
+	gl.UseProgram(r.program)
+	rect.setColour(colour)
+	gl.BindVertexArray(rect.vao)
+	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+	gl.DrawArrays(mode, 0, points)
+	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+}
+
 func (r *OpenGLRenderer) DrawCell(cell *buffer.Cell, col int, row int) {
 
-	if cell == nil || cell.Attr().Hidden || cell.Rune() == 0x00 {
+	if cell == nil || cell.Attr().Hidden || (cell.Rune() == 0x00) {
 		return
 	}
 
@@ -208,61 +235,34 @@ func (r *OpenGLRenderer) DrawCell(cell *buffer.Cell, col int, row int) {
 		bg = cell.Bg()
 	}
 
-	var alpha float32 = 1
-	if cell.Attr().Dim {
-		alpha = 0.5
-	}
-	r.font.SetColor(fg[0], fg[1], fg[2], alpha)
-
 	pos, ok := r.cellPositions[[2]int{col, row}]
 	if !ok {
 		panic(fmt.Sprintf("Missing position data for cell at %d,%d", col, row))
-	}
-
-	rect, ok := r.rectangles[[2]int{col, row}]
-	if !ok {
-		panic(fmt.Sprintf("Missing rectangle data for cell at %d,%d", col, row))
 	}
 
 	gl.UseProgram(r.program)
 
 	// don't bother rendering rectangles that are the same colour as the background
 	if bg != r.config.ColourScheme.Background {
+
+		rect, ok := r.rectangles[[2]int{col, row}]
+		if !ok {
+			panic(fmt.Sprintf("Missing rectangle data for cell at %d,%d", col, row))
+		}
 		rect.setColour(bg)
 		gl.BindVertexArray(rect.vao)
 		gl.DrawArrays(gl.TRIANGLES, 0, 6)
 	}
 
+	var alpha float32 = 1
+	if cell.Attr().Dim {
+		alpha = 0.5
+	}
+	r.font.SetColor(fg[0], fg[1], fg[2], alpha)
+
 	if cell.Attr().Bold { // bold means draw text again one pixel to right, so it's fatter
 		r.font.Print(pos[0]+1, pos[1], 1, string(cell.Rune()))
 	}
 	r.font.Print(pos[0], pos[1], 1, string(cell.Rune()))
-
-	/*
-		this was passed into cell
-		x := ((float32(col) * gui.charWidth) - (float32(gui.width) / 2)) + (gui.charWidth / 2)
-		y := -(((float32(row) * gui.charHeight) - (float32(gui.height) / 2)) + (gui.charHeight / 2))
-
-		this was in cell:
-		x:          x + (float32(gui.width) / 2) - float32(gui.charWidth/2),
-		y:          float32(gui.height) - (y + (float32(gui.height) / 2)) + (gui.charHeight / 2) - (gui.verticalPadding / 2),
-
-
-		and then points:
-
-		x = (x - (w / 2)) / (float32(gui.width) / 2)
-		y = (y - (h / 2)) / (float32(gui.height) / 2)
-		w = (w / float32(gui.width/2))
-		h = (h / float32(gui.height/2))
-		cell.points = []float32{
-			x, y + h, 0,
-			x, y, 0,
-			x + w, y, 0,
-			x, y + h, 0,
-			x + w, y + h, 0,
-			x + w, y, 0,
-		}
-
-	*/
 
 }
