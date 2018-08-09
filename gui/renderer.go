@@ -31,6 +31,8 @@ type OpenGLRenderer struct {
 	cellPositions       map[[2]int][2]float32
 	rectangles          map[[2]int]*rectangle
 	config              config.Config
+	colourAttr          uint32
+	program             uint32
 }
 
 type rectangle struct {
@@ -42,7 +44,7 @@ type rectangle struct {
 	points     []float32
 }
 
-func (r *OpenGLRenderer) newRectangle(x float32, y float32) *rectangle {
+func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
 
 	x = (x - float32(r.areaWidth/2)) / float32(r.areaWidth/2)
 	y = -(y - float32(r.areaHeight/2)) / float32(r.areaHeight/2)
@@ -59,6 +61,7 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32) *rectangle {
 			x + w, y + h, 0,
 			x + w, y, 0,
 		},
+		colourAttr: colourAttr,
 	}
 
 	rect.gen()
@@ -98,7 +101,7 @@ func (rect *rectangle) gen() {
 }
 
 func (rect *rectangle) setColour(colour [3]float32) {
-	if rect.colour == colour || true {
+	if rect.colour == colour {
 		return
 	}
 	rect.Free()
@@ -112,7 +115,7 @@ func (rect *rectangle) Free() {
 	gl.DeleteBuffers(1, &rect.cv)
 }
 
-func NewOpenGLRenderer(config config.Config, font *glfont.Font, fontScale int32, areaX int, areaY int, areaWidth int, areaHeight int) *OpenGLRenderer {
+func NewOpenGLRenderer(config config.Config, font *glfont.Font, fontScale int32, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
 	r := &OpenGLRenderer{
 		areaWidth:     areaWidth,
 		areaHeight:    areaHeight,
@@ -122,6 +125,8 @@ func NewOpenGLRenderer(config config.Config, font *glfont.Font, fontScale int32,
 		cellPositions: map[[2]int][2]float32{},
 		rectangles:    map[[2]int]*rectangle{},
 		config:        config,
+		colourAttr:    colourAttr,
+		program:       program,
 	}
 	r.SetFont(font)
 	return r
@@ -169,6 +174,7 @@ func (r *OpenGLRenderer) calculatePositions() {
 }
 
 func (r *OpenGLRenderer) generateRectangles() {
+	gl.UseProgram(r.program)
 	for line := 0; line < r.termRows; line++ {
 		for col := 0; col < r.termCols; col++ {
 
@@ -180,7 +186,7 @@ func (r *OpenGLRenderer) generateRectangles() {
 			// rounding to whole pixels makes everything nice
 			x := float32(float64((float32(col) * r.cellWidth)))
 			y := float32(float64((float32(line) * r.cellHeight) + (r.cellHeight)))
-			r.rectangles[[2]int{col, line}] = r.newRectangle(x, y)
+			r.rectangles[[2]int{col, line}] = r.newRectangle(x, y, r.colourAttr)
 		}
 	}
 }
@@ -218,12 +224,14 @@ func (r *OpenGLRenderer) DrawCell(cell *buffer.Cell, col int, row int) {
 		panic(fmt.Sprintf("Missing rectangle data for cell at %d,%d", col, row))
 	}
 
-	//rect.setColour(bg)
-	_ = bg
-	rect.setColour([3]float32{0, 0, 1})
+	// don't bother rendering rectangles that are the same colour as the background
+	if bg != r.config.ColourScheme.DefaultBg {
+		rect.setColour(bg)
 
-	gl.BindVertexArray(rect.vao)
-	gl.DrawArrays(gl.TRIANGLES, 0, 6)
+		gl.UseProgram(r.program)
+		gl.BindVertexArray(rect.vao)
+		gl.DrawArrays(gl.TRIANGLES, 0, 6)
+	}
 
 	if cell.Attr().Bold { // bold means draw text again one pixel to right, so it's fatter
 		r.font.Print(pos[0]+1, pos[1], 1, string(cell.Rune()))

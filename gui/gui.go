@@ -106,11 +106,22 @@ func (gui *GUI) Render() error {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
-	gui.renderer = NewOpenGLRenderer(gui.config, gui.font, gui.fontScale, 0, 0, gui.width, gui.height)
+	changeChan := make(chan bool, 1)
+	titleChan := make(chan bool, 1)
+
+	gui.renderer = NewOpenGLRenderer(gui.config, gui.font, gui.fontScale, 0, 0, gui.width, gui.height, gui.colourAttr, program)
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
 	gui.window.SetCharCallback(gui.char)
+	gui.window.SetFocusCallback(func(w *glfw.Window, focused bool) {
+		if focused {
+			select {
+			case changeChan <- true:
+			default:
+			}
+		}
+	})
 	w, h := gui.window.GetSize()
 	gui.resize(gui.window, w, h)
 
@@ -137,14 +148,11 @@ func (gui *GUI) Render() error {
 	//glfw.SwapInterval(1)
 
 	gl.ClearColor(
-		1.0, //gui.config.ColourScheme.DefaultBg[0],
+		gui.config.ColourScheme.DefaultBg[0],
 		gui.config.ColourScheme.DefaultBg[1],
 		gui.config.ColourScheme.DefaultBg[2],
 		1.0,
 	)
-
-	changeChan := make(chan bool, 1)
-	titleChan := make(chan bool, 1)
 
 	gui.terminal.AttachTitleChangeHandler(titleChan)
 	gui.terminal.AttachDisplayChangeHandler(changeChan)
@@ -191,12 +199,13 @@ func (gui *GUI) Render() error {
 			gui.font.Print(10, float32(gui.height-20), 1.5, fmt.Sprintf("%s", fpsData))
 		}
 
-		glfw.PollEvents()
-
 		if gui.config.Rendering.AlwaysRepaint || frames > 0 {
+			glfw.PollEvents()
 			frameCount++
 			gui.window.SwapBuffers()
 			frames--
+		} else {
+			glfw.WaitEventsTimeout(0.02) // every 20ms = 50fps on nothing changing
 		}
 	}
 
