@@ -146,8 +146,7 @@ func (gui *GUI) Render() error {
 
 	// stop smoothing fonts
 
-	//gl.Enable(gl.DEPTH_TEST)
-	//gl.DepthFunc(gl.LESS)
+	gl.Disable(gl.DEPTH_TEST)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
 	//glfw.SwapInterval(1)

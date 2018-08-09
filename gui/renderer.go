@@ -251,7 +251,7 @@ func (r *OpenGLRenderer) DrawCell(cell *buffer.Cell, col int, row int) {
 		}
 		rect.setColour(bg)
 		gl.BindVertexArray(rect.vao)
-		gl.DrawArrays(gl.TRIANGLES, 0, 6)
+		gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 6)
 	}
 
 	var alpha float32 = 1
