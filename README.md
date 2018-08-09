@@ -52,33 +52,27 @@ Ensure you have your latest graphics card drivers installed before use.
 | Mouse interaction           |      | 
 | Sweet render effects        |      | 
 
-## Configuration
-
-Raft looks for a config file in the following places: `~/.raft.yml`, `~/.config/raft.yml` (earlier in the list prioritised).
-
-Example config:
-```
-debug: False
-```
-
-The following options are available:
-
-| Name          | Type    | Default |Description            |
-|---------------|---------|---------|-----------------------|
-| debug         | bool    | False   | Enables debug logging 
-
-
-## Flags
-
-| Name             | Type    | Default |Description            |
-|------------------|---------|---------|-----------------------|
-| --debug          | bool    | False   | Enables debug logging |
-| --ignore-config  | bool    | False   | Ignores user config files and uses defaults
-| --always-repaint | bool    | False   | Redraw the terminal constantly, even when no changes have been made
-
 ## Keyboard Shortcuts
 
-| Operation | Key(s)              |
-|-----------|---------------------|
-| Paste     | ctrl + shift + v
+| Operation          | Key(s)              |
+|--------------------|---------------------|
+| Paste              | ctrl + shift + v
+| Interrupt (SIGINT) | ctrl + c
+| Suspend            | ctrl + s
+| Resume             | ctrl + q
+
+## Configuration
+
+Raft looks for a config file in `~/.raft.toml`, and will write one there the first time it runs, if it doesn't already exist.
+
+You can ignore the config and use defauls by specifying `--ignore-config` as a CLI flag.
+
+### Config Options/CLI Flags
+
+| CLI Flag           | Config Section      | Config Name            | Type    | Default      | Description |
+|--------------------|---------------------|------------------------|---------|--------------|-------------|
+| --debug            | _root_              | debug                  | boolean | false        | Enable debug mode, with debug logging and debug info terminal overlay.
+| --slomo            | _root_              | slomo                  | boolean | false        | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging.
+| --always-repaint   | rendering           | always_repaint         | boolean | false        | Redraw the terminal GUI constantly, even when no changes have occurred.
+
 

@@ -28,11 +28,6 @@ type Terminal struct {
 	resumeChan    chan bool
 }
 
-type Line struct {
-	Cells   []Cell
-	wrapped bool
-}
-
 type Winsize struct {
 	Height uint16
 	Width  uint16

@@ -21,6 +21,7 @@ func getConfig() config.Config {
 	}
 
 	conf := loadConfigFile()
+
 	flag.BoolVar(&conf.DebugMode, "debug", conf.DebugMode, "Enable debug logging")
 	flag.BoolVar(&conf.Slomo, "slomo", conf.Slomo, "Render in slow motion (useful for debugging)")
 	flag.BoolVar(&conf.Rendering.AlwaysRepaint, "always-repaint", conf.Rendering.AlwaysRepaint, "Always repaint the window, even when no changes have occurred")
@@ -37,8 +38,8 @@ func loadConfigFile() config.Config {
 	}
 
 	places := []string{
-		fmt.Sprintf("%s/.raft.yml", home),
-		fmt.Sprintf("%s/.config/raft.yml", home),
+		//fmt.Sprintf("%s/.config/raft.yml", home),
+		fmt.Sprintf("%s/.raft.toml", home),
 	}
 
 	for _, place := range places {
@@ -51,6 +52,13 @@ func loadConfigFile() config.Config {
 		}
 	}
 
+	if b, err := config.DefaultConfig.Encode(); err != nil {
+		fmt.Printf("Failed to encode config file: %s\n", err)
+	} else {
+		if err := ioutil.WriteFile(fmt.Sprintf("%s/.raft.toml", home), b, 0644); err != nil {
+			fmt.Printf("Failed to encode config file: %s\n", err)
+		}
+	}
 	return config.DefaultConfig
 }
 
@@ -61,7 +69,9 @@ func getLogger(conf config.Config) (*zap.SugaredLogger, error) {
 	if conf.DebugMode {
 		logger, err = zap.NewDevelopment()
 	} else {
-		logger, err = zap.NewProduction()
+		loggerConfig := zap.NewProductionConfig()
+		loggerConfig.Encoding = "console"
+		logger, err = loggerConfig.Build()
 	}
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create logger: %s", err)

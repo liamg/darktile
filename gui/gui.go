@@ -106,7 +106,7 @@ func (gui *GUI) Render() error {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
-	gui.renderer = NewOpenGLRenderer(gui.font, gui.fontScale, 0, 0, gui.width, gui.height)
+	gui.renderer = NewOpenGLRenderer(gui.config, gui.font, gui.fontScale, 0, 0, gui.width, gui.height)
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
@@ -137,7 +137,7 @@ func (gui *GUI) Render() error {
 	//glfw.SwapInterval(1)
 
 	gl.ClearColor(
-		gui.config.ColourScheme.DefaultBg[0],
+		1.0, //gui.config.ColourScheme.DefaultBg[0],
 		gui.config.ColourScheme.DefaultBg[1],
 		gui.config.ColourScheme.DefaultBg[2],
 		1.0,
