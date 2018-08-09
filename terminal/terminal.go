@@ -44,8 +44,8 @@ func New(pty *os.File, logger *zap.SugaredLogger, config config.Config) *Termina
 
 	return &Terminal{
 		buffer: buffer.NewBuffer(0, 0, buffer.CellAttributes{
-			FgColour: config.ColourScheme.DefaultFg,
-			BgColour: config.ColourScheme.DefaultBg,
+			FgColour: config.ColourScheme.Foreground,
+			BgColour: config.ColourScheme.Background,
 		}),
 		pty:           pty,
 		logger:        logger,

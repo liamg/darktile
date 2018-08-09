@@ -14,8 +14,8 @@ func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal
 		case "00", "0", "":
 			attr := terminal.buffer.CursorAttr()
 			*attr = buffer.CellAttributes{
-				FgColour: terminal.config.ColourScheme.DefaultFg,
-				BgColour: terminal.config.ColourScheme.DefaultBg,
+				FgColour: terminal.config.ColourScheme.Foreground,
+				BgColour: terminal.config.ColourScheme.Background,
 			}
 		case "1", "01":
 			terminal.buffer.CursorAttr().Bold = true
@@ -42,73 +42,73 @@ func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal
 		case "28":
 			terminal.buffer.CursorAttr().Hidden = false
 		case "39":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.DefaultFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.Foreground
 		case "30":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.BlackFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.Black
 		case "31":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.RedFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.Red
 		case "32":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.GreenFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.Green
 		case "33":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.YellowFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.Yellow
 		case "34":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.BlueFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.Blue
 		case "35":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.MagentaFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.Magenta
 		case "36":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.CyanFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.Cyan
 		case "37":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.WhiteFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.White
 		case "90":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.DarkGreyFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.DarkGrey
 		case "91":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightRedFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightRed
 		case "92":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightGreenFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightGreen
 		case "93":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightYellowFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightYellow
 		case "94":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightBlueFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightBlue
 		case "95":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightMagentaFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightMagenta
 		case "96":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightCyanFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.LightCyan
 		case "97":
-			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.WhiteFg
+			terminal.buffer.CursorAttr().FgColour = terminal.config.ColourScheme.White
 		case "49":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.DefaultBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.Background
 		case "40":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.BlackBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.Black
 		case "41":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.RedBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.Red
 		case "42":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.GreenBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.Green
 		case "43":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.YellowBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.Yellow
 		case "44":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.BlueBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.Blue
 		case "45":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.MagentaBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.Magenta
 		case "46":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.CyanBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.Cyan
 		case "47":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.WhiteBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.White
 		case "100":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.DarkGreyBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.DarkGrey
 		case "101":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightRedBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightRed
 		case "102":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightGreenBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightGreen
 		case "103":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightYellowBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightYellow
 		case "104":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightBlueBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightBlue
 		case "105":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightMagentaBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightMagenta
 		case "106":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightCyanBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.LightCyan
 		case "107":
-			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.WhiteBg
+			terminal.buffer.CursorAttr().BgColour = terminal.config.ColourScheme.White
 		default:
 			return fmt.Errorf("Unknown SGR control sequence: (ESC[%s%sm)", param, intermediate)
 		}

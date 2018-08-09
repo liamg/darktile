@@ -227,7 +227,7 @@ func (r *OpenGLRenderer) DrawCell(cell *buffer.Cell, col int, row int) {
 	gl.UseProgram(r.program)
 
 	// don't bother rendering rectangles that are the same colour as the background
-	if bg != r.config.ColourScheme.DefaultBg {
+	if bg != r.config.ColourScheme.Background {
 		rect.setColour(bg)
 		gl.BindVertexArray(rect.vao)
 		gl.DrawArrays(gl.TRIANGLES, 0, 6)

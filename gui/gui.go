@@ -147,9 +147,9 @@ func (gui *GUI) Render() error {
 	//glfw.SwapInterval(1)
 
 	gl.ClearColor(
-		gui.config.ColourScheme.DefaultBg[0],
-		gui.config.ColourScheme.DefaultBg[1],
-		gui.config.ColourScheme.DefaultBg[2],
+		gui.config.ColourScheme.Background[0],
+		gui.config.ColourScheme.Background[1],
+		gui.config.ColourScheme.Background[2],
 		1.0,
 	)
 
