@@ -11,6 +11,69 @@ var csiSequenceMap = map[rune]csiSequenceHandler{
 	'P': csiDeleteHandler,
 	'J': csiEraseInDisplayHandler,
 	'K': csiEraseInLineHandler,
+	'h': csiSetModeHandler,
+	'l': csiResetModeHandler,
+	'd': csiLinePositionAbsolute,
+	't': csiWindowManipulation,
+	'X': csiEraseCharactersHandler,
+}
+
+func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
+	switch modeStr {
+	case "?1":
+		terminal.modes.ApplicationCursorKeys = enabled
+	case "?12":
+		terminal.modes.BlinkingCursor = enabled
+	case "?25":
+		terminal.modes.ShowCursor = enabled
+	default:
+		return fmt.Errorf("Unsupported CSI %sl code", modeStr)
+	}
+
+	return nil
+}
+
+func csiEraseCharactersHandler(params []string, intermediate string, terminal *Terminal) error {
+	count := 1
+	if len(params) > 0 {
+		var err error
+		count, err = strconv.Atoi(params[0])
+		if err != nil {
+			count = 1
+		}
+	}
+
+	terminal.buffer.EraseCharacters(count)
+
+	return nil
+}
+
+func csiResetModeHandler(params []string, intermediate string, terminal *Terminal) error {
+	return csiSetMode(strings.Join(params, ""), false, terminal)
+}
+
+func csiSetModeHandler(params []string, intermediate string, terminal *Terminal) error {
+	return csiSetMode(strings.Join(params, ""), true, terminal)
+}
+
+func csiWindowManipulation(params []string, intermediate string, terminal *Terminal) error {
+	// @todo this
+	return nil
+}
+
+func csiLinePositionAbsolute(params []string, intermediate string, terminal *Terminal) error {
+	col := 1
+	if len(params) > 0 {
+		var err error
+		col, err = strconv.Atoi(params[0])
+		if err != nil {
+			col = 1
+		}
+	}
+
+	terminal.buffer.SetPosition(uint16(col), terminal.buffer.CursorLine())
+
+	return nil
 }
 
 type csiSequenceHandler func(params []string, intermediate string, terminal *Terminal) error
@@ -153,19 +216,7 @@ CSI:
 			terminal.buffer.SetPosition(uint16(x-1), uint16(y-1))
 
 		default:
-			switch param + intermediate + string(final) {
-			case "?25h":
-				terminal.buffer.ShowCursor()
-			case "?25l":
-				terminal.buffer.HideCursor()
-			case "?12h":
-				terminal.buffer.SetCursorBlink(true)
-			case "?12l":
-				terminal.buffer.SetCursorBlink(false)
-			default:
-				err = fmt.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
-			}
-
+			err = fmt.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
 		}
 	}
 	terminal.logger.Debugf("Received CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))

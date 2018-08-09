@@ -26,6 +26,13 @@ type Terminal struct {
 	titleHandlers []chan bool
 	pauseChan     chan bool
 	resumeChan    chan bool
+	modes         Modes
+}
+
+type Modes struct {
+	ShowCursor            bool
+	ApplicationCursorKeys bool
+	BlinkingCursor        bool
 }
 
 type Winsize struct {
@@ -53,6 +60,9 @@ func New(pty *os.File, logger *zap.SugaredLogger, config config.Config) *Termina
 		titleHandlers: []chan bool{},
 		pauseChan:     make(chan bool, 1),
 		resumeChan:    make(chan bool, 1),
+		modes: Modes{
+			ShowCursor: true,
+		},
 	}
 }
 
@@ -66,6 +76,10 @@ func (terminal *Terminal) AttachDisplayChangeHandler(handler chan bool) {
 
 func (terminal *Terminal) AttachTitleChangeHandler(handler chan bool) {
 	terminal.titleHandlers = append(terminal.titleHandlers, handler)
+}
+
+func (terminal *Terminal) Modes() Modes {
+	return terminal.modes
 }
 
 func (terminal *Terminal) emitTitleChange() {

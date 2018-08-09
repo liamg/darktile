@@ -232,18 +232,6 @@ func (buffer *Buffer) MovePosition(x int16, y int16) {
 	buffer.SetPosition(toX, toY)
 }
 
-func (buffer *Buffer) ShowCursor() {
-
-}
-
-func (buffer *Buffer) HideCursor() {
-
-}
-
-func (buffer *Buffer) SetCursorBlink(enabled bool) {
-
-}
-
 func (buffer *Buffer) SetPosition(col uint16, line uint16) {
 	defer buffer.emitDisplayChange()
 	if col >= buffer.ViewWidth() {
@@ -339,11 +327,31 @@ func (buffer *Buffer) EraseDisplay() {
 	}
 }
 
+func (buffer *Buffer) EraseCharacters(n int) {
+	defer buffer.emitDisplayChange()
+
+	line := buffer.getCurrentLine()
+
+	max := int(buffer.cursorX) + n
+	if max > len(line.cells) {
+		max = len(line.cells)
+	}
+
+	for i := int(buffer.cursorX); i < max; i++ {
+		line.cells[i].erase()
+	}
+}
+
 func (buffer *Buffer) EraseDisplayFromCursor() {
 	defer buffer.emitDisplayChange()
 	line := buffer.getCurrentLine()
 
-	line.cells = line.cells[:buffer.cursorX]
+	max := int(buffer.cursorX)
+	if max > len(line.cells) {
+		max = len(line.cells)
+	}
+
+	line.cells = line.cells[:max]
 	for i := buffer.cursorY + 1; i < buffer.ViewHeight(); i++ {
 		rawLine := buffer.convertViewLineToRawLine(i)
 		if int(rawLine) < len(buffer.lines) {

@@ -195,9 +195,11 @@ func (gui *GUI) Render() error {
 				}
 			}
 
-			cx := int(gui.terminal.GetLogicalCursorX())
-			cy := int(gui.terminal.GetLogicalCursorY())
-			gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
+			if gui.terminal.Modes().ShowCursor {
+				cx := int(gui.terminal.GetLogicalCursorX())
+				cy := int(gui.terminal.GetLogicalCursorY())
+				gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
+			}
 
 			_ = fps
 			/*
