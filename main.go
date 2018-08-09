@@ -88,7 +88,7 @@ func main() {
 	}
 
 	logger.Infof("Creating terminal...")
-	terminal := terminal.New(pty, logger, conf.ColourScheme)
+	terminal := terminal.New(pty, logger, conf)
 
 	g := gui.New(conf, terminal, logger)
 	if err := g.Render(); err != nil {

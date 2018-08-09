@@ -19,8 +19,8 @@ type CellAttributes struct {
 func (terminal *Terminal) NewCell() Cell {
 	return Cell{
 		attr: CellAttributes{
-			FgColour: terminal.colourScheme.DefaultFg,
-			BgColour: terminal.colourScheme.DefaultBg,
+			FgColour: terminal.config.ColourScheme.DefaultFg,
+			BgColour: terminal.config.ColourScheme.DefaultBg,
 		},
 	}
 }
