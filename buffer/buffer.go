@@ -183,21 +183,28 @@ func (buffer *Buffer) incrementCursorPosition() {
 }
 
 func (buffer *Buffer) Backspace() {
+
 	if buffer.cursorX == 0 {
 		line := buffer.getCurrentLine()
 		if line.wrapped {
 			buffer.MovePosition(int16(buffer.Width()-1), -1)
+			line := buffer.getCurrentLine()
 			if int(buffer.cursorX) < len(line.cells) {
+				fmt.Printf("Deleting (end) %s\n", string(line.cells[buffer.cursorX].Rune()))
 				line.cells[buffer.cursorX].erase()
 			}
 		} else {
 			//@todo ring bell or whatever
+			fmt.Println("BELL?")
 		}
 	} else {
 		buffer.MovePosition(-1, 0)
 		line := buffer.getCurrentLine()
 		if int(buffer.cursorX) < len(line.cells) {
+			fmt.Printf("Deleting %s\n", string(line.cells[buffer.cursorX].Rune()))
 			line.cells[buffer.cursorX].erase()
+		} else {
+			fmt.Println("Wat?")
 		}
 	}
 }
@@ -323,11 +330,6 @@ func (buffer *Buffer) EraseLineToCursor() {
 func (buffer *Buffer) EraseLineFromCursor() {
 	defer buffer.emitDisplayChange()
 	line := buffer.getCurrentLine()
-
-	if line.wrapped && buffer.cursorX == 0 {
-		//panic("wtf")
-		return
-	}
 
 	max := int(buffer.cursorX)
 	if max > len(line.cells) {

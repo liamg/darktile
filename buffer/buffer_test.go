@@ -403,3 +403,30 @@ func TestEraseDisplayFromCursor(t *testing.T) {
 	assert.Equal(t, "asd", lines[1].String())
 	assert.Equal(t, "", lines[2].String())
 }
+func TestBackspace(t *testing.T) {
+	b := NewBuffer(80, 5, CellAttributes{})
+	b.Write([]rune("hello")...)
+	b.Backspace()
+	b.Backspace()
+	b.Write([]rune("l")...)
+	lines := b.GetVisibleLines()
+	assert.Equal(t, "hell", lines[0].String())
+}
+
+func TestBackspaceWithWrap(t *testing.T) {
+	b := NewBuffer(10, 5, CellAttributes{})
+	b.Write([]rune("hellohellohello")...)
+	b.Backspace()
+	b.Backspace()
+	b.Backspace()
+	b.Backspace()
+	b.Backspace()
+	b.Backspace()
+	b.Backspace()
+	b.Backspace()
+	b.Backspace()
+	b.Backspace()
+	lines := b.GetVisibleLines()
+	assert.Equal(t, "hello\x00\x00\x00\x00\x00", lines[0].String())
+	assert.Equal(t, "\x00\x00\x00\x00\x00", lines[1].String())
+}

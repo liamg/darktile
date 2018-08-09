@@ -36,7 +36,7 @@ func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredL
 		width:     600,
 		height:    300,
 		terminal:  terminal,
-		fontScale: 13.0,
+		fontScale: 15.0,
 	}
 }
 
@@ -100,9 +100,8 @@ func (gui *GUI) Render() error {
 	gl.BindFragDataLocation(program, 0, gl.Str("outColour\x00"))
 
 	gui.logger.Debugf("Loading font...")
-	//if err := gui.loadFont("/usr/share/fonts/nerd-fonts-complete/ttf/Roboto Mono Nerd Font Complete.ttf", 12); err != nil {
-
-	if err := gui.loadFont("./fonts/Roboto.ttf"); err != nil {
+	if err := gui.loadFont("./fonts/envypn-15.ttf"); err != nil {
+		//if err := gui.loadFont("./fonts/Roboto.ttf"); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
@@ -200,13 +199,12 @@ func (gui *GUI) Render() error {
 		}
 
 		if gui.config.Rendering.AlwaysRepaint || frames > 0 {
-			glfw.PollEvents()
-			frameCount++
 			gui.window.SwapBuffers()
+			frameCount++
 			frames--
-		} else {
-			glfw.WaitEventsTimeout(0.02) // every 20ms = 50fps on nothing changing
 		}
+
+		glfw.WaitEventsTimeout(0.02) // every 20ms = 50fps on nothing changing
 	}
 
 	gui.logger.Debugf("Stopping render...")
@@ -229,8 +227,8 @@ func (gui *GUI) createWindow(width int, height int) (*glfw.Window, error) {
 	}
 
 	glfw.WindowHint(glfw.Resizable, glfw.True)
-	glfw.WindowHint(glfw.ContextVersionMajor, 4) // OR 2
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
+	glfw.WindowHint(glfw.ContextVersionMajor, 3) // OR 2
+	glfw.WindowHint(glfw.ContextVersionMinor, 2)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 

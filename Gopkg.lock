@@ -2,6 +2,12 @@
 
 
 [[projects]]
+  name = "github.com/BurntSushi/toml"
+  packages = ["."]
+  revision = "b26d9c308763d68093482582cea63d69be07a0f0"
+  version = "v0.3.0"
+
+[[projects]]
   name = "github.com/davecgh/go-spew"
   packages = ["spew"]
   revision = "346938d642f2ec3594ed81d874461961cd0faa76"
@@ -33,7 +39,7 @@
   branch = "master"
   name = "github.com/liamg/glfont"
   packages = ["."]
-  revision = "1409aed3c17da6d28f211c5e5c52e879abb32fbf"
+  revision = "d24783da55c81fd75c8e7c0897ee3f7d336f8b44"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -90,15 +96,9 @@
   ]
   revision = "c73c2afc3b812cdd6385de5a50616511c4a3d458"
 
-[[projects]]
-  name = "gopkg.in/yaml.v2"
-  packages = ["."]
-  revision = "5420a8b6744d3b0345ab293f6fcba19c978f1183"
-  version = "v2.2.1"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2ba92df49de7d74abb3a647555d24d1d872cfee4812e7250fa7d49fb23872053"
+  inputs-digest = "0b3960a1d15048ccc49c41464fdb2346062f791ca53d614d4535d2930d4969f5"
   solver-name = "gps-cdcl"
   solver-version = 1

@@ -224,11 +224,11 @@ func (r *OpenGLRenderer) DrawCell(cell *buffer.Cell, col int, row int) {
 		panic(fmt.Sprintf("Missing rectangle data for cell at %d,%d", col, row))
 	}
 
+	gl.UseProgram(r.program)
+
 	// don't bother rendering rectangles that are the same colour as the background
 	if bg != r.config.ColourScheme.DefaultBg {
 		rect.setColour(bg)
-
-		gl.UseProgram(r.program)
 		gl.BindVertexArray(rect.vao)
 		gl.DrawArrays(gl.TRIANGLES, 0, 6)
 	}
