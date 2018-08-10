@@ -18,6 +18,15 @@ Ensure you have your latest graphics card drivers installed before use.
 - Bullshit graphical effects
 - Multi platform support
 
+## What isn't supported?
+
+- Suspend/Continue (^S, ^Q). This is archaic bullshit that annoys more people than it helps. Basically:
+
+<span style="display:block;text-align:center">
+![Overheating](https://imgs.xkcd.com/comics/workflow.png)
+</span>
+
+
 ## Build Dependencies
 
 - Go 1.10.3+

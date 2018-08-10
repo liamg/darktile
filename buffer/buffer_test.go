@@ -1,6 +1,7 @@
 package buffer
 
 import (
+	"strings"
 	"testing"
 	"time"
 
@@ -268,11 +269,6 @@ func TestCarriageReturnOnLineThatDoesntExist(t *testing.T) {
 	assert.Equal(t, uint16(3), b.cursorY)
 }
 
-func TestResizeView(t *testing.T) {
-	b := NewBuffer(80, 20, CellAttributes{})
-	b.ResizeView(40, 10)
-}
-
 func TestGetCell(t *testing.T) {
 	b := NewBuffer(80, 20, CellAttributes{})
 	b.Write([]rune("Hello\r\nthere\r\nsomething...")...)
@@ -430,3 +426,84 @@ func TestBackspaceWithWrap(t *testing.T) {
 	assert.Equal(t, "hello\x00\x00\x00\x00\x00", lines[0].String())
 	assert.Equal(t, "\x00\x00\x00\x00\x00", lines[1].String())
 }
+
+func TestHorizontalResizeView(t *testing.T) {
+	b := NewBuffer(80, 10, CellAttributes{})
+
+	// 60 characters
+	b.Write([]rune(
+		`hellohellohellohellohellohellohellohellohellohellohellohello
+goodbyegoodbye`)...)
+
+	require.Equal(t, uint16(14), b.cursorX)
+	require.Equal(t, uint16(1), b.cursorY)
+
+	b.ResizeView(40, 10)
+
+	expected := `hellohellohellohellohellohellohellohello
+hellohellohellohello
+goodbyegoodbye`
+
+	require.Equal(t, uint16(14), b.cursorX)
+	require.Equal(t, uint16(2), b.cursorY)
+
+	lines := b.GetVisibleLines()
+	strs := []string{}
+	for _, l := range lines {
+		strs = append(strs, l.String())
+	}
+	require.Equal(t, expected, strings.Join(strs, "\n"))
+
+	b.ResizeView(20, 10)
+
+	expected = `hellohellohellohello
+hellohellohellohello
+hellohellohellohello
+goodbyegoodbye`
+
+	lines = b.GetVisibleLines()
+	strs = []string{}
+	for _, l := range lines {
+		strs = append(strs, l.String())
+	}
+	require.Equal(t, expected, strings.Join(strs, "\n"))
+
+	b.ResizeView(10, 10)
+
+	expected = `hellohello
+hellohello
+hellohello
+hellohello
+hellohello
+hellohello
+goodbyegoo
+dbye`
+
+	lines = b.GetVisibleLines()
+	strs = []string{}
+	for _, l := range lines {
+		strs = append(strs, l.String())
+	}
+	require.Equal(t, expected, strings.Join(strs, "\n"))
+
+	b.ResizeView(80, 20)
+
+	expected = `hellohellohellohellohellohellohellohellohellohellohellohello
+goodbyegoodbye`
+
+	lines = b.GetVisibleLines()
+	strs = []string{}
+	for _, l := range lines {
+		strs = append(strs, l.String())
+	}
+	require.Equal(t, expected, strings.Join(strs, "\n"))
+
+	require.Equal(t, uint16(1), b.cursorY)
+	require.Equal(t, uint16(14), b.cursorX)
+}
+
+/*
+hellohellohellohellohellohellohellohellohellohellohellohello
+goodbyegoo
+dbye
+*/

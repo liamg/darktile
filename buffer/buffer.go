@@ -270,7 +270,7 @@ func (buffer *Buffer) Clear() {
 func (buffer *Buffer) getCurrentLine() *Line {
 
 	if buffer.cursorY >= buffer.ViewHeight() {
-		panic(fmt.Sprintf("cursor is outside of view: %d %d", buffer.cursorX, buffer.cursorY))
+		panic(fmt.Sprintf("cursor is outside of view: y=%d h=%d", buffer.cursorY, buffer.viewHeight))
 	}
 
 	if len(buffer.lines) < int(buffer.ViewHeight()) {
@@ -377,8 +377,96 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 
 func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 	defer buffer.emitDisplayChange()
+
+	if buffer.viewHeight == 0 {
+		buffer.viewWidth = width
+		buffer.viewHeight = height
+		return
+	}
+
+	// @todo scroll to bottom on resize
+	line := buffer.getCurrentLine()
+	cXFromEndOfLine := len(line.cells) - int(buffer.cursorX+1)
+
+	if width < buffer.viewWidth { // wrap lines if we're shrinking
+		for i := 0; i < len(buffer.lines); i++ {
+			line := &buffer.lines[i]
+			//line.Cleanse()
+			if len(line.cells) > int(width) { // only try wrapping a line if it's too long
+				sillyCells := line.cells[width:] // grab the cells we need to wrap
+				line.cells = line.cells[:width]
+
+				// we need to move cut cells to the next line
+				// if the next line is wrapped anyway, we can push them onto the beginning of that line
+				// otherwise, we need add a new wrapped line
+				if i+1 < len(buffer.lines) {
+					nextLine := &buffer.lines[i+1]
+					if nextLine.wrapped {
+						nextLine.cells = append(sillyCells, nextLine.cells...)
+						continue
+					}
+				}
+
+				newLine := newLine()
+				newLine.setWrapped(true)
+				newLine.cells = sillyCells
+				after := append([]Line{newLine}, buffer.lines[i+1:]...)
+				buffer.lines = append(buffer.lines[:i+1], after...)
+
+			}
+		}
+	} else if width > buffer.viewWidth { // unwrap lines if we're growing
+		for i := 0; i < len(buffer.lines)-1; i++ {
+			line := &buffer.lines[i]
+			//line.Cleanse()
+			for offset := 1; i+offset < len(buffer.lines); offset++ {
+				nextLine := &buffer.lines[i+offset]
+				//nextLine.Cleanse()
+				if !nextLine.wrapped { // if the next line wasn't wrapped, we don't need to move characters back to this line
+					break
+				}
+				spaceOnLine := int(width) - len(line.cells)
+				if spaceOnLine <= 0 { // no more space to unwrap
+					break
+				}
+				moveCount := spaceOnLine
+				if moveCount > len(nextLine.cells) {
+					moveCount = len(nextLine.cells)
+				}
+				line.cells = append(line.cells, nextLine.cells[:moveCount]...)
+				if moveCount == len(nextLine.cells) {
+					// if we unwrapped all cells off the next line, delete it
+					buffer.lines = append(buffer.lines[:i+offset], buffer.lines[i+offset+1:]...)
+
+					offset--
+
+				} else {
+					// otherwise just remove the characters we moved up a line
+					nextLine.cells = nextLine.cells[moveCount:]
+				}
+			}
+
+		}
+	}
+
+	// @todo handle vertical resize?
+
+	if buffer.Height() < int(buffer.viewHeight) {
+		// we might need to move back up if the buffer is now smaller
+		if int(buffer.cursorY) < buffer.Height()-1 {
+			buffer.cursorY = uint16(buffer.Height() - 1)
+		} else {
+			buffer.cursorY = uint16(buffer.Height() - 1)
+		}
+	} else {
+		buffer.cursorY = buffer.viewHeight - 1
+	}
+
 	buffer.viewWidth = width
 	buffer.viewHeight = height
 
-	// @todo wrap/unwrap
+	// position cursorX
+	line = buffer.getCurrentLine()
+	buffer.cursorX = uint16((len(line.cells) - cXFromEndOfLine) - 1)
+
 }

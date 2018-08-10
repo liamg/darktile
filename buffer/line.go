@@ -12,6 +12,21 @@ func newLine() Line {
 	}
 }
 
+// Cleanse removes null bytes from the end of the row
+func (line *Line) Cleanse() {
+	cut := 0
+	for i := len(line.cells) - 1; i >= 0; i-- {
+		if line.cells[i].r != 0 {
+			break
+		}
+		cut++
+	}
+	if cut == 0 {
+		return
+	}
+	line.cells = line.cells[:len(line.cells)-cut]
+}
+
 func (line *Line) setWrapped(wrapped bool) {
 	line.wrapped = wrapped
 }
