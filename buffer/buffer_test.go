@@ -422,9 +422,9 @@ func TestBackspaceWithWrap(t *testing.T) {
 	b.Backspace()
 	b.Backspace()
 	b.Backspace()
+	b.EraseLineFromCursor()
 	lines := b.GetVisibleLines()
 	assert.Equal(t, "hello\x00\x00\x00\x00\x00", lines[0].String())
-	assert.Equal(t, "\x00\x00\x00\x00\x00", lines[1].String())
 }
 
 func TestHorizontalResizeView(t *testing.T) {

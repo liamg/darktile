@@ -12,7 +12,7 @@ import (
 
 type Renderer interface {
 	SetArea(areaX int, areaY int, areaWidth int, areaHeight int)
-	DrawCell(cell *buffer.Cell, col int, row int)
+	DrawCell(cell buffer.Cell, col int, row int)
 	DrawCursor(col int, row int, colour config.Colour)
 	GetTermSize() (int, int)
 }
@@ -218,9 +218,9 @@ func (r *OpenGLRenderer) DrawCursor(col int, row int, colour config.Colour) {
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 }
 
-func (r *OpenGLRenderer) DrawCell(cell *buffer.Cell, col int, row int) {
+func (r *OpenGLRenderer) DrawCell(cell buffer.Cell, col int, row int) {
 
-	if cell == nil || cell.Attr().Hidden || (cell.Rune() == 0x00) {
+	if cell.Attr().Hidden || (cell.Rune() == 0x00) {
 		return
 	}
 

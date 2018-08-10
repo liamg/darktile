@@ -66,6 +66,32 @@ func New(pty *os.File, logger *zap.SugaredLogger, config config.Config) *Termina
 	}
 }
 
+func (terminal *Terminal) GetScrollOffset() uint {
+	return terminal.buffer.GetScrollOffset()
+}
+
+func (terminal *Terminal) ScrollDown(lines uint16) {
+	terminal.buffer.ScrollDown(lines)
+}
+
+func (terminal *Terminal) ScrollUp(lines uint16) {
+	terminal.buffer.ScrollUp(lines)
+}
+
+func (terminal *Terminal) ScrollPageDown() {
+	terminal.buffer.ScrollPageDown()
+}
+func (terminal *Terminal) ScrollPageUp() {
+	terminal.buffer.ScrollPageUp()
+}
+func (terminal *Terminal) ScrollToEnd() {
+	terminal.buffer.ScrollToEnd()
+}
+
+func (terminal *Terminal) GetVisibleLines() []buffer.Line {
+	return terminal.buffer.GetVisibleLines()
+}
+
 func (terminal *Terminal) GetCell(col int, row int) *buffer.Cell {
 	return terminal.buffer.GetCell(col, row)
 }

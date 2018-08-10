@@ -66,6 +66,15 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 }
 
+func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
+	//fmt.Printf("Scroll x=%f y=%f\n", xoff, yoff)
+	if yoff > 0 {
+		gui.terminal.ScrollUp(1)
+	} else {
+		gui.terminal.ScrollDown(1)
+	}
+}
+
 func (gui *GUI) getTermSize() (int, int) {
 	if gui.renderer == nil {
 		return 0, 0
@@ -113,6 +122,7 @@ func (gui *GUI) Render() error {
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
 	gui.window.SetCharCallback(gui.char)
+	gui.window.SetScrollCallback(gui.glfwScrollCallback)
 	gui.window.SetRefreshCallback(func(w *glfw.Window) {
 		select {
 		case changeChan <- true:
@@ -187,17 +197,18 @@ func (gui *GUI) Render() error {
 		if gui.config.Rendering.AlwaysRepaint || frames > 0 {
 
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-			cols, rows := gui.getTermSize()
 
-			for row := 0; row < rows; row++ {
-				for col := 0; col < cols; col++ {
-					gui.renderer.DrawCell(gui.terminal.GetCell(col, row), col, row)
+			lines := gui.terminal.GetVisibleLines()
+			for y := 0; y < len(lines); y++ {
+				for x, cell := range lines[y].Cells() {
+					gui.renderer.DrawCell(cell, x, y)
 				}
 			}
 
 			if gui.terminal.Modes().ShowCursor {
 				cx := int(gui.terminal.GetLogicalCursorX())
 				cy := int(gui.terminal.GetLogicalCursorY())
+				cy = int(cy) + int(gui.terminal.GetScrollOffset())
 				gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
 			}
 

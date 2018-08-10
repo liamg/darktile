@@ -14,6 +14,7 @@ type Buffer struct {
 	displayChangeHandlers []chan bool
 	savedX                uint16
 	savedY                uint16
+	scrollLinesFromBottom uint
 }
 
 // NewBuffer creates a new terminal buffer
@@ -26,6 +27,49 @@ func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 	}
 	b.ResizeView(viewCols, viewLines)
 	return b
+}
+
+func (buffer *Buffer) GetScrollOffset() uint {
+	return buffer.scrollLinesFromBottom
+}
+
+func (buffer *Buffer) ScrollDown(lines uint16) {
+
+	if buffer.Height() < int(buffer.ViewHeight()) {
+		return
+	}
+
+	defer buffer.emitDisplayChange()
+	if uint(lines) > buffer.scrollLinesFromBottom {
+		lines = uint16(buffer.scrollLinesFromBottom)
+	}
+	buffer.scrollLinesFromBottom -= uint(lines)
+}
+
+func (buffer *Buffer) ScrollUp(lines uint16) {
+
+	if buffer.Height() < int(buffer.ViewHeight()) {
+		return
+	}
+
+	defer buffer.emitDisplayChange()
+
+	if uint(lines)+buffer.scrollLinesFromBottom >= (uint(buffer.Height()) - uint(buffer.ViewHeight())) {
+		buffer.scrollLinesFromBottom = uint(buffer.Height()) - uint(buffer.ViewHeight())
+	} else {
+		buffer.scrollLinesFromBottom += uint(lines)
+	}
+}
+
+func (buffer *Buffer) ScrollPageDown() {
+	buffer.ScrollDown(buffer.viewHeight)
+}
+func (buffer *Buffer) ScrollPageUp() {
+	buffer.ScrollUp(buffer.viewHeight)
+}
+func (buffer *Buffer) ScrollToEnd() {
+	defer buffer.emitDisplayChange()
+	buffer.scrollLinesFromBottom = 0
 }
 
 func (buffer *Buffer) SaveCursor() {
@@ -117,6 +161,10 @@ func (buffer *Buffer) ViewHeight() uint16 {
 
 // Write will write a rune to the terminal at the position of the cursor, and increment the cursor position
 func (buffer *Buffer) Write(runes ...rune) {
+
+	// scroll to bottom on input
+	buffer.scrollLinesFromBottom = 0
+
 	for _, r := range runes {
 		if r == 0x0a {
 			buffer.NewLine()
@@ -249,8 +297,9 @@ func (buffer *Buffer) SetPosition(col uint16, line uint16) {
 func (buffer *Buffer) GetVisibleLines() []Line {
 	lines := []Line{}
 	for i := buffer.Height() - int(buffer.ViewHeight()); i < buffer.Height(); i++ {
-		if i >= 0 && i < len(buffer.lines) {
-			lines = append(lines, buffer.lines[i])
+		y := i - int(buffer.scrollLinesFromBottom)
+		if y >= 0 && y < len(buffer.lines) {
+			lines = append(lines, buffer.lines[y])
 		}
 	}
 	return lines

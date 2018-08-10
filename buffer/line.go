@@ -12,6 +12,10 @@ func newLine() Line {
 	}
 }
 
+func (line *Line) Cells() []Cell {
+	return line.cells
+}
+
 // Cleanse removes null bytes from the end of the row
 func (line *Line) Cleanse() {
 	cut := 0
