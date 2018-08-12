@@ -67,8 +67,6 @@ Ensure you have your latest graphics card drivers installed before use.
 |--------------------|---------------------|
 | Paste              | ctrl + shift + v
 | Interrupt (SIGINT) | ctrl + c
-| Suspend            | ctrl + s
-| Resume             | ctrl + q
 
 ## Configuration
 

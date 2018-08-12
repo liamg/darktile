@@ -14,20 +14,6 @@ var escapeSequenceMap = map[rune]escapeSequenceHandler{
 	0x1b: ansiHandler,
 }
 
-func (terminal *Terminal) Suspend() {
-	select {
-	case terminal.pauseChan <- true:
-	default:
-	}
-}
-
-func (terminal *Terminal) Resume() {
-	select {
-	case terminal.resumeChan <- true:
-	default:
-	}
-}
-
 func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
 
 	// https://en.wikipedia.org/wiki/ANSI_escape_code
