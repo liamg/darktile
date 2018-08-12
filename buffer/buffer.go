@@ -15,6 +15,8 @@ type Buffer struct {
 	savedX                uint16
 	savedY                uint16
 	scrollLinesFromBottom uint
+	topMargin             uint // see DECSTBM docs - this is for scrollable regions
+	bottomMargin          uint // see DECSTBM docs - this is for scrollable regions
 }
 
 // NewBuffer creates a new terminal buffer
@@ -27,6 +29,11 @@ func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 	}
 	b.ResizeView(viewCols, viewLines)
 	return b
+}
+
+func (buffer *Buffer) SetMargins(top uint, bottom uint) {
+	buffer.topMargin = top
+	buffer.bottomMargin = bottom
 }
 
 func (buffer *Buffer) GetScrollOffset() uint {
@@ -536,4 +543,5 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 	line = buffer.getCurrentLine()
 	buffer.cursorX = uint16((len(line.cells) - cXFromEndOfLine) - 1)
 
+	buffer.SetMargins(0, uint(buffer.viewHeight-1))
 }

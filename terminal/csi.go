@@ -16,6 +16,37 @@ var csiSequenceMap = map[rune]csiSequenceHandler{
 	'd': csiLinePositionAbsolute,
 	't': csiWindowManipulation,
 	'X': csiEraseCharactersHandler,
+	'r': csiSetMarginsHandler,
+}
+
+// DECSTBM
+func csiSetMarginsHandler(params []string, intermediate string, terminal *Terminal) error {
+	top := 1
+	bottom := int(terminal.ActiveBuffer().ViewHeight())
+	if len(params) > 0 {
+		var err error
+		top, err = strconv.Atoi(params[0])
+		if err != nil {
+			top = 1
+		}
+
+		if len(params) > 1 {
+			var err error
+			bottom, err = strconv.Atoi(params[1])
+			if err != nil {
+				bottom = 1
+			}
+			if bottom > int(terminal.ActiveBuffer().ViewHeight()) {
+				bottom = int(terminal.ActiveBuffer().ViewHeight())
+			}
+		}
+	}
+	top -= 1
+	bottom -= 1
+
+	terminal.ActiveBuffer().SetPosition(0, 0)
+
+	return nil
 }
 
 func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
