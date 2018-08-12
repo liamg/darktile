@@ -84,6 +84,8 @@ func main() {
 	// parse this
 	conf := getConfig()
 
+	os.Setenv("TERM", "xterm-256color")
+
 	logger, err := getLogger(conf)
 	if err != nil {
 		fmt.Printf("Failed to create logger: %s\n", err)

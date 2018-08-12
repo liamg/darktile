@@ -75,7 +75,7 @@ func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
 	}
 }
 
-func (gui *GUI) getTermSize() (int, int) {
+func (gui *GUI) getTermSize() (uint, uint) {
 	if gui.renderer == nil {
 		return 0, 0
 	}
@@ -201,14 +201,14 @@ func (gui *GUI) Render() error {
 			lines := gui.terminal.GetVisibleLines()
 			for y := 0; y < len(lines); y++ {
 				for x, cell := range lines[y].Cells() {
-					gui.renderer.DrawCell(cell, x, y)
+					gui.renderer.DrawCell(cell, uint(x), uint(y))
 				}
 			}
 
 			if gui.terminal.Modes().ShowCursor {
-				cx := int(gui.terminal.GetLogicalCursorX())
-				cy := int(gui.terminal.GetLogicalCursorY())
-				cy = int(cy) + int(gui.terminal.GetScrollOffset())
+				cx := uint(gui.terminal.GetLogicalCursorX())
+				cy := uint(gui.terminal.GetLogicalCursorY())
+				cy = cy + uint(gui.terminal.GetScrollOffset())
 				gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
 			}
 

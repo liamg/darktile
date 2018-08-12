@@ -8,7 +8,7 @@ import (
 
 type TerminalCharSet int
 
-type escapeSequenceHandler func(buffer chan rune, terminal *Terminal) error
+type escapeSequenceHandler func(pty chan rune, terminal *Terminal) error
 
 var escapeSequenceMap = map[rune]escapeSequenceHandler{
 	0x1b: ansiHandler,
@@ -28,7 +28,7 @@ func (terminal *Terminal) Resume() {
 	}
 }
 
-func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
+func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
 
 	// https://en.wikipedia.org/wiki/ANSI_escape_code
 
@@ -47,12 +47,12 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 		//if terminal.config.slomo
 		//time.Sleep(time.Millisecond * 100)
 
-		b := <-buffer
+		b := <-pty
 
 		handler, ok := escapeSequenceMap[b]
 
 		if ok {
-			if err := handler(buffer, terminal); err != nil {
+			if err := handler(pty, terminal); err != nil {
 				terminal.logger.Errorf("Error handling escape sequence 0x%X: %s", b, err)
 			}
 			continue
@@ -62,19 +62,19 @@ func (terminal *Terminal) processInput(ctx context.Context, buffer chan rune) {
 
 		switch b {
 		case 0x0a:
-			terminal.buffer.NewLine()
+			terminal.ActiveBuffer().NewLine()
 		case 0x0d:
-			terminal.buffer.CarriageReturn()
+			terminal.ActiveBuffer().CarriageReturn()
 		case 0x08:
 			// backspace
-			terminal.buffer.Backspace()
+			terminal.ActiveBuffer().Backspace()
 		case 0x07:
 			// @todo ring bell - flash red or some shit?
 		default:
 			// render character at current location
 			//		fmt.Printf("%s\n", string([]byte{b}))
 			if b >= 0x20 {
-				terminal.buffer.Write(b)
+				terminal.ActiveBuffer().Write(b)
 			} else {
 				terminal.logger.Error("Non-readable rune received: 0x%X", b)
 			}

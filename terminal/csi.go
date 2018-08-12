@@ -22,10 +22,28 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 	switch modeStr {
 	case "?1":
 		terminal.modes.ApplicationCursorKeys = enabled
-	case "?12":
+	case "?12", "?13":
 		terminal.modes.BlinkingCursor = enabled
 	case "?25":
 		terminal.modes.ShowCursor = enabled
+	case "?47", "?1047":
+		if enabled {
+			terminal.UseAltBuffer()
+		} else {
+			terminal.UseMainBuffer()
+		}
+	case "?1048":
+		if enabled {
+			terminal.ActiveBuffer().SaveCursor()
+		} else {
+			terminal.ActiveBuffer().RestoreCursor()
+		}
+	case "?1049":
+		if enabled {
+			terminal.UseAltBuffer()
+		} else {
+			terminal.UseMainBuffer()
+		}
 	default:
 		return fmt.Errorf("Unsupported CSI %sl code", modeStr)
 	}
@@ -43,7 +61,7 @@ func csiEraseCharactersHandler(params []string, intermediate string, terminal *T
 		}
 	}
 
-	terminal.buffer.EraseCharacters(count)
+	terminal.ActiveBuffer().EraseCharacters(count)
 
 	return nil
 }
@@ -71,7 +89,7 @@ func csiLinePositionAbsolute(params []string, intermediate string, terminal *Ter
 		}
 	}
 
-	terminal.buffer.SetPosition(uint16(col), terminal.buffer.CursorLine())
+	terminal.ActiveBuffer().SetPosition(uint16(col), terminal.ActiveBuffer().CursorLine())
 
 	return nil
 }
@@ -79,7 +97,7 @@ func csiLinePositionAbsolute(params []string, intermediate string, terminal *Ter
 type csiSequenceHandler func(params []string, intermediate string, terminal *Terminal) error
 
 // CSI: Control Sequence Introducer [
-func csiHandler(buffer chan rune, terminal *Terminal) error {
+func csiHandler(pty chan rune, terminal *Terminal) error {
 	var final rune
 	var b rune
 	var err error
@@ -87,7 +105,7 @@ func csiHandler(buffer chan rune, terminal *Terminal) error {
 	intermediate := ""
 CSI:
 	for {
-		b = <-buffer
+		b = <-pty
 		switch true {
 		case b >= 0x30 && b <= 0x3F:
 			param = param + string(b)
@@ -117,7 +135,7 @@ CSI:
 					distance = 1
 				}
 			}
-			terminal.buffer.MovePosition(0, -int16(distance))
+			terminal.ActiveBuffer().MovePosition(0, -int16(distance))
 		case 'B':
 			distance := 1
 			if len(params) > 0 {
@@ -128,7 +146,7 @@ CSI:
 				}
 			}
 
-			terminal.buffer.MovePosition(0, int16(distance))
+			terminal.ActiveBuffer().MovePosition(0, int16(distance))
 		case 'C':
 
 			distance := 1
@@ -140,7 +158,7 @@ CSI:
 				}
 			}
 
-			terminal.buffer.MovePosition(int16(distance), 0)
+			terminal.ActiveBuffer().MovePosition(int16(distance), 0)
 
 		case 'D':
 
@@ -153,7 +171,7 @@ CSI:
 				}
 			}
 
-			terminal.buffer.MovePosition(-int16(distance), 0)
+			terminal.ActiveBuffer().MovePosition(-int16(distance), 0)
 
 		case 'E':
 			distance := 1
@@ -165,8 +183,8 @@ CSI:
 				}
 			}
 
-			terminal.buffer.MovePosition(0, int16(distance))
-			terminal.buffer.SetPosition(0, terminal.buffer.CursorLine())
+			terminal.ActiveBuffer().MovePosition(0, int16(distance))
+			terminal.ActiveBuffer().SetPosition(0, terminal.ActiveBuffer().CursorLine())
 
 		case 'F':
 
@@ -178,8 +196,8 @@ CSI:
 					distance = 1
 				}
 			}
-			terminal.buffer.MovePosition(0, -int16(distance))
-			terminal.buffer.SetPosition(0, terminal.buffer.CursorLine())
+			terminal.ActiveBuffer().MovePosition(0, -int16(distance))
+			terminal.ActiveBuffer().SetPosition(0, terminal.ActiveBuffer().CursorLine())
 
 		case 'G':
 
@@ -192,7 +210,7 @@ CSI:
 				}
 			}
 
-			terminal.buffer.SetPosition(uint16(distance-1), terminal.buffer.CursorLine())
+			terminal.ActiveBuffer().SetPosition(uint16(distance-1), terminal.ActiveBuffer().CursorLine())
 
 		case 'H', 'f':
 
@@ -213,7 +231,7 @@ CSI:
 				}
 			}
 
-			terminal.buffer.SetPosition(uint16(x-1), uint16(y-1))
+			terminal.ActiveBuffer().SetPosition(uint16(x-1), uint16(y-1))
 
 		default:
 			err = fmt.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
@@ -232,7 +250,9 @@ func csiDeleteHandler(params []string, intermediate string, terminal *Terminal) 
 			n = 1
 		}
 	}
-	_ = n
+
+	terminal.ActiveBuffer().EraseCharacters(n)
+
 	return nil
 }
 
@@ -246,11 +266,11 @@ func csiEraseInDisplayHandler(params []string, intermediate string, terminal *Te
 	switch n {
 
 	case "0", "":
-		terminal.buffer.EraseDisplayFromCursor()
+		terminal.ActiveBuffer().EraseDisplayFromCursor()
 	case "1":
-		terminal.buffer.EraseDisplayToCursor()
+		terminal.ActiveBuffer().EraseDisplayToCursor()
 	case "2":
-		terminal.buffer.EraseDisplay()
+		terminal.ActiveBuffer().EraseDisplay()
 	default:
 		return fmt.Errorf("Unsupported ED: CSI %s J", n)
 	}
@@ -268,11 +288,11 @@ func csiEraseInLineHandler(params []string, intermediate string, terminal *Termi
 
 	switch n {
 	case "0", "": //erase adter cursor
-		terminal.buffer.EraseLineFromCursor()
+		terminal.ActiveBuffer().EraseLineFromCursor()
 	case "1": // erase to cursor inclusive
-		terminal.buffer.EraseLineToCursor()
+		terminal.ActiveBuffer().EraseLineToCursor()
 	case "2": // erase entire
-		terminal.buffer.EraseLine()
+		terminal.ActiveBuffer().EraseLine()
 	default:
 		return fmt.Errorf("Unsupported EL: CSI %s K", n)
 	}

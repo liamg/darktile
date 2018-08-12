@@ -15,18 +15,24 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	MainBuffer uint8 = 0
+	AltBuffer  uint8 = 1
+)
+
 type Terminal struct {
-	buffer        *buffer.Buffer
-	lock          sync.Mutex
-	pty           *os.File
-	logger        *zap.SugaredLogger
-	title         string
-	size          Winsize
-	config        config.Config
-	titleHandlers []chan bool
-	pauseChan     chan bool
-	resumeChan    chan bool
-	modes         Modes
+	buffers           []*buffer.Buffer
+	activeBufferIndex uint8
+	lock              sync.Mutex
+	pty               *os.File
+	logger            *zap.SugaredLogger
+	title             string
+	size              Winsize
+	config            config.Config
+	titleHandlers     []chan bool
+	pauseChan         chan bool
+	resumeChan        chan bool
+	modes             Modes
 }
 
 type Modes struct {
@@ -50,10 +56,16 @@ type Position struct {
 func New(pty *os.File, logger *zap.SugaredLogger, config config.Config) *Terminal {
 
 	return &Terminal{
-		buffer: buffer.NewBuffer(0, 0, buffer.CellAttributes{
-			FgColour: config.ColourScheme.Foreground,
-			BgColour: config.ColourScheme.Background,
-		}),
+		buffers: []*buffer.Buffer{
+			buffer.NewBuffer(1, 1, buffer.CellAttributes{
+				FgColour: config.ColourScheme.Foreground,
+				BgColour: config.ColourScheme.Background,
+			}),
+			buffer.NewBuffer(1, 1, buffer.CellAttributes{
+				FgColour: config.ColourScheme.Foreground,
+				BgColour: config.ColourScheme.Background,
+			}),
+		},
 		pty:           pty,
 		logger:        logger,
 		config:        config,
@@ -66,38 +78,54 @@ func New(pty *os.File, logger *zap.SugaredLogger, config config.Config) *Termina
 	}
 }
 
+func (terminal *Terminal) UseMainBuffer() {
+	terminal.activeBufferIndex = MainBuffer
+	terminal.SetSize(uint(terminal.size.Width), uint(terminal.size.Height))
+}
+
+func (terminal *Terminal) UseAltBuffer() {
+	terminal.activeBufferIndex = AltBuffer
+	terminal.SetSize(uint(terminal.size.Width), uint(terminal.size.Height))
+}
+
+func (terminal *Terminal) ActiveBuffer() *buffer.Buffer {
+	return terminal.buffers[terminal.activeBufferIndex]
+}
+
 func (terminal *Terminal) GetScrollOffset() uint {
-	return terminal.buffer.GetScrollOffset()
+	return terminal.ActiveBuffer().GetScrollOffset()
 }
 
 func (terminal *Terminal) ScrollDown(lines uint16) {
-	terminal.buffer.ScrollDown(lines)
+	terminal.ActiveBuffer().ScrollDown(lines)
 }
 
 func (terminal *Terminal) ScrollUp(lines uint16) {
-	terminal.buffer.ScrollUp(lines)
+	terminal.ActiveBuffer().ScrollUp(lines)
 }
 
 func (terminal *Terminal) ScrollPageDown() {
-	terminal.buffer.ScrollPageDown()
+	terminal.ActiveBuffer().ScrollPageDown()
 }
 func (terminal *Terminal) ScrollPageUp() {
-	terminal.buffer.ScrollPageUp()
+	terminal.ActiveBuffer().ScrollPageUp()
 }
 func (terminal *Terminal) ScrollToEnd() {
-	terminal.buffer.ScrollToEnd()
+	terminal.ActiveBuffer().ScrollToEnd()
 }
 
 func (terminal *Terminal) GetVisibleLines() []buffer.Line {
-	return terminal.buffer.GetVisibleLines()
+	return terminal.ActiveBuffer().GetVisibleLines()
 }
 
-func (terminal *Terminal) GetCell(col int, row int) *buffer.Cell {
-	return terminal.buffer.GetCell(col, row)
+func (terminal *Terminal) GetCell(col uint16, row uint16) *buffer.Cell {
+	return terminal.ActiveBuffer().GetCell(col, row)
 }
 
 func (terminal *Terminal) AttachDisplayChangeHandler(handler chan bool) {
-	terminal.buffer.AttachDisplayChangeHandler(handler)
+	for i := range terminal.buffers {
+		terminal.buffers[i].AttachDisplayChangeHandler(handler)
+	}
 }
 
 func (terminal *Terminal) AttachTitleChangeHandler(handler chan bool) {
@@ -117,19 +145,19 @@ func (terminal *Terminal) emitTitleChange() {
 }
 
 func (terminal *Terminal) GetLogicalCursorX() uint16 {
-	if terminal.buffer.CursorColumn() >= terminal.buffer.Width() {
+	if terminal.ActiveBuffer().CursorColumn() >= terminal.ActiveBuffer().Width() {
 		return 0
 	}
 
-	return terminal.buffer.CursorColumn()
+	return terminal.ActiveBuffer().CursorColumn()
 }
 
 func (terminal *Terminal) GetLogicalCursorY() uint16 {
-	if terminal.buffer.CursorColumn() >= terminal.buffer.Width() {
-		return terminal.buffer.CursorLine() + 1
+	if terminal.ActiveBuffer().CursorColumn() >= terminal.ActiveBuffer().Width() {
+		return terminal.ActiveBuffer().CursorLine() + 1
 	}
 
-	return terminal.buffer.CursorLine()
+	return terminal.ActiveBuffer().CursorLine()
 }
 
 func (terminal *Terminal) GetTitle() string {
@@ -174,21 +202,21 @@ func (terminal *Terminal) Read() error {
 }
 
 func (terminal *Terminal) Clear() {
-	terminal.buffer.Clear()
+	terminal.ActiveBuffer().Clear()
 }
 
 func (terminal *Terminal) GetSize() (int, int) {
 	return int(terminal.size.Width), int(terminal.size.Height)
 }
 
-func (terminal *Terminal) SetSize(newCols int, newLines int) error {
+func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
 	terminal.lock.Lock()
 	defer terminal.lock.Unlock()
 
 	terminal.size.Width = uint16(newCols)
 	terminal.size.Height = uint16(newLines)
 
-	terminal.buffer.ResizeView(terminal.size.Width, terminal.size.Height)
+	terminal.ActiveBuffer().ResizeView(terminal.size.Width, terminal.size.Height)
 
 	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, uintptr(terminal.pty.Fd()),
 		uintptr(syscall.TIOCSWINSZ), uintptr(unsafe.Pointer(&terminal.size)))

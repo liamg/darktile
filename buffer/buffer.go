@@ -86,15 +86,15 @@ func (buffer *Buffer) CursorAttr() *CellAttributes {
 	return &buffer.cursorAttr
 }
 
-func (buffer *Buffer) GetCell(viewCol int, viewRow int) *Cell {
+func (buffer *Buffer) GetCell(viewCol uint16, viewRow uint16) *Cell {
 
-	rawLine := buffer.convertViewLineToRawLine(uint16(viewRow))
+	rawLine := buffer.convertViewLineToRawLine(viewRow)
 
 	if viewCol < 0 || rawLine < 0 || int(rawLine) >= len(buffer.lines) {
 		return nil
 	}
 	line := &buffer.lines[rawLine]
-	if viewCol >= len(line.cells) {
+	if int(viewCol) >= len(line.cells) {
 		return nil
 	}
 	return &line.cells[viewCol]
@@ -242,6 +242,23 @@ func (buffer *Buffer) Backspace() {
 		}
 	} else {
 		buffer.MovePosition(-1, 0)
+	}
+}
+
+func (buffer *Buffer) BackspaceDelete() {
+
+	if buffer.cursorX == 0 {
+		line := buffer.getCurrentLine()
+		if line.wrapped {
+			buffer.MovePosition(int16(buffer.Width()-1), -1)
+			buffer.GetCell(buffer.cursorX, buffer.cursorY).erase()
+		} else {
+			//@todo ring bell or whatever
+			fmt.Println("BELL?")
+		}
+	} else {
+		buffer.MovePosition(-1, 0)
+		buffer.GetCell(buffer.cursorX, buffer.cursorY).erase()
 	}
 }
 
@@ -425,6 +442,7 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 }
 
 func (buffer *Buffer) ResizeView(width uint16, height uint16) {
+
 	defer buffer.emitDisplayChange()
 
 	if buffer.viewHeight == 0 {

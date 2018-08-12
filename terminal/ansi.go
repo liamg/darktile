@@ -15,36 +15,36 @@ var ansiSequenceMap = map[rune]escapeSequenceHandler{
 func indexHandler(buffer chan rune, terminal *Terminal) error {
 	// @todo is thus right?
 	// "This sequence causes the active position to move downward one line without changing the column position. If the active position is at the bottom margin, a scroll up is performed."
-	if terminal.buffer.CursorLine() == terminal.buffer.ViewHeight()-1 {
-		terminal.buffer.NewLine()
+	if terminal.ActiveBuffer().CursorLine() == terminal.ActiveBuffer().ViewHeight()-1 {
+		terminal.ActiveBuffer().NewLine()
 		return nil
 	}
-	terminal.buffer.MovePosition(0, 1)
+	terminal.ActiveBuffer().MovePosition(0, 1)
 	return nil
 }
 
 func reverseIndexHandler(buffer chan rune, terminal *Terminal) error {
-	terminal.buffer.MovePosition(0, -1)
+	terminal.ActiveBuffer().MovePosition(0, -1)
 	return nil
 }
 
 func saveCursorHandler(buffer chan rune, terminal *Terminal) error {
-	terminal.buffer.SaveCursor()
+	terminal.ActiveBuffer().SaveCursor()
 	return nil
 }
 
 func restoreCursorHandler(buffer chan rune, terminal *Terminal) error {
-	terminal.buffer.RestoreCursor()
+	terminal.ActiveBuffer().RestoreCursor()
 	return nil
 }
 
-func ansiHandler(buffer chan rune, terminal *Terminal) error {
+func ansiHandler(pty chan rune, terminal *Terminal) error {
 	// if the byte is an escape character, read the next byte to determine which one
-	b := <-buffer
+	b := <-pty
 
 	handler, ok := ansiSequenceMap[b]
 	if ok {
-		return handler(buffer, terminal)
+		return handler(pty, terminal)
 	}
 
 	switch b {
@@ -52,7 +52,7 @@ func ansiHandler(buffer chan rune, terminal *Terminal) error {
 	case 'c':
 		terminal.logger.Errorf("RIS not yet supported")
 	case '(':
-		b = <-buffer
+		b = <-pty
 		switch b {
 		case 'A': //uk @todo handle these?
 			//terminal.charSet = C0
@@ -60,7 +60,7 @@ func ansiHandler(buffer chan rune, terminal *Terminal) error {
 			//terminal.charSet = C0
 		}
 	case ')':
-		b = <-buffer
+		b = <-pty
 		switch b {
 		case 'A': //uk @todo handle these?
 			//terminal.charSet = C1
@@ -68,7 +68,7 @@ func ansiHandler(buffer chan rune, terminal *Terminal) error {
 			//terminal.charSet = C1
 		}
 	case '*':
-		b = <-buffer
+		b = <-pty
 		switch b {
 		case 'A': //uk @todo handle these?
 			//terminal.charSet = C2
@@ -76,7 +76,7 @@ func ansiHandler(buffer chan rune, terminal *Terminal) error {
 			//terminal.charSet = C2
 		}
 	case '+':
-		b = <-buffer
+		b = <-pty
 		switch b {
 		case 'A': //uk @todo handle these?
 			//terminal.charSet = C3
@@ -90,7 +90,7 @@ func ansiHandler(buffer chan rune, terminal *Terminal) error {
 	case '?':
 		pm := ""
 		for {
-			b = <-buffer
+			b = <-pty
 			switch b {
 			case 'h':
 				switch pm {

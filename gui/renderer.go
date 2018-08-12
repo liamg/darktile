@@ -12,9 +12,9 @@ import (
 
 type Renderer interface {
 	SetArea(areaX int, areaY int, areaWidth int, areaHeight int)
-	DrawCell(cell buffer.Cell, col int, row int)
-	DrawCursor(col int, row int, colour config.Colour)
-	GetTermSize() (int, int)
+	DrawCell(cell buffer.Cell, col uint, row uint)
+	DrawCursor(col uint, row uint, colour config.Colour)
+	GetTermSize() (uint, uint)
 }
 
 type OpenGLRenderer struct {
@@ -27,10 +27,10 @@ type OpenGLRenderer struct {
 	cellWidth           float32
 	cellHeight          float32
 	verticalCellPadding float32
-	termCols            int
-	termRows            int
-	cellPositions       map[[2]int][2]float32
-	rectangles          map[[2]int]*rectangle
+	termCols            uint
+	termRows            uint
+	cellPositions       map[[2]uint][2]float32
+	rectangles          map[[2]uint]*rectangle
 	config              config.Config
 	colourAttr          uint32
 	program             uint32
@@ -124,8 +124,8 @@ func NewOpenGLRenderer(config config.Config, font *glfont.Font, fontScale int32,
 		areaX:         areaX,
 		areaY:         areaY,
 		fontScale:     fontScale,
-		cellPositions: map[[2]int][2]float32{},
-		rectangles:    map[[2]int]*rectangle{},
+		cellPositions: map[[2]uint][2]float32{},
+		rectangles:    map[[2]uint]*rectangle{},
 		config:        config,
 		colourAttr:    colourAttr,
 		program:       program,
@@ -134,7 +134,7 @@ func NewOpenGLRenderer(config config.Config, font *glfont.Font, fontScale int32,
 	return r
 }
 
-func (r *OpenGLRenderer) GetTermSize() (int, int) {
+func (r *OpenGLRenderer) GetTermSize() (uint, uint) {
 	return r.termCols, r.termRows
 }
 
@@ -156,31 +156,31 @@ func (r *OpenGLRenderer) SetFont(font *glfont.Font) { // @todo check for monospa
 	r.verticalCellPadding = (0.25 * float32(r.fontScale))
 	r.cellWidth = font.Width(1, "X")
 	r.cellHeight = font.Height(1, "X") + (r.verticalCellPadding * 2) // vertical padding
-	r.termCols = int(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
-	r.termRows = int(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
+	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
+	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
 	r.calculatePositions()
 	r.generateRectangles()
 }
 
 func (r *OpenGLRenderer) calculatePositions() {
-	for line := 0; line < r.termRows; line++ {
-		for col := 0; col < r.termCols; col++ {
+	for line := uint(0); line < r.termRows; line++ {
+		for col := uint(0); col < r.termCols; col++ {
 			// rounding to whole pixels makes everything nice
 			x := float32(math.Round(float64((float32(col) * r.cellWidth))))
 			y := float32(math.Round(float64(
 				(float32(line) * r.cellHeight) + (r.cellHeight / 2) + r.verticalCellPadding,
 			)))
-			r.cellPositions[[2]int{col, line}] = [2]float32{x, y}
+			r.cellPositions[[2]uint{col, line}] = [2]float32{x, y}
 		}
 	}
 }
 
 func (r *OpenGLRenderer) generateRectangles() {
 	gl.UseProgram(r.program)
-	for line := 0; line < r.termRows; line++ {
-		for col := 0; col < r.termCols; col++ {
+	for line := uint(0); line < r.termRows; line++ {
+		for col := uint(0); col < r.termCols; col++ {
 
-			rect, ok := r.rectangles[[2]int{col, line}]
+			rect, ok := r.rectangles[[2]uint{col, line}]
 			if ok {
 				rect.Free()
 			}
@@ -188,14 +188,14 @@ func (r *OpenGLRenderer) generateRectangles() {
 			// rounding to whole pixels makes everything nice
 			x := float32(float64((float32(col) * r.cellWidth)))
 			y := float32(float64((float32(line) * r.cellHeight) + (r.cellHeight)))
-			r.rectangles[[2]int{col, line}] = r.newRectangle(x, y, r.colourAttr)
+			r.rectangles[[2]uint{col, line}] = r.newRectangle(x, y, r.colourAttr)
 		}
 	}
 }
 
-func (r *OpenGLRenderer) DrawCursor(col int, row int, colour config.Colour) {
+func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
 
-	rect, ok := r.rectangles[[2]int{col, row}]
+	rect, ok := r.rectangles[[2]uint{col, row}]
 	if !ok { // probably trying to draw during resize - perhaps add a mutex?
 		return
 	}
@@ -218,7 +218,7 @@ func (r *OpenGLRenderer) DrawCursor(col int, row int, colour config.Colour) {
 	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
 }
 
-func (r *OpenGLRenderer) DrawCell(cell buffer.Cell, col int, row int) {
+func (r *OpenGLRenderer) DrawCell(cell buffer.Cell, col uint, row uint) {
 
 	if cell.Attr().Hidden || (cell.Rune() == 0x00) {
 		return
@@ -235,7 +235,7 @@ func (r *OpenGLRenderer) DrawCell(cell buffer.Cell, col int, row int) {
 		bg = cell.Bg()
 	}
 
-	pos, ok := r.cellPositions[[2]int{col, row}]
+	pos, ok := r.cellPositions[[2]uint{col, row}]
 	if !ok {
 		panic(fmt.Sprintf("Missing position data for cell at %d,%d", col, row))
 	}
@@ -245,7 +245,7 @@ func (r *OpenGLRenderer) DrawCell(cell buffer.Cell, col int, row int) {
 	// don't bother rendering rectangles that are the same colour as the background
 	if bg != r.config.ColourScheme.Background {
 
-		rect, ok := r.rectangles[[2]int{col, row}]
+		rect, ok := r.rectangles[[2]uint{col, row}]
 		if !ok {
 			panic(fmt.Sprintf("Missing rectangle data for cell at %d,%d", col, row))
 		}
