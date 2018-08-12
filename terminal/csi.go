@@ -19,9 +19,34 @@ var csiSequenceMap = map[rune]csiSequenceHandler{
 }
 
 func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
+
+	/*
+	   Mouse support
+
+	   		#define SET_X10_MOUSE               9
+	        #define SET_VT200_MOUSE             1000
+	        #define SET_VT200_HIGHLIGHT_MOUSE   1001
+	        #define SET_BTN_EVENT_MOUSE         1002
+	        #define SET_ANY_EVENT_MOUSE         1003
+
+	        #define SET_FOCUS_EVENT_MOUSE       1004
+
+	        #define SET_EXT_MODE_MOUSE          1005
+	        #define SET_SGR_EXT_MODE_MOUSE      1006
+	        #define SET_URXVT_EXT_MODE_MOUSE    1015
+
+	        #define SET_ALTERNATE_SCROLL        1007
+	*/
+
 	switch modeStr {
 	case "?1":
 		terminal.modes.ApplicationCursorKeys = enabled
+	case "?9":
+		if enabled {
+			terminal.SetMouseMode(MouseModeX10)
+		} else {
+			terminal.SetMouseMode(MouseModeNone)
+		}
 	case "?12", "?13":
 		terminal.modes.BlinkingCursor = enabled
 	case "?25":
@@ -31,6 +56,13 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 			terminal.UseAltBuffer()
 		} else {
 			terminal.UseMainBuffer()
+		}
+	case "?1000":
+		// enable mouse tracking
+		if enabled {
+			terminal.SetMouseMode(MouseModeVT200)
+		} else {
+			terminal.SetMouseMode(MouseModeNone)
 		}
 	case "?1048":
 		if enabled {

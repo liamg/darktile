@@ -123,6 +123,7 @@ func (gui *GUI) Render() error {
 	gui.window.SetKeyCallback(gui.key)
 	gui.window.SetCharCallback(gui.char)
 	gui.window.SetScrollCallback(gui.glfwScrollCallback)
+	gui.window.SetMouseButtonCallback(gui.mouseButtonCallback)
 	gui.window.SetRefreshCallback(func(w *glfw.Window) {
 		select {
 		case changeChan <- true:

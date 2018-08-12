@@ -20,6 +20,17 @@ const (
 	AltBuffer  uint8 = 1
 )
 
+type MouseMode uint
+
+const (
+	MouseModeNone MouseMode = iota
+	MouseModeX10
+	MouseModeVT200
+	MouseModeVT200Highlight
+	MouseModeButtonEvent
+	MouseModeAnyEvent
+)
+
 type Terminal struct {
 	buffers           []*buffer.Buffer
 	activeBufferIndex uint8
@@ -33,6 +44,7 @@ type Terminal struct {
 	pauseChan         chan bool
 	resumeChan        chan bool
 	modes             Modes
+	mouseMode         MouseMode
 }
 
 type Modes struct {
@@ -76,6 +88,14 @@ func New(pty *os.File, logger *zap.SugaredLogger, config config.Config) *Termina
 			ShowCursor: true,
 		},
 	}
+}
+
+func (terminal *Terminal) SetMouseMode(mode MouseMode) {
+	terminal.mouseMode = mode
+}
+
+func (terminal *Terminal) GetMouseMode() MouseMode {
+	return terminal.mouseMode
 }
 
 func (terminal *Terminal) UseMainBuffer() {
