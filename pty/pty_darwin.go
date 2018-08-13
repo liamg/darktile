@@ -39,7 +39,11 @@ func open() (*os.File, *os.File, error) {
 }
 
 func getpt() (file *os.File, err error) {
-	return os.OpenFile("/dev/ptmx", os.O_RDWR, 0)
+	f, err := os.OpenFile("/dev/ptmx", os.O_RDWR|syscall.O_CLOEXEC, 0)
+	if err != nil {
+		return nil, err
+	}
+	return os.NewFile(uintptr(f), "/dev/ptmx"), nil
 }
 
 func ptsname(file *os.File) (name string, err error) {
