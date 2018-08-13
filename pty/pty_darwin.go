@@ -59,7 +59,7 @@ func ptsname(file *os.File) (name string, err error) {
 	return "", errors.New("TIOCPTYGNAME string not NUL-terminated")
 }
 
-func ioctl(file *os.File, command uint, arg int) (int, error) {
+func ioctl(file *os.File, command uint, arg uintptr) (int, error) {
 	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, uintptr(file.Fd()),
 		uintptr(command), uintptr(unsafe.Pointer(&arg)))
 	if err != 0 {
