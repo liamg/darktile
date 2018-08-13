@@ -39,7 +39,7 @@ type Terminal struct {
 	logger            *zap.SugaredLogger
 	title             string
 	size              Winsize
-	config            config.Config
+	config            *config.Config
 	titleHandlers     []chan bool
 	pauseChan         chan bool
 	resumeChan        chan bool
@@ -65,7 +65,7 @@ type Position struct {
 	Col  int
 }
 
-func New(pty *os.File, logger *zap.SugaredLogger, config config.Config) *Terminal {
+func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Terminal {
 
 	return &Terminal{
 		buffers: []*buffer.Buffer{
@@ -246,20 +246,3 @@ func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
 
 	return nil
 }
-
-/*
------------------- ->
-ssssssssssssssssss
-ssssPPPPPPPPPPPPPP
-xxxxxxxxx
-xxxxxxxxxxxxxxxxxx
---------------------------
-ssssssssssssssssss
-SsssPPPPPPPPPPPPPP
-xxxxxxxxx
-xxxxxxxxxxxxxxxxxx
-
-
-
-
-*/

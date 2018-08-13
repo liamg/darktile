@@ -31,7 +31,7 @@ type OpenGLRenderer struct {
 	termRows            uint
 	cellPositions       map[[2]uint][2]float32
 	rectangles          map[[2]uint]*rectangle
-	config              config.Config
+	config              *config.Config
 	colourAttr          uint32
 	program             uint32
 }
@@ -117,7 +117,7 @@ func (rect *rectangle) Free() {
 	gl.DeleteBuffers(1, &rect.cv)
 }
 
-func NewOpenGLRenderer(config config.Config, font *glfont.Font, fontScale int32, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
+func NewOpenGLRenderer(config *config.Config, font *glfont.Font, fontScale int32, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
 	r := &OpenGLRenderer{
 		areaWidth:     areaWidth,
 		areaHeight:    areaHeight,

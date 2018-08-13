@@ -2,6 +2,7 @@ package terminal
 
 import (
 	"context"
+	"time"
 )
 
 // Wish list here: http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
@@ -30,8 +31,9 @@ func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
 		default:
 		}
 
-		//if terminal.config.slomo
-		//time.Sleep(time.Millisecond * 100)
+		if terminal.config.Slomo {
+			time.Sleep(time.Millisecond * 100)
+		}
 
 		b := <-pty
 

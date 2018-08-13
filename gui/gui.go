@@ -17,7 +17,7 @@ import (
 type GUI struct {
 	window     *glfw.Window
 	logger     *zap.SugaredLogger
-	config     config.Config
+	config     *config.Config
 	terminal   *terminal.Terminal
 	width      int //window width in pixels
 	height     int //window height in pixels
@@ -27,7 +27,7 @@ type GUI struct {
 	colourAttr uint32
 }
 
-func New(config config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
+func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
 
 	//logger.
 	return &GUI{

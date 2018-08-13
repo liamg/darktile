@@ -342,8 +342,8 @@ func (buffer *Buffer) Clear() {
 // creates if necessary
 func (buffer *Buffer) getCurrentLine() *Line {
 
-	if buffer.cursorY >= buffer.ViewHeight() {
-		panic(fmt.Sprintf("cursor is outside of view: y=%d h=%d", buffer.cursorY, buffer.viewHeight))
+	if buffer.cursorY >= buffer.ViewHeight() { // @todo is this okay?
+		return &buffer.lines[len(buffer.lines)-1]
 	}
 
 	if len(buffer.lines) < int(buffer.ViewHeight()) {

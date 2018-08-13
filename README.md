@@ -66,6 +66,7 @@ Ensure you have your latest graphics card drivers installed before use.
 | Operation          | Key(s)              |
 |--------------------|---------------------|
 | Paste              | ctrl + shift + v
+| Toggle slomo       | ctrl + shift + ;
 | Interrupt (SIGINT) | ctrl + c
 
 ## Configuration

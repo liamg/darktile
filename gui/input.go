@@ -23,6 +23,8 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 					if buf, err := gui.window.GetClipboardString(); err == nil {
 						_ = gui.terminal.Write([]byte(buf))
 					}
+				case glfw.KeySemicolon:
+					gui.config.Slomo = !gui.config.Slomo
 				}
 			} else {
 				// ctrl +

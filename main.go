@@ -13,11 +13,11 @@ import (
 	"go.uber.org/zap"
 )
 
-func getConfig() config.Config {
+func getConfig() *config.Config {
 	ignore := false
 	flag.BoolVar(&ignore, "ignore-config", ignore, "Ignore user config files and use defauls")
 	if ignore {
-		return config.DefaultConfig
+		return &config.DefaultConfig
 	}
 
 	conf := loadConfigFile()
@@ -30,11 +30,11 @@ func getConfig() config.Config {
 	return conf
 }
 
-func loadConfigFile() config.Config {
+func loadConfigFile() *config.Config {
 
 	home := os.Getenv("HOME")
 	if home == "" {
-		return config.DefaultConfig
+		return &config.DefaultConfig
 	}
 
 	places := []string{
@@ -45,7 +45,7 @@ func loadConfigFile() config.Config {
 	for _, place := range places {
 		if b, err := ioutil.ReadFile(place); err == nil {
 			if c, err := config.Parse(b); err == nil {
-				return *c
+				return c
 			} else {
 				fmt.Printf("Invalid config at %s: %s\n", place, err)
 			}
@@ -59,10 +59,10 @@ func loadConfigFile() config.Config {
 			fmt.Printf("Failed to encode config file: %s\n", err)
 		}
 	}
-	return config.DefaultConfig
+	return &config.DefaultConfig
 }
 
-func getLogger(conf config.Config) (*zap.SugaredLogger, error) {
+func getLogger(conf *config.Config) (*zap.SugaredLogger, error) {
 
 	var logger *zap.Logger
 	var err error
