@@ -88,7 +88,7 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			terminal.UseMainBuffer()
 		}
-	case "?1000", "?10061000": // ?10061000 seen from xterm
+	case "?1000", "?10061000": // ?10061000 seen from htop
 		// enable mouse tracking
 		if enabled {
 			terminal.SetMouseMode(MouseModeVT200)
