@@ -39,7 +39,7 @@ func open() (*os.File, *os.File, error) {
 }
 
 func getpt() (file *os.File, err error) {
-	f, err := os.OpenFile("/dev/ptmx", os.O_RDWR|syscall.O_CLOEXEC, 0)
+	f, err := syscall.Open("/dev/ptmx", syscall.O_RDWR|syscall.O_CLOEXEC, 0)
 	if err != nil {
 		return nil, err
 	}
