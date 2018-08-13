@@ -219,7 +219,7 @@ func (f *Font) Height(scale float32, text string) float32 {
 			baseHeight = height
 			height = 0
 		}
-
+		
 		//skip runes that are not in font chacter range
 		if int(runeIndex)-int(lowChar) > len(f.fontChar) || runeIndex < lowChar {
 			continue
@@ -229,7 +229,7 @@ func (f *Font) Height(scale float32, text string) float32 {
 		ch := f.fontChar[runeIndex-lowChar]
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-		if float32(ch.height)*scale > height {
+		if float32(ch.height) * scale > height {
 			height = float32(ch.height) * scale
 		}
 

@@ -36,6 +36,12 @@
   revision = "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4"
 
 [[projects]]
+  name = "github.com/kr/pty"
+  packages = ["."]
+  revision = "fa756f09eeb418bf1cc6268c66ceaad9bb98f598"
+  version = "v1.1.2"
+
+[[projects]]
   branch = "master"
   name = "github.com/liamg/glfont"
   packages = ["."]
@@ -99,6 +105,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "0b3960a1d15048ccc49c41464fdb2346062f791ca53d614d4535d2930d4969f5"
+  inputs-digest = "18e6b85742181970b4dbe1aae2d74b033fbca809df825b8a03c8e3ba6b5ba29c"
   solver-name = "gps-cdcl"
   solver-version = 1

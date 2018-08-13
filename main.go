@@ -5,10 +5,13 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"os/exec"
+	"syscall"
 
+	"github.com/kr/pty"
+	"github.com/riywo/loginshell"
 	"gitlab.com/liamg/raft/config"
 	"gitlab.com/liamg/raft/gui"
-	"gitlab.com/liamg/raft/pty"
 	"gitlab.com/liamg/raft/terminal"
 	"go.uber.org/zap"
 )
@@ -94,9 +97,24 @@ func main() {
 	defer logger.Sync()
 
 	logger.Infof("Allocating pty...")
-	pty, err := pty.NewPtyWithShell()
+	pty, tty, err := pty.Open()
 	if err != nil {
 		logger.Fatalf("Failed to allocate pty: %s", err)
+	}
+
+	shellStr, err := loginshell.Shell()
+	if err != nil {
+		panic(fmt.Errorf("Failed to ascertain your shell: %s", err))
+	}
+
+	shell := exec.Command(shellStr)
+	shell.Stdout = tty
+	shell.Stdin = tty
+	shell.Stderr = tty
+	shell.SysProcAttr = &syscall.SysProcAttr{Setctty: true, Setsid: true}
+	if err := shell.Start(); err != nil {
+		pty.Close()
+		panic(err)
 	}
 
 	logger.Infof("Creating terminal...")

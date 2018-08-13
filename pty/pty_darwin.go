@@ -17,7 +17,6 @@ func open() (*os.File, *os.File, error) {
 	}
 
 	ptsName, err := ptsname(pty)
-	panic(ptsName)
 	if err != nil {
 		panic(err)
 	}
