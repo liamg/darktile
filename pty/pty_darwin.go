@@ -1,6 +1,7 @@
 package pty
 
 import (
+	"errors"
 	"fmt"
 	"os"
 	"syscall"
@@ -47,8 +48,16 @@ func getpt() (file *os.File, err error) {
 }
 
 func ptsname(file *os.File) (name string, err error) {
-	n, err := ioctl(file, syscall.TIOCPTYGNAME, 0)
-	return fmt.Sprintf("/dev/pts/%d", n), err
+
+	n := make([]byte, (syscall.TIOCPTYGNAME>>16)&((1<<13)-1))
+	var err error
+	n, err = ioctl(file, syscall.TIOCPTYGNAME, uintptr(unsafe.Pointer(&n[0])))
+	for i, c := range n {
+		if c == 0 {
+			return string(n[:i]), nil
+		}
+	}
+	return "", errors.New("TIOCPTYGNAME string not NUL-terminated")
 }
 
 func ioctl(file *os.File, command uint, arg int) (int, error) {
