@@ -17,6 +17,8 @@ type Buffer struct {
 	scrollLinesFromBottom uint
 	topMargin             uint // see DECSTBM docs - this is for scrollable regions
 	bottomMargin          uint // see DECSTBM docs - this is for scrollable regions
+	replaceMode           bool // overwrite character at cursor or insert new
+	autoWrap              bool
 }
 
 // NewBuffer creates a new terminal buffer
@@ -26,9 +28,22 @@ func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 		cursorY:    0,
 		lines:      []Line{},
 		cursorAttr: attr,
+		autoWrap:   true,
 	}
 	b.ResizeView(viewCols, viewLines)
 	return b
+}
+
+func (buffer *Buffer) SetAutoWrap(enabled bool) {
+	buffer.autoWrap = enabled
+}
+
+func (buffer *Buffer) SetInsertMode() {
+	buffer.replaceMode = false
+}
+
+func (buffer *Buffer) SetReplaceMode() {
+	buffer.replaceMode = true
 }
 
 func (buffer *Buffer) SetMargins(top uint, bottom uint) {
@@ -170,6 +185,7 @@ func (buffer *Buffer) ViewHeight() uint16 {
 func (buffer *Buffer) Write(runes ...rune) {
 
 	// scroll to bottom on input
+	inc := true
 	buffer.scrollLinesFromBottom = 0
 
 	for _, r := range runes {
@@ -183,27 +199,29 @@ func (buffer *Buffer) Write(runes ...rune) {
 		line := buffer.getCurrentLine()
 
 		if buffer.CursorColumn() >= buffer.Width() { // if we're after the line, move to next
-			buffer.cursorX = 0
 
-			if buffer.cursorY >= buffer.ViewHeight()-1 {
-				buffer.lines = append(buffer.lines, newLine())
+			if buffer.autoWrap {
+				buffer.cursorX = 0
+
+				if buffer.cursorY >= buffer.ViewHeight()-1 {
+					buffer.lines = append(buffer.lines, newLine())
+				} else {
+					buffer.cursorY++
+				}
+
+				newLine := buffer.getCurrentLine()
+				newLine.setWrapped(true)
+				if len(newLine.cells) == 0 {
+					newLine.cells = []Cell{Cell{}}
+				}
+				cell := &newLine.cells[buffer.CursorColumn()]
+				cell.setRune(r)
+				cell.attr = buffer.cursorAttr
+
 			} else {
-				buffer.cursorY++
+				buffer.cursorX = buffer.Width() - 1
+				inc = false
 			}
-
-			//if int(buffer.RawLine()) >= len(buffer.lines) { // if we need to create a new line, set it to wrapped and write to it
-
-			newLine := buffer.getCurrentLine()
-			newLine.setWrapped(true)
-			if len(newLine.cells) == 0 {
-				newLine.cells = []Cell{Cell{}}
-			}
-			cell := &newLine.cells[buffer.CursorColumn()]
-			cell.setRune(r)
-			cell.attr = buffer.cursorAttr
-			//} else {
-			//newLine := &buffer.lines[buffer.RawLine()]
-			//}
 
 			// @todo if next line is wrapped then prepend to it and shuffle characters along line, wrapping to next if necessary
 		} else {
@@ -218,7 +236,9 @@ func (buffer *Buffer) Write(runes ...rune) {
 
 		}
 
-		buffer.incrementCursorPosition()
+		if inc {
+			buffer.incrementCursorPosition()
+		}
 	}
 }
 
@@ -244,28 +264,11 @@ func (buffer *Buffer) Backspace() {
 		if line.wrapped {
 			buffer.MovePosition(int16(buffer.Width()-1), -1)
 		} else {
-			//@todo ring bell or whatever
-			fmt.Println("BELL?")
+			//@todo ring bell or whatever - actually i think the pty will trigger this
+			//fmt.Println("BELL?")
 		}
 	} else {
 		buffer.MovePosition(-1, 0)
-	}
-}
-
-func (buffer *Buffer) BackspaceDelete() {
-
-	if buffer.cursorX == 0 {
-		line := buffer.getCurrentLine()
-		if line.wrapped {
-			buffer.MovePosition(int16(buffer.Width()-1), -1)
-			buffer.GetCell(buffer.cursorX, buffer.cursorY).erase()
-		} else {
-			//@todo ring bell or whatever
-			fmt.Println("BELL?")
-		}
-	} else {
-		buffer.MovePosition(-1, 0)
-		buffer.GetCell(buffer.cursorX, buffer.cursorY).erase()
 	}
 }
 

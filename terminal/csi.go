@@ -70,8 +70,18 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 	*/
 
 	switch modeStr {
+	case "4":
+		if enabled { // @todo support replace mode
+			terminal.ActiveBuffer().SetInsertMode()
+		} else {
+			terminal.ActiveBuffer().SetReplaceMode()
+		}
 	case "?1":
 		terminal.modes.ApplicationCursorKeys = enabled
+	case "?7":
+		// auto-wrap mode
+		//DECAWM
+		terminal.ActiveBuffer().SetAutoWrap(enabled)
 	case "?9":
 		if enabled {
 			terminal.SetMouseMode(MouseModeX10)
