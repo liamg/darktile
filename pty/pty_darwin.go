@@ -20,10 +20,10 @@ func open() (*os.File, *os.File, error) {
 		panic(err)
 	}
 
-	//	err = grantpt(pty)
-	//	if err != nil {
-	//		return nil, nil, err
-	//	}
+	err = grantpt(pty)
+	if err != nil {
+		return nil, nil, err
+	}
 
 	err = unlockpt(pty)
 	if err != nil {
@@ -43,7 +43,7 @@ func getpt() (file *os.File, err error) {
 }
 
 func ptsname(file *os.File) (name string, err error) {
-	n, err := ioctl(file, syscall.TIOCGPTN, 0)
+	n, err := ioctl(file, syscall.TIOCPTYGNAME, 0)
 	return fmt.Sprintf("/dev/pts/%d", n), err
 }
 
@@ -56,15 +56,12 @@ func ioctl(file *os.File, command uint, arg int) (int, error) {
 	return arg, nil
 }
 
-/*
 func grantpt(f *os.File) error {
 	_, err := ioctl(f, syscall.TIOCPTYGRANT, 0)
-	syscall.SYS
 	return err
 }
-*/
 
 func unlockpt(f *os.File) error {
-	_, err := ioctl(f, syscall.TIOCSPTLCK, 0)
+	_, err := ioctl(f, syscall.TIOCPTYUNLK, 0)
 	return err
 }
