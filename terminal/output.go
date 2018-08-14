@@ -41,7 +41,7 @@ func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
 
 		if ok {
 			if err := handler(pty, terminal); err != nil {
-				terminal.logger.Errorf("Error handling escape sequence 0x%X: %s", b, err)
+				terminal.logger.Errorf("Error handling escape sequence: %s", err)
 			}
 			continue
 		}
@@ -49,18 +49,22 @@ func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
 		terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
 
 		switch b {
-		case 0x0a:
+		case 0x0a, 0x0c, 0x0b: // LF, FF, VT
 			terminal.ActiveBuffer().NewLine()
-		case 0x0d:
+		case 0x0d: // CR
 			terminal.ActiveBuffer().CarriageReturn()
-		case 0x08:
+		case 0x08: // BS
 			// backspace
 			terminal.ActiveBuffer().Backspace()
-		case 0x07:
+		case 0x07: // BEL
 			// @todo ring bell - flash red or some shit?
+		case 0x05: // ENQ
+			terminal.logger.Errorf("Received ENQ!")
+		case 0xe, 0xf:
+			terminal.logger.Errorf("Received SI/SO")
+		case 0x09:
+			terminal.logger.Errorf("Received TAB")
 		default:
-			// render character at current location
-			//		fmt.Printf("%s\n", string([]byte{b}))
 			if b >= 0x20 {
 				terminal.ActiveBuffer().Write(b)
 			} else {

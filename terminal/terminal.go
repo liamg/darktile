@@ -90,6 +90,10 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 	}
 }
 
+func (terminal *Terminal) IsApplicationCursorKeysModeEnabled() bool {
+	return terminal.modes.ApplicationCursorKeys
+}
+
 func (terminal *Terminal) SetMouseMode(mode MouseMode) {
 	terminal.mouseMode = mode
 }
