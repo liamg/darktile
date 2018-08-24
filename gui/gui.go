@@ -9,34 +9,37 @@ import (
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"gitlab.com/liamg/raft/buffer"
 	"gitlab.com/liamg/raft/config"
 	"gitlab.com/liamg/raft/terminal"
 	"go.uber.org/zap"
 )
 
 type GUI struct {
-	window     *glfw.Window
-	logger     *zap.SugaredLogger
-	config     *config.Config
-	terminal   *terminal.Terminal
-	width      int //window width in pixels
-	height     int //window height in pixels
-	font       *glfont.Font
-	fontScale  int32
-	renderer   Renderer
-	colourAttr uint32
+	window      *glfw.Window
+	logger      *zap.SugaredLogger
+	config      *config.Config
+	terminal    *terminal.Terminal
+	width       int //window width in pixels
+	height      int //window height in pixels
+	font        *glfont.Font
+	fontScale   int32
+	renderer    Renderer
+	colourAttr  uint32
+	renderState *RenderState
 }
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
 
 	//logger.
 	return &GUI{
-		config:    config,
-		logger:    logger,
-		width:     600,
-		height:    300,
-		terminal:  terminal,
-		fontScale: 15.0,
+		config:      config,
+		logger:      logger,
+		width:       600,
+		height:      300,
+		terminal:    terminal,
+		fontScale:   15.0,
+		renderState: NewRenderState(),
 	}
 }
 
@@ -45,24 +48,38 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
-	gui.logger.Debugf("GUI resize to %dx%d", width, height)
+	if width == gui.width && height == gui.height {
+		//return
+	}
+
+	gui.logger.Debugf("Initiating GUI resize to %dx%d", width, height)
 
 	gui.width = width
 	gui.height = height
 
+	gui.logger.Debugf("Updating font resolution...")
 	if gui.font != nil {
 		gui.font.UpdateResolution((width), (height))
 	}
 
-	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
-
+	gui.logger.Debugf("Setting renderer area...")
 	gui.renderer.SetArea(0, 0, gui.width, gui.height)
 
+	gui.logger.Debugf("Calculating size in cols/rows...")
 	cols, rows := gui.renderer.GetTermSize()
 
+	gui.logger.Debugf("Resizing internal terminal...")
 	if err := gui.terminal.SetSize(cols, rows); err != nil {
 		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", cols, rows, err)
 	}
+
+	gui.logger.Debugf("Resetting render state...")
+	gui.renderState.Reset()
+
+	gui.logger.Debugf("Setting viewport size...")
+	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
+
+	gui.logger.Debugf("Resize complete!")
 
 }
 
@@ -93,7 +110,7 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Creating window...")
 	var err error
-	gui.window, err = gui.createWindow(gui.width, gui.height)
+	gui.window, err = gui.createWindow(500, 300)
 	if err != nil {
 		return fmt.Errorf("Failed to create window: %s", err)
 	}
@@ -172,37 +189,79 @@ func (gui *GUI) Render() error {
 	gui.terminal.AttachTitleChangeHandler(titleChan)
 	gui.terminal.AttachDisplayChangeHandler(changeChan)
 
-	frames := 0
-	frameCount := 0
-	fps := 0
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
+
+	dirty := true
+	defaultCell := buffer.NewBackgroundCell(gui.config.ColourScheme.Background)
+
+	var lastCursorX uint
+	var lastCursorY uint
 
 	for !gui.window.ShouldClose() {
 
 		select {
 
-		case <-changeChan:
-			frames = 2
+		case <-ticker.C:
 			gui.logger.Sync()
+		case <-changeChan:
+			dirty = true
 		case <-titleChan:
 			gui.window.SetTitle(gui.terminal.GetTitle())
-		case <-ticker.C:
-			fps = frameCount
-			frameCount = 0
 		default:
 		}
 
 		gl.UseProgram(program)
 
-		if gui.config.Rendering.AlwaysRepaint || frames > 0 {
+		if dirty {
+			gui.window.SwapBuffers()
+			dirty = false
+		}
 
-			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
+		if gui.terminal.CheckDirty() {
+
+			if gui.terminal.Modes().ShowCursor {
+				cx := uint(gui.terminal.GetLogicalCursorX())
+				cy := uint(gui.terminal.GetLogicalCursorY())
+				cy = cy + uint(gui.terminal.GetScrollOffset())
+
+				if lastCursorX != cx || lastCursorY != cy {
+					gui.renderState.SetDirty(lastCursorX, lastCursorY)
+					dirty = true
+				}
+			} else {
+				gui.renderState.SetDirty(lastCursorX, lastCursorY)
+				dirty = true
+			}
 
 			lines := gui.terminal.GetVisibleLines()
-			for y := 0; y < len(lines); y++ {
-				for x, cell := range lines[y].Cells() {
-					gui.renderer.DrawCell(cell, uint(x), uint(y))
+			lineCount := gui.terminal.ActiveBuffer().ViewHeight()
+			colCount := gui.terminal.ActiveBuffer().ViewWidth()
+			for y := 0; y < int(lineCount); y++ {
+
+				for x := 0; x < int(colCount); x++ {
+
+					cell := defaultCell
+					empty := true
+
+					if y < len(lines) {
+						cells := lines[y].Cells()
+						if x < len(cells) {
+							cell = cells[x]
+							if cell.Rune() == 0 {
+								cell = defaultCell
+							}
+							empty = false
+						}
+					}
+
+					if gui.renderState.RequiresRender(uint(x), uint(y), cell.Bg(), cell.Fg(), cell.Rune(), empty) {
+						gui.renderer.DrawCell(cell, uint(x), uint(y))
+						dirty = true
+					}
+
 				}
 			}
 
@@ -210,26 +269,19 @@ func (gui *GUI) Render() error {
 				cx := uint(gui.terminal.GetLogicalCursorX())
 				cy := uint(gui.terminal.GetLogicalCursorY())
 				cy = cy + uint(gui.terminal.GetScrollOffset())
-				gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
+
+				if lastCursorX != cx || lastCursorY != cy {
+					gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
+					gui.renderState.SetDirty(lastCursorX, lastCursorY)
+					lastCursorX = cx
+					lastCursorY = cy
+					dirty = true
+				}
 			}
 
-			_ = fps
-			/*
-				gui.font.SetColor(1, 0.5, 0.5, 0.5)
-				fpsData := ""
-				if gui.config.Rendering.AlwaysRepaint {
-					fpsData = fmt.Sprintf("%d FPS | %d,%d", fps, gui.terminal.GetLogicalCursorX(), gui.terminal.GetLogicalCursorY())
-				}
-				gui.font.Print(10, float32(gui.height-20), 1.5, fmt.Sprintf("%s", fpsData))
-			*/
 		}
 
-		if gui.config.Rendering.AlwaysRepaint || frames > 0 {
-			gui.window.SwapBuffers()
-			frameCount++
-			frames--
-		}
-
+		//glfw.PollEvents()
 		glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
 	}
 

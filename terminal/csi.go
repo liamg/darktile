@@ -98,7 +98,7 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			terminal.UseMainBuffer()
 		}
-	case "?1000", "?10061000": // ?10061000 seen from htop
+	case "?1000", "?1006;1000", "?10061000": // ?10061000 seen from htop
 		// enable mouse tracking
 		if enabled {
 			terminal.SetMouseMode(MouseModeVT200)
@@ -153,16 +153,16 @@ func csiWindowManipulation(params []string, intermediate string, terminal *Termi
 }
 
 func csiLinePositionAbsolute(params []string, intermediate string, terminal *Terminal) error {
-	col := 1
+	row := 1
 	if len(params) > 0 {
 		var err error
-		col, err = strconv.Atoi(params[0])
+		row, err = strconv.Atoi(params[0])
 		if err != nil {
-			col = 1
+			row = 1
 		}
 	}
 
-	terminal.ActiveBuffer().SetPosition(uint16(col), terminal.ActiveBuffer().CursorLine())
+	terminal.ActiveBuffer().SetPosition(terminal.ActiveBuffer().CursorColumn(), uint16(row-1))
 
 	return nil
 }

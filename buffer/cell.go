@@ -1,9 +1,8 @@
 package buffer
 
 type Cell struct {
-	r          rune
-	attr       CellAttributes
-	hasContent bool
+	r    rune
+	attr CellAttributes
 }
 
 type CellAttributes struct {
@@ -43,5 +42,12 @@ func (cell *Cell) erase() {
 
 func (cell *Cell) setRune(r rune) {
 	cell.r = r
-	cell.hasContent = r > 0
+}
+
+func NewBackgroundCell(colour [3]float32) Cell {
+	return Cell{
+		attr: CellAttributes{
+			BgColour: colour,
+		},
+	}
 }

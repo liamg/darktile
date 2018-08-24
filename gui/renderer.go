@@ -43,6 +43,7 @@ type rectangle struct {
 	colourAttr uint32
 	colour     [3]float32
 	points     []float32
+	prog       uint32
 }
 
 func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
@@ -53,7 +54,6 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 	h := r.cellHeight / float32(r.areaHeight/2)
 
 	rect := &rectangle{
-		colour: [3]float32{0, 0, 1},
 		points: []float32{
 			x, y, 0,
 			x, y + h, 0,
@@ -64,24 +64,8 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 			x + w, y + h, 0,
 		},
 		colourAttr: colourAttr,
+		prog:       r.program,
 	}
-
-	rect.gen()
-
-	return rect
-}
-
-func (rect *rectangle) gen() {
-
-	colour := []float32{
-		rect.colour[0], rect.colour[1], rect.colour[2],
-		rect.colour[0], rect.colour[1], rect.colour[2],
-		rect.colour[0], rect.colour[1], rect.colour[2],
-		rect.colour[0], rect.colour[1], rect.colour[2],
-		rect.colour[0], rect.colour[1], rect.colour[2],
-		rect.colour[0], rect.colour[1], rect.colour[2],
-	}
-
 	// SHAPE
 	gl.GenBuffers(1, &rect.vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, rect.vbo)
@@ -96,22 +80,37 @@ func (rect *rectangle) gen() {
 
 	// colour
 	gl.GenBuffers(1, &rect.cv)
-	gl.BindBuffer(gl.ARRAY_BUFFER, rect.cv)
-	gl.BufferData(gl.ARRAY_BUFFER, len(colour)*4, gl.Ptr(colour), gl.STATIC_DRAW)
-	gl.EnableVertexAttribArray(rect.colourAttr)
-	gl.VertexAttribPointer(rect.colourAttr, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
+	rect.setColour([3]float32{0, 1, 0})
+
+	return rect
 }
 
 func (rect *rectangle) setColour(colour [3]float32) {
 	if rect.colour == colour {
 		return
 	}
-	rect.Free()
+
+	c := []float32{
+		colour[0], colour[1], colour[2],
+		colour[0], colour[1], colour[2],
+		colour[0], colour[1], colour[2],
+		colour[0], colour[1], colour[2],
+		colour[0], colour[1], colour[2],
+		colour[0], colour[1], colour[2],
+	}
+
+	gl.UseProgram(rect.prog)
+	gl.BindBuffer(gl.ARRAY_BUFFER, rect.cv)
+	gl.BufferData(gl.ARRAY_BUFFER, len(c)*4, gl.Ptr(c), gl.STATIC_DRAW)
+	gl.EnableVertexAttribArray(rect.colourAttr)
+	gl.VertexAttribPointer(rect.colourAttr, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
 	rect.colour = colour
-	rect.gen()
 }
 
 func (rect *rectangle) Free() {
+	gl.UseProgram(rect.prog)
 	gl.DeleteVertexArrays(1, &rect.vao)
 	gl.DeleteBuffers(1, &rect.vbo)
 	gl.DeleteBuffers(1, &rect.cv)
@@ -159,7 +158,6 @@ func (r *OpenGLRenderer) SetFont(font *glfont.Font) { // @todo check for monospa
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
 	r.calculatePositions()
-	r.generateRectangles()
 }
 
 func (r *OpenGLRenderer) calculatePositions() {
@@ -175,22 +173,27 @@ func (r *OpenGLRenderer) calculatePositions() {
 	}
 }
 
-func (r *OpenGLRenderer) generateRectangles() {
-	gl.UseProgram(r.program)
-	for line := uint(0); line < r.termRows; line++ {
-		for col := uint(0); col < r.termCols; col++ {
-
-			rect, ok := r.rectangles[[2]uint{col, line}]
-			if ok {
-				rect.Free()
-			}
-
-			// rounding to whole pixels makes everything nice
-			x := float32(float64((float32(col) * r.cellWidth)))
-			y := float32(float64((float32(line) * r.cellHeight) + (r.cellHeight)))
-			r.rectangles[[2]uint{col, line}] = r.newRectangle(x, y, r.colourAttr)
-		}
+func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
+	if rect, ok := r.rectangles[[2]uint{col, row}]; ok {
+		return rect
 	}
+	return r.generateRectangle(col, row)
+}
+
+func (r *OpenGLRenderer) generateRectangle(col uint, line uint) *rectangle {
+
+	gl.UseProgram(r.program)
+
+	rect, ok := r.rectangles[[2]uint{col, line}]
+	if ok {
+		rect.Free()
+	}
+
+	// rounding to whole pixels makes everything nice
+	x := float32(float32(col) * r.cellWidth)
+	y := float32((float32(line) * r.cellHeight) + (r.cellHeight))
+	r.rectangles[[2]uint{col, line}] = r.newRectangle(x, y, r.colourAttr)
+	return r.rectangles[[2]uint{col, line}]
 }
 
 func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
@@ -220,10 +223,6 @@ func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
 
 func (r *OpenGLRenderer) DrawCell(cell buffer.Cell, col uint, row uint) {
 
-	if cell.Attr().Hidden || (cell.Rune() == 0x00) {
-		return
-	}
-
 	var fg [3]float32
 	var bg [3]float32
 
@@ -241,18 +240,10 @@ func (r *OpenGLRenderer) DrawCell(cell buffer.Cell, col uint, row uint) {
 	}
 
 	gl.UseProgram(r.program)
-
-	// don't bother rendering rectangles that are the same colour as the background
-	if bg != r.config.ColourScheme.Background {
-
-		rect, ok := r.rectangles[[2]uint{col, row}]
-		if !ok {
-			panic(fmt.Sprintf("Missing rectangle data for cell at %d,%d", col, row))
-		}
-		rect.setColour(bg)
-		gl.BindVertexArray(rect.vao)
-		gl.DrawArrays(gl.TRIANGLE_STRIP, 0, 6)
-	}
+	rect := r.getRectangle(col, row)
+	rect.setColour(bg)
+	gl.BindVertexArray(rect.vao)
+	gl.DrawArrays(gl.TRIANGLES, 0, 6)
 
 	var alpha float32 = 1
 	if cell.Attr().Dim {

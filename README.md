@@ -20,7 +20,7 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ## What isn't supported?
 
-- Suspend/Continue (^S, ^Q). This is archaic bullshit that annoys more people than it helps. Basically:
+- Suspend/Continue (\^S, \^Q). This is archaic bullshit that annoys more people than it helps. Basically:q
 
 <span style="display:block;text-align:center">
 ![Overheating](https://imgs.xkcd.com/comics/workflow.png)

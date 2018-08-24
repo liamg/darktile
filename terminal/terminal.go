@@ -45,6 +45,7 @@ type Terminal struct {
 	resumeChan        chan bool
 	modes             Modes
 	mouseMode         MouseMode
+	isDirty           bool
 }
 
 type Modes struct {
@@ -88,6 +89,12 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 			ShowCursor: true,
 		},
 	}
+}
+
+func (terminal *Terminal) CheckDirty() bool {
+	d := terminal.isDirty
+	terminal.isDirty = false
+	return d
 }
 
 func (terminal *Terminal) IsApplicationCursorKeysModeEnabled() bool {
