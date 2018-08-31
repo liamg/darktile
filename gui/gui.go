@@ -37,7 +37,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		width:     600,
 		height:    300,
 		terminal:  terminal,
-		fontScale: 15.0,
+		fontScale: 14.0,
 	}
 }
 
@@ -121,7 +121,7 @@ func (gui *GUI) Render() error {
 	gl.BindFragDataLocation(program, 0, gl.Str("outColour\x00"))
 
 	gui.logger.Debugf("Loading font...")
-	if err := gui.loadFont("./fonts/envypn-15.ttf"); err != nil {
+	if err := gui.loadFont("./fonts/Hack-Regular.ttf"); err != nil {
 		//if err := gui.loadFont("./fonts/Roboto.ttf"); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}

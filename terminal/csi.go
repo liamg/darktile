@@ -7,16 +7,33 @@ import (
 )
 
 var csiSequenceMap = map[rune]csiSequenceHandler{
-	'm': sgrSequenceHandler,
-	'P': csiDeleteHandler,
-	'J': csiEraseInDisplayHandler,
-	'K': csiEraseInLineHandler,
+	'd': csiLinePositionAbsolute,
 	'h': csiSetModeHandler,
 	'l': csiResetModeHandler,
-	'd': csiLinePositionAbsolute,
-	't': csiWindowManipulation,
-	'X': csiEraseCharactersHandler,
+	'm': sgrSequenceHandler,
 	'r': csiSetMarginsHandler,
+	't': csiWindowManipulation,
+	'J': csiEraseInDisplayHandler,
+	'K': csiEraseInLineHandler,
+	'P': csiDeleteHandler,
+	'T': csiScrollHandler,
+	'X': csiEraseCharactersHandler,
+}
+
+func csiScrollHandler(params []string, intermediate string, terminal *Terminal) error {
+	distance := 1
+	if len(params) > 1 {
+		return fmt.Errorf("Not supported")
+	}
+	if len(params) == 1 {
+		var err error
+		distance, err = strconv.Atoi(params[0])
+		if err != nil {
+			distance = 1
+		}
+	}
+	terminal.ScrollDown(uint16(distance))
+	return nil
 }
 
 // DECSTBM
@@ -41,12 +58,14 @@ func csiSetMarginsHandler(params []string, intermediate string, terminal *Termin
 			}
 		}
 	}
-	top -= 1
-	bottom -= 1
+	top--
+	bottom--
+
+	terminal.logger.Warnf("Request to set margins from line %d to %d", top, bottom)
 
 	terminal.ActiveBuffer().SetPosition(0, 0)
 
-	return nil
+	return fmt.Errorf("Not supported")
 }
 
 func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
