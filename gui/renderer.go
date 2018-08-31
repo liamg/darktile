@@ -5,14 +5,15 @@ import (
 	"math"
 
 	"github.com/go-gl/gl/all-core/gl"
-	"github.com/liamg/glfont"
 	"gitlab.com/liamg/raft/buffer"
 	"gitlab.com/liamg/raft/config"
+	"gitlab.com/liamg/raft/glfont"
 )
 
 type Renderer interface {
 	SetArea(areaX int, areaY int, areaWidth int, areaHeight int)
-	DrawCell(cell buffer.Cell, col uint, row uint)
+	DrawCellBg(cell buffer.Cell, col uint, row uint)
+	DrawCellText(cell buffer.Cell, col uint, row uint)
 	DrawCursor(col uint, row uint, colour config.Colour)
 	GetTermSize() (uint, uint)
 }
@@ -87,6 +88,12 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 	rect.setColour([3]float32{0, 1, 0})
 
 	return rect
+}
+
+func (rect *rectangle) Draw() {
+	gl.UseProgram(rect.prog)
+	gl.BindVertexArray(rect.vao)
+	gl.DrawArrays(gl.TRIANGLES, 0, 6)
 }
 
 func (rect *rectangle) setColour(colour [3]float32) {
@@ -199,54 +206,43 @@ func (r *OpenGLRenderer) generateRectangle(col uint, line uint) *rectangle {
 }
 
 func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
-
-	rect, ok := r.rectangles[[2]uint{col, row}]
-	if !ok { // probably trying to draw during resize - perhaps add a mutex?
-		return
-	}
-
-	solid := true
-
-	mode := uint32(gl.LINE_LOOP) // gl.TRIANGES for solid cursor
-	points := int32(4)
-
-	if solid {
-		mode = gl.TRIANGLES
-		points = 6
-	}
-
-	gl.UseProgram(r.program)
+	rect := r.getRectangle(col, row)
 	rect.setColour(colour)
-	gl.BindVertexArray(rect.vao)
-	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
-	gl.DrawArrays(mode, 0, points)
-	//gl.PolygonMode(gl.FRONT_AND_BACK, gl.FILL)
+	rect.Draw()
 }
 
-func (r *OpenGLRenderer) DrawCell(cell buffer.Cell, col uint, row uint) {
+func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint) {
 
-	var fg [3]float32
 	var bg [3]float32
 
 	if cell.Attr().Reverse {
-		fg = cell.Bg()
 		bg = cell.Fg()
 	} else {
-		fg = cell.Fg()
 		bg = cell.Bg()
+	}
+
+	if bg != r.config.ColourScheme.Background {
+		rect := r.getRectangle(col, row)
+		rect.setColour(bg)
+		rect.Draw()
+	}
+
+}
+
+func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint) {
+
+	var fg [3]float32
+
+	if cell.Attr().Reverse {
+		fg = cell.Bg()
+	} else {
+		fg = cell.Fg()
 	}
 
 	pos, ok := r.cellPositions[[2]uint{col, row}]
 	if !ok {
 		panic(fmt.Sprintf("Missing position data for cell at %d,%d", col, row))
 	}
-
-	rect := r.getRectangle(col, row)
-	rect.setColour(bg)
-
-	gl.UseProgram(r.program)
-	gl.BindVertexArray(rect.vao)
-	gl.DrawArrays(gl.TRIANGLES, 0, 6)
 
 	var alpha float32 = 1
 	if cell.Attr().Dim {

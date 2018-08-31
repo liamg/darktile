@@ -5,7 +5,7 @@ import (
 	"runtime"
 	"time"
 
-	"github.com/liamg/glfont"
+	"gitlab.com/liamg/raft/glfont"
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -16,30 +16,28 @@ import (
 )
 
 type GUI struct {
-	window      *glfw.Window
-	logger      *zap.SugaredLogger
-	config      *config.Config
-	terminal    *terminal.Terminal
-	width       int //window width in pixels
-	height      int //window height in pixels
-	font        *glfont.Font
-	fontScale   int32
-	renderer    Renderer
-	colourAttr  uint32
-	renderState *RenderState
+	window     *glfw.Window
+	logger     *zap.SugaredLogger
+	config     *config.Config
+	terminal   *terminal.Terminal
+	width      int //window width in pixels
+	height     int //window height in pixels
+	font       *glfont.Font
+	fontScale  int32
+	renderer   Renderer
+	colourAttr uint32
 }
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
 
 	//logger.
 	return &GUI{
-		config:      config,
-		logger:      logger,
-		width:       600,
-		height:      300,
-		terminal:    terminal,
-		fontScale:   15.0,
-		renderState: NewRenderState(),
+		config:    config,
+		logger:    logger,
+		width:     600,
+		height:    300,
+		terminal:  terminal,
+		fontScale: 15.0,
 	}
 }
 
@@ -72,9 +70,6 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	if err := gui.terminal.SetSize(cols, rows); err != nil {
 		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", cols, rows, err)
 	}
-
-	gui.logger.Debugf("Resetting render state...")
-	gui.renderState.Reset()
 
 	gui.logger.Debugf("Setting viewport size...")
 	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
@@ -192,9 +187,6 @@ func (gui *GUI) Render() error {
 
 	defaultCell := buffer.NewBackgroundCell(gui.config.ColourScheme.Background)
 
-	var lastCursorX uint
-	var lastCursorY uint
-
 	for !gui.window.ShouldClose() {
 
 		dirty := false
@@ -210,29 +202,16 @@ func (gui *GUI) Render() error {
 		default:
 		}
 
-		gl.UseProgram(program)
-
 		if dirty || gui.terminal.CheckDirty() {
 
+			gl.UseProgram(program)
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
-
-			if gui.terminal.Modes().ShowCursor {
-				cx := uint(gui.terminal.GetLogicalCursorX())
-				cy := uint(gui.terminal.GetLogicalCursorY())
-				cy = cy + uint(gui.terminal.GetScrollOffset())
-
-				if lastCursorX != cx || lastCursorY != cy {
-					gui.renderState.SetDirty(lastCursorX, lastCursorY)
-					dirty = true
-				}
-			}
 
 			lines := gui.terminal.GetVisibleLines()
 			lineCount := gui.terminal.ActiveBuffer().ViewHeight()
 			colCount := gui.terminal.ActiveBuffer().ViewWidth()
-			for y := 0; y < int(lineCount); y++ {
-
-				for x := 0; x < int(colCount); x++ {
+			for x := 0; x < int(colCount); x++ {
+				for y := 0; y < int(lineCount); y++ {
 
 					cell := defaultCell
 
@@ -246,7 +225,27 @@ func (gui *GUI) Render() error {
 						}
 					}
 
-					gui.renderer.DrawCell(cell, uint(x), uint(y))
+					gui.renderer.DrawCellBg(cell, uint(x), uint(y))
+
+				}
+			}
+
+			for x := 0; x < int(colCount); x++ {
+				for y := 0; y < int(lineCount); y++ {
+
+					cell := defaultCell
+
+					if y < len(lines) {
+						cells := lines[y].Cells()
+						if x < len(cells) {
+							cell = cells[x]
+							if cell.Rune() == 0 {
+								cell = defaultCell
+							}
+						}
+					}
+
+					gui.renderer.DrawCellText(cell, uint(x), uint(y))
 
 				}
 			}
