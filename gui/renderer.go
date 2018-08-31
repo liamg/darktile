@@ -66,6 +66,9 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 		colourAttr: colourAttr,
 		prog:       r.program,
 	}
+
+	gl.UseProgram(rect.prog)
+
 	// SHAPE
 	gl.GenBuffers(1, &rect.vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, rect.vbo)
@@ -158,6 +161,7 @@ func (r *OpenGLRenderer) SetFont(font *glfont.Font) { // @todo check for monospa
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
 	r.calculatePositions()
+	r.rectangles = map[[2]uint]*rectangle{}
 }
 
 func (r *OpenGLRenderer) calculatePositions() {
@@ -181,8 +185,6 @@ func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
 }
 
 func (r *OpenGLRenderer) generateRectangle(col uint, line uint) *rectangle {
-
-	gl.UseProgram(r.program)
 
 	rect, ok := r.rectangles[[2]uint{col, line}]
 	if ok {
@@ -239,9 +241,10 @@ func (r *OpenGLRenderer) DrawCell(cell buffer.Cell, col uint, row uint) {
 		panic(fmt.Sprintf("Missing position data for cell at %d,%d", col, row))
 	}
 
-	gl.UseProgram(r.program)
 	rect := r.getRectangle(col, row)
 	rect.setColour(bg)
+
+	gl.UseProgram(r.program)
 	gl.BindVertexArray(rect.vao)
 	gl.DrawArrays(gl.TRIANGLES, 0, 6)
 

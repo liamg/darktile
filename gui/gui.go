@@ -177,8 +177,6 @@ func (gui *GUI) Render() error {
 	gl.Disable(gl.DEPTH_TEST)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
-	//glfw.SwapInterval(1)
-
 	gl.ClearColor(
 		gui.config.ColourScheme.Background[0],
 		gui.config.ColourScheme.Background[1],
@@ -189,18 +187,17 @@ func (gui *GUI) Render() error {
 	gui.terminal.AttachTitleChangeHandler(titleChan)
 	gui.terminal.AttachDisplayChangeHandler(changeChan)
 
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT)
-
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
-	dirty := true
 	defaultCell := buffer.NewBackgroundCell(gui.config.ColourScheme.Background)
 
 	var lastCursorX uint
 	var lastCursorY uint
 
 	for !gui.window.ShouldClose() {
+
+		dirty := false
 
 		select {
 
@@ -215,12 +212,9 @@ func (gui *GUI) Render() error {
 
 		gl.UseProgram(program)
 
-		if dirty {
-			gui.window.SwapBuffers()
-			dirty = false
-		}
+		if dirty || gui.terminal.CheckDirty() {
 
-		if gui.terminal.CheckDirty() {
+			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
 
 			if gui.terminal.Modes().ShowCursor {
 				cx := uint(gui.terminal.GetLogicalCursorX())
@@ -231,9 +225,6 @@ func (gui *GUI) Render() error {
 					gui.renderState.SetDirty(lastCursorX, lastCursorY)
 					dirty = true
 				}
-			} else {
-				gui.renderState.SetDirty(lastCursorX, lastCursorY)
-				dirty = true
 			}
 
 			lines := gui.terminal.GetVisibleLines()
@@ -244,7 +235,6 @@ func (gui *GUI) Render() error {
 				for x := 0; x < int(colCount); x++ {
 
 					cell := defaultCell
-					empty := true
 
 					if y < len(lines) {
 						cells := lines[y].Cells()
@@ -253,14 +243,10 @@ func (gui *GUI) Render() error {
 							if cell.Rune() == 0 {
 								cell = defaultCell
 							}
-							empty = false
 						}
 					}
 
-					if gui.renderState.RequiresRender(uint(x), uint(y), cell.Bg(), cell.Fg(), cell.Rune(), empty) {
-						gui.renderer.DrawCell(cell, uint(x), uint(y))
-						dirty = true
-					}
+					gui.renderer.DrawCell(cell, uint(x), uint(y))
 
 				}
 			}
@@ -269,16 +255,10 @@ func (gui *GUI) Render() error {
 				cx := uint(gui.terminal.GetLogicalCursorX())
 				cy := uint(gui.terminal.GetLogicalCursorY())
 				cy = cy + uint(gui.terminal.GetScrollOffset())
-
-				if lastCursorX != cx || lastCursorY != cy {
-					gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
-					gui.renderState.SetDirty(lastCursorX, lastCursorY)
-					lastCursorX = cx
-					lastCursorY = cy
-					dirty = true
-				}
+				gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
 			}
 
+			gui.window.SwapBuffers()
 		}
 
 		//glfw.PollEvents()
