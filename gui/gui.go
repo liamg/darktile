@@ -219,9 +219,9 @@ func (gui *GUI) Render() error {
 						cells := lines[y].Cells()
 						if x < len(cells) {
 							cell = cells[x]
-							if cell.Rune() == 0 {
-								cell = defaultCell
-							}
+							//if cell.Rune() == 0 {
+							//	cell = defaultCell
+							//}
 						}
 					}
 
@@ -240,7 +240,7 @@ func (gui *GUI) Render() error {
 						if x < len(cells) {
 							cell = cells[x]
 							if cell.Rune() == 0 {
-								cell = defaultCell
+								continue
 							}
 						}
 					}

@@ -1,5 +1,9 @@
 package buffer
 
+import (
+	"strings"
+)
+
 type Line struct {
 	wrapped bool // whether line was wrapped onto from the previous one
 	cells   []Cell
@@ -40,7 +44,7 @@ func (line *Line) String() string {
 	for _, cell := range line.cells {
 		runes = append(runes, cell.r)
 	}
-	return string(runes)
+	return strings.TrimRight(string(runes), "\x00 ")
 }
 
 // @todo test these (ported from legacy) ------------------

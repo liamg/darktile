@@ -16,10 +16,6 @@ type CellAttributes struct {
 	Hidden    bool
 }
 
-func newCell() Cell {
-	return Cell{}
-}
-
 func (cell *Cell) Attr() CellAttributes {
 	return cell.attr
 }

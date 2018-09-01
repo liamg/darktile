@@ -227,7 +227,7 @@ func (buffer *Buffer) Write(runes ...rune) {
 		} else {
 
 			for int(buffer.CursorColumn()) >= len(line.cells) {
-				line.cells = append(line.cells, newCell())
+				line.cells = append(line.cells, NewBackgroundCell(buffer.cursorAttr.BgColour))
 			}
 
 			cell := &line.cells[buffer.CursorColumn()]
@@ -383,14 +383,15 @@ func (buffer *Buffer) EraseLineFromCursor() {
 	defer buffer.emitDisplayChange()
 	line := buffer.getCurrentLine()
 
-	max := int(buffer.cursorX)
-	if max > len(line.cells) {
-		max = len(line.cells)
-	}
+	line.cells = line.cells[:buffer.cursorX]
 
-	for c := int(buffer.cursorX); c < len(line.cells); c++ {
-		line.cells[c].erase()
+	max := int(buffer.ViewWidth()) - len(line.cells)
+
+	buffer.SaveCursor()
+	for i := 0; i < max; i++ {
+		buffer.Write(0)
 	}
+	buffer.RestoreCursor()
 }
 
 func (buffer *Buffer) EraseDisplay() {

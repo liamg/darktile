@@ -255,7 +255,7 @@ func TestCarriageReturnOnOverWrappedLine(t *testing.T) {
 	b.Write([]rune("hello there!\rsecret sauce")...)
 	lines := b.GetVisibleLines()
 	require.Equal(t, 3, len(lines))
-	assert.Equal(t, "hello ", lines[0].String())
+	assert.Equal(t, "hello", lines[0].String())
 	assert.Equal(t, "secret", lines[1].String())
 	assert.True(t, b.lines[1].wrapped)
 	assert.Equal(t, " sauce", lines[2].String())
@@ -289,8 +289,6 @@ func TestGetCellWithBadCursor(t *testing.T) {
 	b := NewBuffer(80, 2, CellAttributes{})
 	b.Write([]rune("Hello\r\nthere\r\nsomething...")...)
 	require.Nil(t, b.GetCell(8, 3))
-	require.Nil(t, b.GetCell(8, -1))
-	require.Nil(t, b.GetCell(-8, 1))
 	require.Nil(t, b.GetCell(90, 0))
 
 }
@@ -365,7 +363,7 @@ func TestEraseLineAfterCursor(t *testing.T) {
 	b.MovePosition(-3, 0)
 	b.EraseLineFromCursor()
 	assert.Equal(t, "hello, this is a test", b.lines[0].String())
-	assert.Equal(t, "dele\x00\x00\x00", b.lines[1].String())
+	assert.Equal(t, "dele", b.lines[1].String())
 }
 func TestEraseDisplay(t *testing.T) {
 	b := NewBuffer(80, 5, CellAttributes{})
@@ -404,9 +402,9 @@ func TestBackspace(t *testing.T) {
 	b.Write([]rune("hello")...)
 	b.Backspace()
 	b.Backspace()
-	b.Write([]rune("l")...)
+	b.Write([]rune("p")...)
 	lines := b.GetVisibleLines()
-	assert.Equal(t, "hell\x00", lines[0].String())
+	assert.Equal(t, "helpo", lines[0].String())
 }
 
 func TestBackspaceWithWrap(t *testing.T) {
@@ -424,7 +422,7 @@ func TestBackspaceWithWrap(t *testing.T) {
 	b.Backspace()
 	b.EraseLineFromCursor()
 	lines := b.GetVisibleLines()
-	assert.Equal(t, "hello\x00\x00\x00\x00\x00", lines[0].String())
+	assert.Equal(t, "hello", lines[0].String())
 }
 
 func TestHorizontalResizeView(t *testing.T) {
