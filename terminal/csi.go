@@ -103,8 +103,10 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		terminal.ActiveBuffer().SetAutoWrap(enabled)
 	case "?9":
 		if enabled {
+			terminal.logger.Debugf("Turning on X10 mouse mode")
 			terminal.SetMouseMode(MouseModeX10)
 		} else {
+			terminal.logger.Debugf("Turning off X10 mouse mode")
 			terminal.SetMouseMode(MouseModeNone)
 		}
 	case "?12", "?13":
@@ -119,9 +121,12 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		}
 	case "?1000", "?1006;1000", "?10061000": // ?10061000 seen from htop
 		// enable mouse tracking
+		// 1000 refers to ext mode for extended mouse click area - otherwise only x <= 255-31
 		if enabled {
+			terminal.logger.Debugf("Turning on VT200 mouse mode")
 			terminal.SetMouseMode(MouseModeVT200)
 		} else {
+			terminal.logger.Debugf("Turning off VT200 mouse mode")
 			terminal.SetMouseMode(MouseModeNone)
 		}
 	case "?1048":

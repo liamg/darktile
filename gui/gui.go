@@ -23,7 +23,7 @@ type GUI struct {
 	width      int //window width in pixels
 	height     int //window height in pixels
 	font       *glfont.Font
-	fontScale  int32
+	fontScale  float32
 	renderer   Renderer
 	colourAttr uint32
 }
@@ -122,14 +122,14 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Loading font...")
 	if err := gui.loadFont("./fonts/Hack-Regular.ttf"); err != nil {
-		//if err := gui.loadFont("./fonts/Roboto.ttf"); err != nil {
+		//if err := gui.loadFont("./fonts/envypn-15.ttf"); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
 	changeChan := make(chan bool, 1)
 	titleChan := make(chan bool, 1)
 
-	gui.renderer = NewOpenGLRenderer(gui.config, gui.font, gui.fontScale, 0, 0, gui.width, gui.height, gui.colourAttr, program)
+	gui.renderer = NewOpenGLRenderer(gui.config, gui.font, 0, 0, gui.width, gui.height, gui.colourAttr, program)
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)

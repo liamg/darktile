@@ -28,11 +28,7 @@
 [[projects]]
   branch = "master"
   name = "github.com/golang/freetype"
-  packages = [
-    ".",
-    "raster",
-    "truetype"
-  ]
+  packages = [".","raster","truetype"]
   revision = "e2365dfdc4a05e4b8299a783240d4a7d5a65d4e4"
 
 [[projects]]
@@ -40,12 +36,6 @@
   packages = ["."]
   revision = "fa756f09eeb418bf1cc6268c66ceaad9bb98f598"
   version = "v1.1.2"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/liamg/glfont"
-  packages = ["."]
-  revision = "d24783da55c81fd75c8e7c0897ee3f7d336f8b44"
 
 [[projects]]
   name = "github.com/pmezard/go-difflib"
@@ -61,10 +51,7 @@
 
 [[projects]]
   name = "github.com/stretchr/testify"
-  packages = [
-    "assert",
-    "require"
-  ]
+  packages = ["assert","require"]
   revision = "f35b8ab0b5a2cef36673838d662e249dd9c94686"
   version = "v1.2.2"
 
@@ -82,29 +69,19 @@
 
 [[projects]]
   name = "go.uber.org/zap"
-  packages = [
-    ".",
-    "buffer",
-    "internal/bufferpool",
-    "internal/color",
-    "internal/exit",
-    "zapcore"
-  ]
+  packages = [".","buffer","internal/bufferpool","internal/color","internal/exit","zapcore"]
   revision = "ff33455a0e382e8a81d14dd7c922020b6b5e7982"
   version = "v1.9.1"
 
 [[projects]]
   branch = "master"
   name = "golang.org/x/image"
-  packages = [
-    "font",
-    "math/fixed"
-  ]
+  packages = ["font","math/fixed"]
   revision = "c73c2afc3b812cdd6385de5a50616511c4a3d458"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "18e6b85742181970b4dbe1aae2d74b033fbca809df825b8a03c8e3ba6b5ba29c"
+  inputs-digest = "511d10ed41125fb4859199ab90d9779aaa5a5134f6ca26eca1d517d200404124"
   solver-name = "gps-cdcl"
   solver-version = 1

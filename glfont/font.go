@@ -1,29 +1,31 @@
 package glfont
 
 import (
+	"fmt"
+	"image"
+	"image/draw"
+	"math"
 	"os"
 
 	"github.com/go-gl/gl/all-core/gl"
-)
-
-// Direction represents the direction in which strings should be rendered.
-type Direction uint8
-
-// Known directions.
-const (
-	LeftToRight Direction = iota // E.g.: Latin
-	RightToLeft                  // E.g.: Arabic
-	TopToBottom                  // E.g.: Chinese
+	"github.com/golang/freetype"
+	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
+	"golang.org/x/image/math/fixed"
 )
 
 // A Font allows rendering of text to an OpenGL context.
 type Font struct {
-	fontChar []*character
-	vao      uint32
-	vbo      uint32
-	program  uint32
-	texture  uint32 // Holds the glyph texture id.
-	color    color
+	characters  map[rune]*character
+	vao         uint32
+	vbo         uint32
+	program     uint32
+	texture     uint32 // Holds the glyph texture id.
+	color       color
+	ttf         *truetype.Font
+	scale       float32
+	linePadding float32
+	lineHeight  float32
 }
 
 type color struct {
@@ -34,7 +36,7 @@ type color struct {
 }
 
 //LoadFont loads the specified font at the given scale.
-func LoadFont(file string, scale int32, windowWidth int, windowHeight int) (*Font, error) {
+func LoadFont(file string, scale float32, windowWidth int, windowHeight int) (*Font, error) {
 	fd, err := os.Open(file)
 	if err != nil {
 		return nil, err
@@ -54,7 +56,7 @@ func LoadFont(file string, scale int32, windowWidth int, windowHeight int) (*Fon
 	resUniform := gl.GetUniformLocation(program, gl.Str("resolution\x00"))
 	gl.Uniform2f(resUniform, float32(windowWidth), float32(windowHeight))
 
-	return LoadTrueTypeFont(program, fd, scale, 32, 127, LeftToRight)
+	return LoadTrueTypeFont(program, fd, scale)
 }
 
 //SetColor allows you to set the text color to be used when you draw the text
@@ -70,18 +72,28 @@ func (f *Font) UpdateResolution(windowWidth int, windowHeight int) {
 	resUniform := gl.GetUniformLocation(f.program, gl.Str("resolution\x00"))
 	gl.Uniform2f(resUniform, float32(windowWidth), float32(windowHeight))
 	gl.UseProgram(0)
+	//f.characters = map[rune]*character{}
+}
+
+func (f *Font) LineHeight() float32 {
+	return f.lineHeight
+}
+
+func (f *Font) LinePadding() float32 {
+	return f.linePadding
 }
 
 //Printf draws a string to the screen, takes a list of arguments like printf
-func (f *Font) Print(x, y float32, scale float32, text string) error {
+func (f *Font) Print(x, y float32, text string) error {
+
+	x = float32(math.Round(float64(x)))
+	y = float32(math.Round(float64(y)))
 
 	indices := []rune(text)
 
 	if len(indices) == 0 {
 		return nil
 	}
-
-	lowChar := rune(32)
 
 	//setup blending mode
 	gl.Enable(gl.BLEND)
@@ -104,19 +116,17 @@ func (f *Font) Print(x, y float32, scale float32, text string) error {
 		//get rune
 		runeIndex := indices[i]
 
-		//skip runes that are not in font chacter range
-		if int(runeIndex)-int(lowChar) > len(f.fontChar) || runeIndex < lowChar {
-			continue
+		//find rune in fontChar list
+		ch, err := f.GetRune(runeIndex)
+		if err != nil {
+			return err // @todo ignore errors?
 		}
 
-		//find rune in fontChar list
-		ch := f.fontChar[runeIndex-lowChar]
-
 		//calculate position and size for current rune
-		xpos := x + float32(ch.bearingH)*scale
-		ypos := y - float32(ch.height-ch.bearingV)*scale
-		w := float32(ch.width) * scale
-		h := float32(ch.height) * scale
+		xpos := x + float32(ch.bearingH)
+		ypos := y - float32(+ch.height-ch.bearingV)
+		w := float32(ch.width)
+		h := float32(ch.height)
 
 		//set quad positions
 		var x1 = xpos
@@ -147,7 +157,7 @@ func (f *Font) Print(x, y float32, scale float32, text string) error {
 
 		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-		x += float32((ch.advance >> 6)) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
+		x += float32((ch.advance >> 6)) // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
 
 	}
 
@@ -161,53 +171,16 @@ func (f *Font) Print(x, y float32, scale float32, text string) error {
 }
 
 //Width returns the width of a piece of text in pixels
-func (f *Font) Width(scale float32, text string) float32 {
+func (f *Font) Size(text string) (float32, float32) {
 
 	var width float32
-
-	indices := []rune(text)
-
-	if len(indices) == 0 {
-		return 0
-	}
-
-	lowChar := rune(32)
-
-	// Iterate through all characters in string
-	for i := range indices {
-
-		//get rune
-		runeIndex := indices[i]
-
-		//skip runes that are not in font chacter range
-		if int(runeIndex)-int(lowChar) > len(f.fontChar) || runeIndex < lowChar {
-			continue
-		}
-
-		//find rune in fontChar list
-		ch := f.fontChar[runeIndex-lowChar]
-
-		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-		width += float32((ch.advance >> 6)) * scale // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
-
-	}
-
-	return width
-}
-
-//Height returns the height of a piece of text in pixels
-func (f *Font) Height(scale float32, text string) float32 {
-
-	var baseHeight float32
 	var height float32
 
 	indices := []rune(text)
 
 	if len(indices) == 0 {
-		return 0
+		return 0, 0
 	}
-
-	lowChar := rune(32)
 
 	// Iterate through all characters in string
 	for i := range indices {
@@ -215,25 +188,112 @@ func (f *Font) Height(scale float32, text string) float32 {
 		//get rune
 		runeIndex := indices[i]
 
-		if int(runeIndex) == 0x0a {
-			baseHeight = height
-			height = 0
-		}
-
-		//skip runes that are not in font chacter range
-		if int(runeIndex)-int(lowChar) > len(f.fontChar) || runeIndex < lowChar {
+		//find rune in fontChar list
+		ch, err := f.GetRune(runeIndex)
+		if err != nil {
 			continue
 		}
 
-		//find rune in fontChar list
-		ch := f.fontChar[runeIndex-lowChar]
+		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
+		width += float32((ch.advance >> 6)) // Bitshift by 6 to get value in pixels (2^6 = 64 (divide amount of 1/64th pixels by 64 to get amount of pixels))
 
 		// Now advance cursors for next glyph (note that advance is number of 1/64 pixels)
-		if float32(ch.height)*scale > height {
-			height = float32(ch.height) * scale
+		if float32(ch.height)*f.scale > height {
+			height = float32(ch.height)
 		}
-
 	}
 
-	return baseHeight + height
+	return width, height
+}
+
+func (f *Font) GetRune(r rune) (*character, error) {
+
+	cc, ok := f.characters[r]
+	if ok {
+		return cc, nil
+	}
+
+	char := new(character)
+
+	//create new face to measure glyph diamensions
+	ttfFace := truetype.NewFace(f.ttf, &truetype.Options{
+		Size:    float64(f.scale),
+		DPI:     72,
+		Hinting: font.HintingFull,
+	})
+
+	gBnd, gAdv, ok := ttfFace.GlyphBounds(r)
+	if ok != true {
+		return nil, fmt.Errorf("ttf face glyphBounds error")
+	}
+
+	gh := int32((gBnd.Max.Y - gBnd.Min.Y) >> 6)
+	gw := int32((gBnd.Max.X - gBnd.Min.X) >> 6)
+
+	//if gylph has no diamensions set to a max value
+	if gw == 0 || gh == 0 {
+		gBnd = f.ttf.Bounds(fixed.Int26_6(f.scale))
+		gw = int32((gBnd.Max.X - gBnd.Min.X) >> 6)
+		gh = int32((gBnd.Max.Y - gBnd.Min.Y) >> 6)
+
+		//above can sometimes yield 0 for font smaller than 48pt, 1 is minimum
+		if gw == 0 || gh == 0 {
+			gw = 1
+			gh = 1
+		}
+	}
+
+	//The glyph's ascent and descent equal -bounds.Min.Y and +bounds.Max.Y.
+	gAscent := int(-gBnd.Min.Y) >> 6
+	gdescent := int(gBnd.Max.Y) >> 6
+
+	//set w,h and adv, bearing V and bearing H in char
+	char.width = int(gw)
+	char.height = int(gh)
+	char.advance = int(gAdv)
+	char.bearingV = gdescent
+	char.bearingH = (int(gBnd.Min.X) >> 6)
+
+	//create image to draw glyph
+	fg, bg := image.White, image.Black
+	rect := image.Rect(0, 0, int(gw), int(gh))
+	rgba := image.NewRGBA(rect)
+	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
+
+	//create a freetype context for drawing
+	c := freetype.NewContext()
+	c.SetDPI(72)
+	c.SetFont(f.ttf)
+	c.SetFontSize(float64(f.scale))
+	c.SetClip(rgba.Bounds())
+	c.SetDst(rgba)
+	c.SetSrc(fg)
+	c.SetHinting(font.HintingFull)
+
+	//set the glyph dot
+	px := 0 - (int(gBnd.Min.X) >> 6)
+	py := (gAscent)
+	pt := freetype.Pt(px, py)
+
+	// Draw the text from mask to image
+	if _, err := c.DrawString(string(r), pt); err != nil {
+		return nil, err
+	}
+
+	// Generate texture
+	var texture uint32
+	gl.GenTextures(1, &texture)
+	gl.BindTexture(gl.TEXTURE_2D, texture)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.LINEAR)
+	gl.TexParameteri(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.LINEAR)
+	gl.TexImage2D(gl.TEXTURE_2D, 0, gl.RGBA, int32(rgba.Rect.Dx()), int32(rgba.Rect.Dy()), 0,
+		gl.RGBA, gl.UNSIGNED_BYTE, gl.Ptr(rgba.Pix))
+
+	char.textureID = texture
+
+	f.characters[r] = char
+
+	return char, nil
 }

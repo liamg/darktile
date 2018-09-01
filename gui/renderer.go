@@ -1,7 +1,6 @@
 package gui
 
 import (
-	"fmt"
 	"math"
 
 	"github.com/go-gl/gl/all-core/gl"
@@ -19,22 +18,20 @@ type Renderer interface {
 }
 
 type OpenGLRenderer struct {
-	font                *glfont.Font
-	areaWidth           int
-	areaHeight          int
-	areaX               int
-	areaY               int
-	fontScale           int32
-	cellWidth           float32
-	cellHeight          float32
-	verticalCellPadding float32
-	termCols            uint
-	termRows            uint
-	cellPositions       map[[2]uint][2]float32
-	rectangles          map[[2]uint]*rectangle
-	config              *config.Config
-	colourAttr          uint32
-	program             uint32
+	font          *glfont.Font
+	areaWidth     int
+	areaHeight    int
+	areaX         int
+	areaY         int
+	cellWidth     float32
+	cellHeight    float32
+	termCols      uint
+	termRows      uint
+	cellPositions map[[2]uint][2]float32
+	rectangles    map[[2]uint]*rectangle
+	config        *config.Config
+	colourAttr    uint32
+	program       uint32
 }
 
 type rectangle struct {
@@ -49,10 +46,13 @@ type rectangle struct {
 
 func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
 
-	x = (x - float32(r.areaWidth/2)) / float32(r.areaWidth/2)
-	y = -(y - float32(r.areaHeight/2)) / float32(r.areaHeight/2)
-	w := r.cellWidth / float32(r.areaWidth/2)
-	h := r.cellHeight / float32(r.areaHeight/2)
+	halfAreaWidth := float32(r.areaWidth / 2)
+	halfAreaHeight := float32(r.areaHeight / 2)
+
+	x = (x - halfAreaWidth) / halfAreaWidth
+	y = -(y - halfAreaHeight) / halfAreaHeight
+	w := r.cellWidth / halfAreaWidth
+	h := r.cellHeight / halfAreaHeight
 
 	rect := &rectangle{
 		points: []float32{
@@ -126,13 +126,12 @@ func (rect *rectangle) Free() {
 	gl.DeleteBuffers(1, &rect.cv)
 }
 
-func NewOpenGLRenderer(config *config.Config, font *glfont.Font, fontScale int32, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
+func NewOpenGLRenderer(config *config.Config, font *glfont.Font, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
 	r := &OpenGLRenderer{
 		areaWidth:     areaWidth,
 		areaHeight:    areaHeight,
 		areaX:         areaX,
 		areaY:         areaY,
-		fontScale:     fontScale,
 		cellPositions: map[[2]uint][2]float32{},
 		rectangles:    map[[2]uint]*rectangle{},
 		config:        config,
@@ -155,33 +154,13 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	r.SetFont(r.font)
 }
 
-func (r *OpenGLRenderer) SetFontScale(fontScale int32) {
-	r.fontScale = fontScale
-	r.SetFont(r.font)
-}
-
 func (r *OpenGLRenderer) SetFont(font *glfont.Font) { // @todo check for monospace and return error if not?
 	r.font = font
-	r.verticalCellPadding = (0.25 * float32(r.fontScale))
-	r.cellWidth = font.Width(1, "X")
-	r.cellHeight = font.Height(1, "X") + (r.verticalCellPadding * 2) // vertical padding
+	r.cellWidth, _ = font.Size("X")
+	r.cellHeight = font.LineHeight() // vertical padding
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
-	r.calculatePositions()
 	r.rectangles = map[[2]uint]*rectangle{}
-}
-
-func (r *OpenGLRenderer) calculatePositions() {
-	for line := uint(0); line < r.termRows; line++ {
-		for col := uint(0); col < r.termCols; col++ {
-			// rounding to whole pixels makes everything nice
-			x := float32(math.Round(float64((float32(col) * r.cellWidth))))
-			y := float32(math.Round(float64(
-				(float32(line) * r.cellHeight) + (r.cellHeight / 2) + r.verticalCellPadding,
-			)))
-			r.cellPositions[[2]uint{col, line}] = [2]float32{x, y}
-		}
-	}
 }
 
 func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
@@ -200,7 +179,7 @@ func (r *OpenGLRenderer) generateRectangle(col uint, line uint) *rectangle {
 
 	// rounding to whole pixels makes everything nice
 	x := float32(float32(col) * r.cellWidth)
-	y := float32((float32(line) * r.cellHeight) + (r.cellHeight))
+	y := float32((float32(line) * r.cellHeight)) + r.cellHeight + (r.font.LinePadding() / 2)
 	r.rectangles[[2]uint{col, line}] = r.newRectangle(x, y, r.colourAttr)
 	return r.rectangles[[2]uint{col, line}]
 }
@@ -239,20 +218,18 @@ func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint) {
 		fg = cell.Fg()
 	}
 
-	pos, ok := r.cellPositions[[2]uint{col, row}]
-	if !ok {
-		panic(fmt.Sprintf("Missing position data for cell at %d,%d", col, row))
-	}
-
 	var alpha float32 = 1
 	if cell.Attr().Dim {
 		alpha = 0.5
 	}
 	r.font.SetColor(fg[0], fg[1], fg[2], alpha)
 
+	x := float32(col) * r.cellWidth
+	y := (float32(row+1) * r.cellHeight) - (r.font.LinePadding() / 2)
+
 	if cell.Attr().Bold { // bold means draw text again one pixel to right, so it's fatter
-		r.font.Print(pos[0]+1, pos[1], 1, string(cell.Rune()))
+		r.font.Print(x+1, y, string(cell.Rune()))
 	}
-	r.font.Print(pos[0], pos[1], 1, string(cell.Rune()))
+	r.font.Print(x, y, string(cell.Rune()))
 
 }

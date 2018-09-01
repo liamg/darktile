@@ -41,7 +41,7 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 			b := rune(byte(button & 0xff))
 			x := rune(byte((gui.terminal.ActiveBuffer().CursorColumn() + 31) & 0xff))
 			y := rune(byte((gui.terminal.ActiveBuffer().CursorLine() + 31) & 0xff))
-			packet := fmt.Sprintf("\x1b[%c%c%cM", b, x, y)
+			packet := fmt.Sprintf("\x1b[M%c%c%c", b, x, y)
 			gui.terminal.Write([]byte(packet))
 		}
 	case terminal.MouseModeVT200: // normal
@@ -95,7 +95,7 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 		}
 		x := rune(byte((gui.terminal.ActiveBuffer().CursorColumn() + 31) & 0xff))
 		y := rune(byte((gui.terminal.ActiveBuffer().CursorLine() + 31) & 0xff))
-		packet := fmt.Sprintf("\x1b[%c%c%cM", b, x, y)
+		packet := fmt.Sprintf("\x1b[M%c%c%c", b, x, y)
 		gui.terminal.Write([]byte(packet))
 
 	case terminal.MouseModeVT200Highlight:
