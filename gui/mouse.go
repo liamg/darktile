@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"math"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"gitlab.com/liamg/raft/terminal"
@@ -38,10 +39,12 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 		*/
 
 		if action == glfw.Press {
-			b := rune(byte(button & 0xff))
-			x := rune(byte((gui.terminal.ActiveBuffer().CursorColumn() + 31) & 0xff))
-			y := rune(byte((gui.terminal.ActiveBuffer().CursorLine() + 31) & 0xff))
-			packet := fmt.Sprintf("\x1b[M%c%c%c", b, x, y)
+			b := rune(button)
+			px, py := w.GetCursorPos()
+			x := int(math.Floor(px/float64(gui.renderer.CellWidth()))) + 1
+			y := int(math.Floor(py/float64(gui.renderer.CellHeight()))) + 1
+			packet := fmt.Sprintf("\x1b[M%c%c%c", (rune(b + 32)), (rune(x + 32)), (rune(y + 32)))
+
 			gui.terminal.Write([]byte(packet))
 		}
 	case terminal.MouseModeVT200: // normal
@@ -93,9 +96,11 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 		if mod&glfw.ModControl > 0 {
 			b |= 16
 		}
-		x := rune(byte((gui.terminal.ActiveBuffer().CursorColumn() + 31) & 0xff))
-		y := rune(byte((gui.terminal.ActiveBuffer().CursorLine() + 31) & 0xff))
-		packet := fmt.Sprintf("\x1b[M%c%c%c", b, x, y)
+		px, py := w.GetCursorPos()
+		x := int(math.Floor(px/float64(gui.renderer.CellWidth()))) + 1
+		y := int(math.Floor(py/float64(gui.renderer.CellHeight()))) + 1
+		packet := fmt.Sprintf("\x1b[M%c%c%c", (rune(b + 32)), (rune(x + 32)), (rune(y + 32)))
+		gui.logger.Infof("Sending mouse packet: '%v'", packet)
 		gui.terminal.Write([]byte(packet))
 
 	case terminal.MouseModeVT200Highlight:

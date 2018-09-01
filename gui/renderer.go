@@ -15,6 +15,8 @@ type Renderer interface {
 	DrawCellText(cell buffer.Cell, col uint, row uint)
 	DrawCursor(col uint, row uint, colour config.Colour)
 	GetTermSize() (uint, uint)
+	CellWidth() float32
+	CellHeight() float32
 }
 
 type OpenGLRenderer struct {
@@ -42,6 +44,14 @@ type rectangle struct {
 	colour     [3]float32
 	points     []float32
 	prog       uint32
+}
+
+func (r *OpenGLRenderer) CellWidth() float32 {
+	return r.cellWidth
+}
+
+func (r *OpenGLRenderer) CellHeight() float32 {
+	return r.cellHeight
 }
 
 func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
