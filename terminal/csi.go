@@ -15,12 +15,14 @@ var csiSequenceMap = map[rune]csiSequenceHandler{
 	't': csiWindowManipulation,
 	'J': csiEraseInDisplayHandler,
 	'K': csiEraseInLineHandler,
+	'L': csiInsertLinesHandler,
 	'P': csiDeleteHandler,
-	'T': csiScrollHandler,
+	'S': csiScrollUpHandler,
+	'T': csiScrollDownHandler,
 	'X': csiEraseCharactersHandler,
 }
 
-func csiScrollHandler(params []string, intermediate string, terminal *Terminal) error {
+func csiScrollUpHandler(params []string, intermediate string, terminal *Terminal) error {
 	distance := 1
 	if len(params) > 1 {
 		return fmt.Errorf("Not supported")
@@ -32,6 +34,41 @@ func csiScrollHandler(params []string, intermediate string, terminal *Terminal) 
 			distance = 1
 		}
 	}
+	terminal.logger.Debugf("Scrolling up %d", distance)
+	terminal.ScrollUp(uint16(distance))
+	return nil
+}
+
+func csiInsertLinesHandler(params []string, intermediate string, terminal *Terminal) error {
+	count := 1
+	if len(params) > 1 {
+		return fmt.Errorf("Not supported")
+	}
+	if len(params) == 1 {
+		var err error
+		count, err = strconv.Atoi(params[0])
+		if err != nil {
+			count = 1
+		}
+	}
+	terminal.logger.Debugf("Inserting %d lines", count)
+	panic("Not supported")
+	return nil
+}
+
+func csiScrollDownHandler(params []string, intermediate string, terminal *Terminal) error {
+	distance := 1
+	if len(params) > 1 {
+		return fmt.Errorf("Not supported")
+	}
+	if len(params) == 1 {
+		var err error
+		distance, err = strconv.Atoi(params[0])
+		if err != nil {
+			distance = 1
+		}
+	}
+	terminal.logger.Debugf("Scrolling down %d", distance)
 	terminal.ScrollDown(uint16(distance))
 	return nil
 }
@@ -61,89 +98,8 @@ func csiSetMarginsHandler(params []string, intermediate string, terminal *Termin
 	top--
 	bottom--
 
-	terminal.logger.Warnf("Request to set margins from line %d to %d", top, bottom)
-
+	terminal.ActiveBuffer().SetVerticalMargins(uint(top), uint(bottom))
 	terminal.ActiveBuffer().SetPosition(0, 0)
-
-	return fmt.Errorf("Not supported")
-}
-
-func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
-
-	/*
-	   Mouse support
-
-	   		#define SET_X10_MOUSE               9
-	        #define SET_VT200_MOUSE             1000
-	        #define SET_VT200_HIGHLIGHT_MOUSE   1001
-	        #define SET_BTN_EVENT_MOUSE         1002
-	        #define SET_ANY_EVENT_MOUSE         1003
-
-	        #define SET_FOCUS_EVENT_MOUSE       1004
-
-	        #define SET_EXT_MODE_MOUSE          1005
-	        #define SET_SGR_EXT_MODE_MOUSE      1006
-	        #define SET_URXVT_EXT_MODE_MOUSE    1015
-
-	        #define SET_ALTERNATE_SCROLL        1007
-	*/
-
-	switch modeStr {
-	case "4":
-		if enabled { // @todo support replace mode
-			terminal.ActiveBuffer().SetInsertMode()
-		} else {
-			terminal.ActiveBuffer().SetReplaceMode()
-		}
-	case "?1":
-		terminal.modes.ApplicationCursorKeys = enabled
-	case "?7":
-		// auto-wrap mode
-		//DECAWM
-		terminal.ActiveBuffer().SetAutoWrap(enabled)
-	case "?9":
-		if enabled {
-			terminal.logger.Infof("Turning on X10 mouse mode")
-			terminal.SetMouseMode(MouseModeX10)
-		} else {
-			terminal.logger.Infof("Turning off X10 mouse mode")
-			terminal.SetMouseMode(MouseModeNone)
-		}
-	case "?12", "?13":
-		terminal.modes.BlinkingCursor = enabled
-	case "?25":
-		terminal.modes.ShowCursor = enabled
-	case "?47", "?1047":
-		if enabled {
-			terminal.UseAltBuffer()
-		} else {
-			terminal.UseMainBuffer()
-		}
-	case "?1000", "?1006;1000", "?10061000": // ?10061000 seen from htop
-		// enable mouse tracking
-		// 1000 refers to ext mode for extended mouse click area - otherwise only x <= 255-31
-		if enabled {
-			terminal.logger.Infof("Turning on VT200 mouse mode")
-			terminal.SetMouseMode(MouseModeVT200)
-		} else {
-			terminal.logger.Infof("Turning off VT200 mouse mode")
-			terminal.SetMouseMode(MouseModeNone)
-		}
-	case "?1048":
-		if enabled {
-			terminal.ActiveBuffer().SaveCursor()
-		} else {
-			terminal.ActiveBuffer().RestoreCursor()
-		}
-	case "?1049":
-		if enabled {
-			terminal.UseAltBuffer()
-		} else {
-			terminal.UseMainBuffer()
-		}
-	default:
-		return fmt.Errorf("Unsupported CSI %sl code", modeStr)
-	}
 
 	return nil
 }
@@ -334,7 +290,7 @@ CSI:
 			err = fmt.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
 		}
 	}
-	terminal.logger.Debugf("Received CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
+	fmt.Printf("CSI 0x%02X (ESC[%s%s%s)\n", final, param, intermediate, string(final))
 	return err
 }
 

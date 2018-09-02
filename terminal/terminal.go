@@ -133,10 +133,13 @@ func (terminal *Terminal) GetScrollOffset() uint {
 }
 
 func (terminal *Terminal) ScrollDown(lines uint16) {
+	terminal.logger.Infof("Scrolling down %d", lines)
 	terminal.ActiveBuffer().ScrollDown(lines)
+
 }
 
 func (terminal *Terminal) ScrollUp(lines uint16) {
+	terminal.logger.Infof("Scrolling up %d", lines)
 	terminal.ActiveBuffer().ScrollUp(lines)
 }
 

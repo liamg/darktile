@@ -26,6 +26,7 @@ var escapeSequenceMap = map[rune]escapeSequenceHandler{
 }
 
 func newLineSequenceHandler(pty chan rune, terminal *Terminal) error {
+	terminal.logger.Debugf("New line!")
 	terminal.ActiveBuffer().NewLine()
 	return nil
 }
@@ -94,7 +95,7 @@ func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
 				terminal.logger.Errorf("Error handling escape sequence: %s", err)
 			}
 		} else {
-			terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
+			//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
 			if b >= 0x20 {
 				terminal.ActiveBuffer().Write(b)
 			} else {

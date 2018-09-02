@@ -46,7 +46,7 @@ func (buffer *Buffer) SetReplaceMode() {
 	buffer.replaceMode = true
 }
 
-func (buffer *Buffer) SetMargins(top uint, bottom uint) {
+func (buffer *Buffer) SetVerticalMargins(top uint, bottom uint) {
 	buffer.topMargin = top
 	buffer.bottomMargin = bottom
 }
@@ -57,11 +57,36 @@ func (buffer *Buffer) GetScrollOffset() uint {
 
 func (buffer *Buffer) ScrollDown(lines uint16) {
 
+	defer buffer.emitDisplayChange()
+
+	// scrollable region is enabled
+	if buffer.topMargin > 0 || buffer.bottomMargin < uint(buffer.ViewHeight())-1 {
+
+		for c := 0; c < int(lines); c++ {
+
+			for i := buffer.topMargin; i < buffer.bottomMargin; i++ {
+				above := buffer.getViewLine(uint16(i))
+				below := buffer.getViewLine(uint16(i + 1))
+				above.cells = below.cells
+			}
+			final := buffer.getViewLine(uint16(buffer.bottomMargin))
+
+			lineIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin + 1))
+
+			if lineIndex < uint64(len(buffer.lines)) {
+				*final = buffer.lines[lineIndex]
+			} else {
+				*final = newLine()
+			}
+		}
+
+		return
+	}
+
 	if buffer.Height() < int(buffer.ViewHeight()) {
 		return
 	}
 
-	defer buffer.emitDisplayChange()
 	if uint(lines) > buffer.scrollLinesFromBottom {
 		lines = uint16(buffer.scrollLinesFromBottom)
 	}
@@ -70,11 +95,36 @@ func (buffer *Buffer) ScrollDown(lines uint16) {
 
 func (buffer *Buffer) ScrollUp(lines uint16) {
 
-	if buffer.Height() < int(buffer.ViewHeight()) {
+	defer buffer.emitDisplayChange()
+
+	// scrollable region is enabled
+	if buffer.topMargin > 0 || buffer.bottomMargin < uint(buffer.ViewHeight())-1 {
+
+		for c := 0; c < int(lines); c++ {
+
+			for i := buffer.bottomMargin; i > buffer.topMargin+1; i-- {
+				below := buffer.getViewLine(uint16(i))
+				above := buffer.getViewLine(uint16(i - 1))
+				below.cells = above.cells
+			}
+			final := buffer.getViewLine(uint16(buffer.topMargin))
+
+			lineIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin - 1))
+
+			if lineIndex >= 0 && lineIndex < uint64(len(buffer.lines)) {
+				*final = buffer.lines[lineIndex]
+			} else {
+				panic("hmm!?")
+				*final = newLine()
+			}
+		}
+
 		return
 	}
 
-	defer buffer.emitDisplayChange()
+	if buffer.Height() < int(buffer.ViewHeight()) {
+		return
+	}
 
 	if uint(lines)+buffer.scrollLinesFromBottom >= (uint(buffer.Height()) - uint(buffer.ViewHeight())) {
 		buffer.scrollLinesFromBottom = uint(buffer.Height()) - uint(buffer.ViewHeight())
@@ -279,12 +329,26 @@ func (buffer *Buffer) CarriageReturn() {
 
 func (buffer *Buffer) NewLine() {
 	defer buffer.emitDisplayChange()
+
+	buffer.cursorX = 0
+
+	if (buffer.topMargin > 0 || buffer.bottomMargin < uint(buffer.ViewHeight())-1) && uint(buffer.cursorY) == buffer.bottomMargin {
+		// scrollable region is enabled
+		for i := buffer.topMargin; i < buffer.bottomMargin; i++ {
+			above := buffer.getViewLine(uint16(i))
+			below := buffer.getViewLine(uint16(i + 1))
+			above.cells = below.cells
+		}
+		final := buffer.getViewLine(uint16(buffer.bottomMargin))
+		*final = newLine()
+		return
+	}
+
 	if buffer.cursorY >= buffer.ViewHeight()-1 {
 		buffer.lines = append(buffer.lines, newLine())
 	} else {
 		buffer.cursorY++
 	}
-	buffer.cursorX = 0
 }
 
 func (buffer *Buffer) MovePosition(x int16, y int16) {
@@ -344,23 +408,27 @@ func (buffer *Buffer) Clear() {
 
 // creates if necessary
 func (buffer *Buffer) getCurrentLine() *Line {
+	return buffer.getViewLine(buffer.cursorY)
+}
 
-	if buffer.cursorY >= buffer.ViewHeight() { // @todo is this okay?
+func (buffer *Buffer) getViewLine(index uint16) *Line {
+
+	if index >= buffer.ViewHeight() { // @todo is this okay?
 		return &buffer.lines[len(buffer.lines)-1]
 	}
 
 	if len(buffer.lines) < int(buffer.ViewHeight()) {
-		for int(buffer.cursorY) >= len(buffer.lines) {
+		for int(index) >= len(buffer.lines) {
 			buffer.lines = append(buffer.lines, newLine())
 		}
-		return &buffer.lines[int(buffer.cursorY)]
+		return &buffer.lines[int(index)]
 	}
 
-	if int(buffer.RawLine()) < len(buffer.lines) {
-		return &buffer.lines[buffer.RawLine()]
+	if int(buffer.convertViewLineToRawLine(index)) < len(buffer.lines) {
+		return &buffer.lines[buffer.convertViewLineToRawLine(index)]
 	}
 
-	panic(fmt.Sprintf("Failed to retrieve line for %d %d", buffer.cursorX, buffer.cursorY))
+	panic(fmt.Sprintf("Failed to retrieve line for %d", index))
 }
 
 func (buffer *Buffer) EraseLine() {
@@ -547,5 +615,5 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 	line = buffer.getCurrentLine()
 	buffer.cursorX = uint16((len(line.cells) - cXFromEndOfLine) - 1)
 
-	buffer.SetMargins(0, uint(buffer.viewHeight-1))
+	buffer.SetVerticalMargins(0, uint(buffer.viewHeight-1))
 }
