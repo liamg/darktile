@@ -179,7 +179,7 @@ func (r *OpenGLRenderer) generateRectangle(col uint, line uint) *rectangle {
 
 	// rounding to whole pixels makes everything nice
 	x := float32(float32(col) * r.cellWidth)
-	y := float32((float32(line) * r.cellHeight)) + r.cellHeight + (r.font.LinePadding() / 2)
+	y := float32((float32(line) * r.cellHeight)) + r.cellHeight
 	r.rectangles[[2]uint{col, line}] = r.newRectangle(x, y, r.colourAttr)
 	return r.rectangles[[2]uint{col, line}]
 }
@@ -226,7 +226,7 @@ func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint) {
 	r.font.SetColor(fg[0], fg[1], fg[2], alpha)
 
 	x := float32(col) * r.cellWidth
-	y := (float32(row+1) * r.cellHeight) - (r.font.LinePadding() / 2)
+	y := (float32(row+1) * r.cellHeight) - (r.font.LinePadding())
 
 	if cell.Attr().Bold { // bold means draw text again one pixel to right, so it's fatter
 		r.font.Print(x+1, y, string(cell.Rune()))
