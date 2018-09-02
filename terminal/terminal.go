@@ -89,12 +89,17 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 			ShowCursor: true,
 		},
 	}
+
 }
 
 func (terminal *Terminal) CheckDirty() bool {
 	d := terminal.isDirty
 	terminal.isDirty = false
 	return d
+}
+
+func (terminal *Terminal) SetDirty() {
+	terminal.isDirty = true
 }
 
 func (terminal *Terminal) IsApplicationCursorKeysModeEnabled() bool {

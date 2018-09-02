@@ -24,7 +24,7 @@ type GUI struct {
 	height     int //window height in pixels
 	font       *glfont.Font
 	fontScale  float32
-	renderer   Renderer
+	renderer   *OpenGLRenderer
 	colourAttr uint32
 }
 
@@ -126,7 +126,6 @@ func (gui *GUI) Render() error {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
-	changeChan := make(chan bool, 1)
 	titleChan := make(chan bool, 1)
 
 	gui.renderer = NewOpenGLRenderer(gui.config, gui.font, 0, 0, gui.width, gui.height, gui.colourAttr, program)
@@ -137,17 +136,11 @@ func (gui *GUI) Render() error {
 	gui.window.SetScrollCallback(gui.glfwScrollCallback)
 	gui.window.SetMouseButtonCallback(gui.mouseButtonCallback)
 	gui.window.SetRefreshCallback(func(w *glfw.Window) {
-		select {
-		case changeChan <- true:
-		default:
-		}
+		gui.terminal.SetDirty()
 	})
 	gui.window.SetFocusCallback(func(w *glfw.Window, focused bool) {
 		if focused {
-			select {
-			case changeChan <- true:
-			default:
-			}
+			gui.terminal.SetDirty()
 		}
 	})
 	w, h := gui.window.GetSize()
@@ -180,88 +173,71 @@ func (gui *GUI) Render() error {
 	)
 
 	gui.terminal.AttachTitleChangeHandler(titleChan)
-	gui.terminal.AttachDisplayChangeHandler(changeChan)
+	//gui.terminal.AttachDisplayChangeHandler(changeChan)
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
 
 	defaultCell := buffer.NewBackgroundCell(gui.config.ColourScheme.Background)
 
+	go func() {
+		for {
+			<-ticker.C
+			gui.logger.Sync()
+		}
+	}()
+
 	for !gui.window.ShouldClose() {
 
-		dirty := false
-
 		select {
-
-		case <-ticker.C:
-			gui.logger.Sync()
-		case <-changeChan:
-			dirty = true
 		case <-titleChan:
 			gui.window.SetTitle(gui.terminal.GetTitle())
 		default:
+			//glfw.PollEvents()
+			glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
 		}
 
-		if dirty || gui.terminal.CheckDirty() {
+		if gui.terminal.CheckDirty() {
 
-			gl.UseProgram(program)
+			//gl.UseProgram(program)
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
 
 			lines := gui.terminal.GetVisibleLines()
-			lineCount := gui.terminal.ActiveBuffer().ViewHeight()
-			colCount := gui.terminal.ActiveBuffer().ViewWidth()
-			for x := 0; x < int(colCount); x++ {
-				for y := 0; y < int(lineCount); y++ {
+			lineCount := int(gui.terminal.ActiveBuffer().ViewHeight())
+			colCount := int(gui.terminal.ActiveBuffer().ViewWidth())
+			for y := 0; y < lineCount; y++ {
+				for x := 0; x < colCount; x++ {
 
 					cell := defaultCell
+					hasText := false
 
 					if y < len(lines) {
 						cells := lines[y].Cells()
 						if x < len(cells) {
 							cell = cells[x]
-							//if cell.Rune() == 0 {
-							//	cell = defaultCell
-							//}
-						}
-					}
-
-					gui.renderer.DrawCellBg(cell, uint(x), uint(y))
-
-				}
-			}
-
-			for x := 0; x < int(colCount); x++ {
-				for y := 0; y < int(lineCount); y++ {
-
-					cell := defaultCell
-
-					if y < len(lines) {
-						cells := lines[y].Cells()
-						if x < len(cells) {
-							cell = cells[x]
-							if cell.Rune() == 0 {
-								continue
+							if cell.Rune() != 0 && cell.Rune() != 32 {
+								hasText = true
 							}
 						}
 					}
 
-					gui.renderer.DrawCellText(cell, uint(x), uint(y))
-
+					cursor := false
+					if gui.terminal.Modes().ShowCursor {
+						cx := uint(gui.terminal.GetLogicalCursorX())
+						cy := uint(gui.terminal.GetLogicalCursorY())
+						cy = cy + uint(gui.terminal.GetScrollOffset())
+						cursor = cx == uint(x) && cy == uint(y)
+					}
+					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor)
+					if hasText {
+						gui.renderer.DrawCellText(cell, uint(x), uint(y))
+					}
 				}
-			}
-
-			if gui.terminal.Modes().ShowCursor {
-				cx := uint(gui.terminal.GetLogicalCursorX())
-				cy := uint(gui.terminal.GetLogicalCursorY())
-				cy = cy + uint(gui.terminal.GetScrollOffset())
-				gui.renderer.DrawCursor(cx, cy, gui.config.ColourScheme.Cursor)
 			}
 
 			gui.window.SwapBuffers()
 		}
 
-		//glfw.PollEvents()
-		glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
 	}
 
 	gui.logger.Debugf("Stopping render...")

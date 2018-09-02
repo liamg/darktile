@@ -9,16 +9,6 @@ import (
 	"gitlab.com/liamg/raft/glfont"
 )
 
-type Renderer interface {
-	SetArea(areaX int, areaY int, areaWidth int, areaHeight int)
-	DrawCellBg(cell buffer.Cell, col uint, row uint)
-	DrawCellText(cell buffer.Cell, col uint, row uint)
-	DrawCursor(col uint, row uint, colour config.Colour)
-	GetTermSize() (uint, uint)
-	CellWidth() float32
-	CellHeight() float32
-}
-
 type OpenGLRenderer struct {
 	font          *glfont.Font
 	areaWidth     int
@@ -200,11 +190,13 @@ func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
 	rect.Draw()
 }
 
-func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint) {
+func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor bool) {
 
 	var bg [3]float32
 
-	if cell.Attr().Reverse {
+	if cursor {
+		bg = r.config.ColourScheme.Cursor
+	} else if cell.Attr().Reverse {
 		bg = cell.Fg()
 	} else {
 		bg = cell.Bg()
