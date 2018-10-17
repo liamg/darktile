@@ -25,7 +25,7 @@ Ensure you have your latest graphics card drivers installed before use.
 - Suspend/Continue (\^S, \^Q). This is archaic bullshit that annoys more people than it helps. Basically:
 
 <span style="display:block;text-align:center">
-![Overheating](https://imgs.xkcd.com/comics/workflow.png)
+<img alt="Overheating" src="https://imgs.xkcd.com/comics/workflow.png"/>
 </span>
 
 
