@@ -1,4 +1,6 @@
-Raft is a modern terminal emulator utilising OpenGL.
+# RAFT - Golang Terminal Emulator
+
+Raft is a modern terminal emulator utilising OpenGL. So far the terminal is very much incomplete, but we're getting there!
 
 ![Example screenshot](demo.png)
 
