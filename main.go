@@ -104,7 +104,7 @@ func main() {
 
 	shellStr, err := loginshell.Shell()
 	if err != nil {
-		panic(fmt.Errorf("Failed to ascertain your shell: %s", err))
+		logger.Fatalf("Failed to ascertain your shell: %s", err)
 	}
 
 	shell := exec.Command(shellStr)
@@ -114,7 +114,7 @@ func main() {
 	shell.SysProcAttr = &syscall.SysProcAttr{Setctty: true, Setsid: true}
 	if err := shell.Start(); err != nil {
 		pty.Close()
-		panic(err)
+		logger.Fatalf("Failed to start your shell: %s", err)
 	}
 
 	logger.Infof("Creating terminal...")

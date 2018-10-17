@@ -1,5 +1,7 @@
 Raft is a modern terminal emulator utilising OpenGL.
 
+![Example screenshot](demo.png)
+
 The project is experimental at the moment, so you probably won't want to rely on Raft as your main terminal for a while.
 
 Ensure you have your latest graphics card drivers installed before use.
@@ -20,7 +22,7 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ## What isn't supported?
 
-- Suspend/Continue (\^S, \^Q). This is archaic bullshit that annoys more people than it helps. Basically:q
+- Suspend/Continue (\^S, \^Q). This is archaic bullshit that annoys more people than it helps. Basically:
 
 <span style="display:block;text-align:center">
 ![Overheating](https://imgs.xkcd.com/comics/workflow.png)
@@ -73,7 +75,7 @@ Ensure you have your latest graphics card drivers installed before use.
 
 Raft looks for a config file in `~/.raft.toml`, and will write one there the first time it runs, if it doesn't already exist.
 
-You can ignore the config and use defauls by specifying `--ignore-config` as a CLI flag.
+You can ignore the config and use defaults by specifying `--ignore-config` as a CLI flag.
 
 ### Config Options/CLI Flags
 

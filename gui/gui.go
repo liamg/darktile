@@ -122,7 +122,6 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Loading font...")
 	if err := gui.loadFont("./fonts/Hack-Regular.ttf"); err != nil {
-		//if err := gui.loadFont("./fonts/envypn-15.ttf"); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
