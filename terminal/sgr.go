@@ -3,7 +3,7 @@ package terminal
 import (
 	"fmt"
 
-	"gitlab.com/liamg/raft/buffer"
+	"github.com/liamg/raft/buffer"
 )
 
 func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal) error {

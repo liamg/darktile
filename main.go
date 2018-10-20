@@ -10,9 +10,9 @@ import (
 
 	"github.com/kr/pty"
 	"github.com/riywo/loginshell"
-	"gitlab.com/liamg/raft/config"
-	"gitlab.com/liamg/raft/gui"
-	"gitlab.com/liamg/raft/terminal"
+	"github.com/liamg/raft/config"
+	"github.com/liamg/raft/gui"
+	"github.com/liamg/raft/terminal"
 	"go.uber.org/zap"
 )
 

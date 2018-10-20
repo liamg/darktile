@@ -5,13 +5,13 @@ import (
 	"runtime"
 	"time"
 
-	"gitlab.com/liamg/raft/glfont"
+	"github.com/liamg/raft/glfont"
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
-	"gitlab.com/liamg/raft/buffer"
-	"gitlab.com/liamg/raft/config"
-	"gitlab.com/liamg/raft/terminal"
+	"github.com/liamg/raft/buffer"
+	"github.com/liamg/raft/config"
+	"github.com/liamg/raft/terminal"
 	"go.uber.org/zap"
 )
 
