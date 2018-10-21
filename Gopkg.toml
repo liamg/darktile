@@ -29,7 +29,7 @@
   name = "github.com/go-gl/gl"
 
 [[constraint]]
-  branch = "master"
+  branch = "3.3-beta"
   name = "github.com/go-gl/glfw"
 
 [[constraint]]
