@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"image"
 	"image/draw"
+	"io"
 	"math"
-	"os"
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/golang/freetype"
@@ -36,12 +36,7 @@ type color struct {
 }
 
 //LoadFont loads the specified font at the given scale.
-func LoadFont(file string, scale float32, windowWidth int, windowHeight int) (*Font, error) {
-	fd, err := os.Open(file)
-	if err != nil {
-		return nil, err
-	}
-	defer fd.Close()
+func LoadFont(reader io.Reader, scale float32, windowWidth int, windowHeight int) (*Font, error) {
 
 	// Configure the default font vertex and fragment shaders
 	program, err := newProgram(vertexFontShader, fragmentFontShader)
@@ -56,7 +51,7 @@ func LoadFont(file string, scale float32, windowWidth int, windowHeight int) (*F
 	resUniform := gl.GetUniformLocation(program, gl.Str("resolution\x00"))
 	gl.Uniform2f(resUniform, float32(windowWidth), float32(windowHeight))
 
-	return LoadTrueTypeFont(program, fd, scale)
+	return LoadTrueTypeFont(program, reader, scale)
 }
 
 //SetColor allows you to set the text color to be used when you draw the text
