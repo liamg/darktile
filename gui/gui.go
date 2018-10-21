@@ -32,7 +32,6 @@ type GUI struct {
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
 
-	//logger.
 	return &GUI{
 		config:    config,
 		logger:    logger,
@@ -47,10 +46,6 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
-
-	if width == gui.width && height == gui.height {
-		//return
-	}
 
 	gui.logger.Debugf("Initiating GUI resize to %dx%d", width, height)
 
@@ -81,7 +76,6 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 }
 
 func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
-	//fmt.Printf("Scroll x=%f y=%f\n", xoff, yoff)
 	if yoff > 0 {
 		gui.terminal.ScrollUp(1)
 	} else {
@@ -162,7 +156,6 @@ func (gui *GUI) Render() error {
 	gl.UseProgram(program)
 
 	// stop smoothing fonts
-
 	gl.Disable(gl.DEPTH_TEST)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
@@ -174,7 +167,6 @@ func (gui *GUI) Render() error {
 	)
 
 	gui.terminal.AttachTitleChangeHandler(titleChan)
-	//gui.terminal.AttachDisplayChangeHandler(changeChan)
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -194,13 +186,12 @@ func (gui *GUI) Render() error {
 		case <-titleChan:
 			gui.window.SetTitle(gui.terminal.GetTitle())
 		default:
-			//glfw.PollEvents()
+			// this is more efficient than glfw.PollEvents()
 			glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
 		}
 
 		if gui.terminal.CheckDirty() {
 
-			//gl.UseProgram(program)
 			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
 
 			lines := gui.terminal.GetVisibleLines()

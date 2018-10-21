@@ -1,7 +1,6 @@
 package buffer
 
 import (
-	"fmt"
 	"strings"
 	"testing"
 	"time"
@@ -21,9 +20,6 @@ func TestOffsets(t *testing.T) {
 	assert.Equal(t, uint16(10), b.ViewWidth())
 	assert.Equal(t, uint16(10), b.Width())
 	assert.Equal(t, uint16(3), b.ViewHeight())
-	for i, l := range b.lines {
-		fmt.Printf("%d. %s", i, l.String())
-	}
 	assert.Equal(t, 5, b.Height())
 }
 

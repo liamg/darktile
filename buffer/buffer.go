@@ -315,7 +315,6 @@ func (buffer *Buffer) Backspace() {
 			buffer.MovePosition(int16(buffer.Width()-1), -1)
 		} else {
 			//@todo ring bell or whatever - actually i think the pty will trigger this
-			//fmt.Println("BELL?")
 		}
 	} else {
 		buffer.MovePosition(-1, 0)
@@ -333,8 +332,6 @@ func (buffer *Buffer) NewLine() {
 	buffer.cursorX = 0
 
 	if (buffer.topMargin > 0 || buffer.bottomMargin < uint(buffer.ViewHeight())-1) && uint(buffer.cursorY) == buffer.bottomMargin {
-
-		fmt.Printf("Top %d Bot %d VH %d", buffer.topMargin, buffer.bottomMargin, buffer.ViewHeight())
 
 		// scrollable region is enabled
 		for i := buffer.topMargin; i < buffer.bottomMargin; i++ {

@@ -1,7 +1,6 @@
 package glfont
 
 import (
-	"fmt"
 	"io"
 	"io/ioutil"
 
@@ -49,8 +48,6 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale float32) (*Font, error)
 	_, h := f.Size(sample)
 	f.linePadding = h - float32(ttfFace.Metrics().Height>>6)
 	f.lineHeight = h
-
-	fmt.Printf("Line height: %f px, padding: %f px", f.lineHeight, f.linePadding)
 
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 
