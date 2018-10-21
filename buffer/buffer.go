@@ -115,7 +115,6 @@ func (buffer *Buffer) ScrollUp(lines uint16) {
 			if lineIndex >= 0 && lineIndex < uint64(len(buffer.lines)) {
 				*final = buffer.lines[lineIndex]
 			} else {
-				panic("hmm!?")
 				*final = newLine()
 			}
 		}
@@ -304,7 +303,7 @@ func (buffer *Buffer) incrementCursorPosition() {
 		buffer.cursorX++
 
 	} else {
-		panic("bad")
+		panic("cursor position invalid")
 	}
 }
 
