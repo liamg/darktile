@@ -10,8 +10,8 @@ import (
 	"syscall"
 	"unsafe"
 
-	"github.com/liamg/raft/buffer"
-	"github.com/liamg/raft/config"
+	"github.com/liamg/aminal/buffer"
+	"github.com/liamg/aminal/config"
 	"go.uber.org/zap"
 )
 

@@ -1,17 +1,17 @@
-# RAFT - Golang Terminal Emulator
-[![CircleCI](https://circleci.com/gh/liamg/raft/tree/master.svg?style=svg)](https://circleci.com/gh/liamg/raft/tree/master)
+# Aminal - Golang Terminal Emulator
+[![CircleCI](https://circleci.com/gh/liamg/aminal/tree/master.svg?style=svg)](https://circleci.com/gh/liamg/aminal/tree/master)
 
-Raft is a modern terminal emulator utilising OpenGL. So far the terminal is very much incomplete, but we're getting there!
+Aminal is a modern terminal emulator utilising OpenGL. So far the terminal is very much incomplete, but we're getting there!
 
 ![Example screenshot](demo.png)
 
-The project is experimental at the moment, so you probably won't want to rely on Raft as your main terminal for a while.
+The project is experimental at the moment, so you probably won't want to rely on Aminal as your main terminal for a while.
 
 Ensure you have your latest graphics card drivers installed before use.
 
 ## Help Rename This Project!
 
-We're currently looking for a new name! Please add suggestions [here](https://github.com/liamg/raft/issues/2).
+We're currently looking for a new name! Please add suggestions [here](https://github.com/liamg/aminal/issues/2).
 
 ## Aims
 
@@ -80,7 +80,7 @@ We're currently looking for a new name! Please add suggestions [here](https://gi
 
 ## Configuration
 
-Raft looks for a config file in `~/.raft.toml`, and will write one there the first time it runs, if it doesn't already exist.
+Aminal looks for a config file in `~/.aminal.toml`, and will write one there the first time it runs, if it doesn't already exist.
 
 You can ignore the config and use defaults by specifying `--ignore-config` as a CLI flag.
 
