@@ -9,10 +9,6 @@ The project is experimental at the moment, so you probably won't want to rely on
 
 Ensure you have your latest graphics card drivers installed before use.
 
-## Help Rename This Project!
-
-We're currently looking for a new name! Please add suggestions [here](https://github.com/liamg/aminal/issues/2).
-
 ## Aims
 
 - Full unicode support
