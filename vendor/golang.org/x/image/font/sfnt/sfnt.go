@@ -21,6 +21,7 @@ package sfnt // import "golang.org/x/image/font/sfnt"
 
 import (
 	"errors"
+	"image"
 	"io"
 
 	"golang.org/x/image/font"
@@ -86,6 +87,7 @@ var (
 	errInvalidLocationData    = errors.New("sfnt: invalid location data")
 	errInvalidMaxpTable       = errors.New("sfnt: invalid maxp table")
 	errInvalidNameTable       = errors.New("sfnt: invalid name table")
+	errInvalidOS2Table        = errors.New("sfnt: invalid OS/2 table")
 	errInvalidPostTable       = errors.New("sfnt: invalid post table")
 	errInvalidSingleFont      = errors.New("sfnt: invalid single font (data is a font collection)")
 	errInvalidSourceData      = errors.New("sfnt: invalid source data")
@@ -565,6 +567,7 @@ type Font struct {
 
 	cached struct {
 		ascent           int32
+		capHeight        int32
 		glyphData        glyphData
 		glyphIndex       glyphIndexFunc
 		bounds           [4]int16
@@ -577,7 +580,9 @@ type Font struct {
 		lineGap          int32
 		numHMetrics      int32
 		postTableVersion uint32
+		slope            [2]int32
 		unitsPerEm       Units
+		xHeight          int32
 	}
 }
 
@@ -624,11 +629,15 @@ func (f *Font) initialize(offset int, isDfont bool) error {
 	if err != nil {
 		return err
 	}
-	buf, ascent, descent, lineGap, numHMetrics, err := f.parseHhea(buf, numGlyphs)
+	buf, ascent, descent, lineGap, run, rise, numHMetrics, err := f.parseHhea(buf, numGlyphs)
 	if err != nil {
 		return err
 	}
 	buf, err = f.parseHmtx(buf, numGlyphs, numHMetrics)
+	if err != nil {
+		return err
+	}
+	buf, xHeight, capHeight, err := f.parseOS2(buf)
 	if err != nil {
 		return err
 	}
@@ -638,6 +647,7 @@ func (f *Font) initialize(offset int, isDfont bool) error {
 	}
 
 	f.cached.ascent = ascent
+	f.cached.capHeight = capHeight
 	f.cached.glyphData = glyphData
 	f.cached.glyphIndex = glyphIndex
 	f.cached.bounds = bounds
@@ -650,7 +660,9 @@ func (f *Font) initialize(offset int, isDfont bool) error {
 	f.cached.lineGap = lineGap
 	f.cached.numHMetrics = numHMetrics
 	f.cached.postTableVersion = postTableVersion
+	f.cached.slope = [2]int32{run, rise}
 	f.cached.unitsPerEm = unitsPerEm
+	f.cached.xHeight = xHeight
 
 	return nil
 }
@@ -844,32 +856,40 @@ func (f *Font) parseHead(buf []byte) (buf1 []byte, bounds [4]int16, indexToLocFo
 	return buf, bounds, indexToLocFormat, unitsPerEm, nil
 }
 
-func (f *Font) parseHhea(buf []byte, numGlyphs int32) (buf1 []byte, ascent, descent, lineGap, numHMetrics int32, err error) {
+func (f *Font) parseHhea(buf []byte, numGlyphs int32) (buf1 []byte, ascent, descent, lineGap, run, rise, numHMetrics int32, err error) {
 	// https://www.microsoft.com/typography/OTSPEC/hhea.htm
 
 	if f.hhea.length != 36 {
-		return nil, 0, 0, 0, 0, errInvalidHheaTable
+		return nil, 0, 0, 0, 0, 0, 0, errInvalidHheaTable
 	}
 	u, err := f.src.u16(buf, f.hhea, 34)
 	if err != nil {
-		return nil, 0, 0, 0, 0, err
+		return nil, 0, 0, 0, 0, 0, 0, err
 	}
 	if int32(u) > numGlyphs || u == 0 {
-		return nil, 0, 0, 0, 0, errInvalidHheaTable
+		return nil, 0, 0, 0, 0, 0, 0, errInvalidHheaTable
 	}
 	a, err := f.src.u16(buf, f.hhea, 4)
 	if err != nil {
-		return nil, 0, 0, 0, 0, err
+		return nil, 0, 0, 0, 0, 0, 0, err
 	}
 	d, err := f.src.u16(buf, f.hhea, 6)
 	if err != nil {
-		return nil, 0, 0, 0, 0, err
+		return nil, 0, 0, 0, 0, 0, 0, err
 	}
 	l, err := f.src.u16(buf, f.hhea, 8)
 	if err != nil {
-		return nil, 0, 0, 0, 0, err
+		return nil, 0, 0, 0, 0, 0, 0, err
 	}
-	return buf, int32(int16(a)), int32(int16(d)), int32(int16(l)), int32(u), nil
+	ru, err := f.src.u16(buf, f.hhea, 20)
+	if err != nil {
+		return nil, 0, 0, 0, 0, 0, 0, err
+	}
+	ri, err := f.src.u16(buf, f.hhea, 18)
+	if err != nil {
+		return nil, 0, 0, 0, 0, 0, 0, err
+	}
+	return buf, int32(int16(a)), int32(int16(d)), int32(int16(l)), int32(int16(ru)), int32(int16(ri)), int32(u), nil
 }
 
 func (f *Font) parseHmtx(buf []byte, numGlyphs, numHMetrics int32) (buf1 []byte, err error) {
@@ -1043,6 +1063,24 @@ func (f *Font) parseGlyphData(buf []byte, numGlyphs int32, indexToLocFormat, isP
 	}
 
 	return buf, ret, isColorBitmap, nil
+}
+
+func (f *Font) parseOS2(buf []byte) (buf1 []byte, xHeight, capHeight int32, err error) {
+	// https://docs.microsoft.com/da-dk/typography/opentype/spec/os2
+
+	const headerSize = 96
+	if f.os2.length < headerSize {
+		return nil, 0, 0, errInvalidOS2Table
+	}
+	xh, err := f.src.u16(buf, f.os2, 86)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	ch, err := f.src.u16(buf, f.os2, 88)
+	if err != nil {
+		return nil, 0, 0, err
+	}
+	return buf, int32(int16(xh)), int32(int16(ch)), nil
 }
 
 func (f *Font) parsePost(buf []byte, numGlyphs int32) (buf1 []byte, postTableVersion uint32, err error) {
@@ -1357,15 +1395,20 @@ func (f *Font) Kern(b *Buffer, x0, x1 GlyphIndex, ppem fixed.Int26_6, h font.Hin
 // Metrics returns the metrics of this font.
 func (f *Font) Metrics(b *Buffer, ppem fixed.Int26_6, h font.Hinting) (font.Metrics, error) {
 	m := font.Metrics{
-		Height:  scale(fixed.Int26_6(f.cached.ascent-f.cached.descent+f.cached.lineGap)*ppem, f.cached.unitsPerEm),
-		Ascent:  +scale(fixed.Int26_6(f.cached.ascent)*ppem, f.cached.unitsPerEm),
-		Descent: -scale(fixed.Int26_6(f.cached.descent)*ppem, f.cached.unitsPerEm),
+		Height:     scale(fixed.Int26_6(f.cached.ascent-f.cached.descent+f.cached.lineGap)*ppem, f.cached.unitsPerEm),
+		Ascent:     +scale(fixed.Int26_6(f.cached.ascent)*ppem, f.cached.unitsPerEm),
+		Descent:    -scale(fixed.Int26_6(f.cached.descent)*ppem, f.cached.unitsPerEm),
+		XHeight:    scale(fixed.Int26_6(f.cached.xHeight)*ppem, f.cached.unitsPerEm),
+		CapHeight:  scale(fixed.Int26_6(f.cached.capHeight)*ppem, f.cached.unitsPerEm),
+		CaretSlope: image.Point{X: int(f.cached.slope[0]), Y: int(f.cached.slope[1])},
 	}
 	if h == font.HintingFull {
 		// Quantize up to a whole pixel.
 		m.Height = (m.Height + 63) &^ 63
 		m.Ascent = (m.Ascent + 63) &^ 63
 		m.Descent = (m.Descent + 63) &^ 63
+		m.XHeight = (m.XHeight + 63) &^ 63
+		m.CapHeight = (m.CapHeight + 63) &^ 63
 	}
 	return m, nil
 }

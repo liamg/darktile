@@ -62,10 +62,17 @@ func (f *subface) Close() error                   { return nil }
 func (f *subface) Kern(r0, r1 rune) fixed.Int26_6 { return 0 }
 
 func (f *subface) Metrics() font.Metrics {
+	// Approximate XHeight with the ascent of lowercase 'x'.
+	xbounds, _, _ := f.GlyphBounds('x')
+	// The same applies to CapHeight, using the uppercase 'H'.
+	hbounds, _, _ := f.GlyphBounds('H')
 	return font.Metrics{
-		Height:  fixed.I(f.height),
-		Ascent:  fixed.I(f.ascent),
-		Descent: fixed.I(f.height - f.ascent),
+		Height:     fixed.I(f.height),
+		Ascent:     fixed.I(f.ascent),
+		Descent:    fixed.I(f.height - f.ascent),
+		XHeight:    -xbounds.Min.Y,
+		CapHeight:  -hbounds.Min.Y,
+		CaretSlope: image.Point{X: 0, Y: 1},
 	}
 }
 
@@ -144,10 +151,15 @@ func (f *face) Close() error                   { return nil }
 func (f *face) Kern(r0, r1 rune) fixed.Int26_6 { return 0 }
 
 func (f *face) Metrics() font.Metrics {
+	xbounds, _, _ := f.GlyphBounds('x')
+	hbounds, _, _ := f.GlyphBounds('H')
 	return font.Metrics{
-		Height:  fixed.I(f.height),
-		Ascent:  fixed.I(f.ascent),
-		Descent: fixed.I(f.height - f.ascent),
+		Height:     fixed.I(f.height),
+		Ascent:     fixed.I(f.ascent),
+		Descent:    fixed.I(f.height - f.ascent),
+		XHeight:    -xbounds.Min.Y,
+		CapHeight:  -hbounds.Min.Y,
+		CaretSlope: image.Point{X: 0, Y: 1},
 	}
 }
 

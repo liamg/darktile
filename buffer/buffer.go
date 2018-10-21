@@ -30,6 +30,7 @@ func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 		cursorAttr: attr,
 		autoWrap:   true,
 	}
+	b.SetVerticalMargins(0, uint(viewLines-1))
 	b.ResizeView(viewCols, viewLines)
 	return b
 }
@@ -333,6 +334,9 @@ func (buffer *Buffer) NewLine() {
 	buffer.cursorX = 0
 
 	if (buffer.topMargin > 0 || buffer.bottomMargin < uint(buffer.ViewHeight())-1) && uint(buffer.cursorY) == buffer.bottomMargin {
+
+		fmt.Printf("Top %d Bot %d VH %d", buffer.topMargin, buffer.bottomMargin, buffer.ViewHeight())
+
 		// scrollable region is enabled
 		for i := buffer.topMargin; i < buffer.bottomMargin; i++ {
 			above := buffer.getViewLine(uint16(i))
@@ -413,7 +417,7 @@ func (buffer *Buffer) getCurrentLine() *Line {
 
 func (buffer *Buffer) getViewLine(index uint16) *Line {
 
-	if index >= buffer.ViewHeight() { // @todo is this okay?
+	if index >= buffer.ViewHeight() { // @todo is this okay?#
 		return &buffer.lines[len(buffer.lines)-1]
 	}
 
