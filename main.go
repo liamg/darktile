@@ -9,10 +9,10 @@ import (
 	"syscall"
 
 	"github.com/kr/pty"
+	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/gui"
+	"github.com/liamg/aminal/terminal"
 	"github.com/riywo/loginshell"
-	"github.com/liamg/raft/config"
-	"github.com/liamg/raft/gui"
-	"github.com/liamg/raft/terminal"
 	"go.uber.org/zap"
 )
 
@@ -41,8 +41,7 @@ func loadConfigFile() *config.Config {
 	}
 
 	places := []string{
-		//fmt.Sprintf("%s/.config/raft.yml", home),
-		fmt.Sprintf("%s/.raft.toml", home),
+		fmt.Sprintf("%s/.aminal.toml", home),
 	}
 
 	for _, place := range places {
@@ -58,7 +57,7 @@ func loadConfigFile() *config.Config {
 	if b, err := config.DefaultConfig.Encode(); err != nil {
 		fmt.Printf("Failed to encode config file: %s\n", err)
 	} else {
-		if err := ioutil.WriteFile(fmt.Sprintf("%s/.raft.toml", home), b, 0644); err != nil {
+		if err := ioutil.WriteFile(fmt.Sprintf("%s/.aminal.toml", home), b, 0644); err != nil {
 			fmt.Printf("Failed to encode config file: %s\n", err)
 		}
 	}

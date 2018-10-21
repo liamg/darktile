@@ -7,13 +7,13 @@ import (
 	"time"
 
 	"github.com/gobuffalo/packr"
-	"github.com/liamg/raft/glfont"
+	"github.com/liamg/aminal/glfont"
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.3/glfw"
-	"github.com/liamg/raft/buffer"
-	"github.com/liamg/raft/config"
-	"github.com/liamg/raft/terminal"
+	"github.com/liamg/aminal/buffer"
+	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/terminal"
 	"go.uber.org/zap"
 )
 

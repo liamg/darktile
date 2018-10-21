@@ -5,7 +5,7 @@ import (
 	"math"
 
 	"github.com/go-gl/glfw/v3.3/glfw"
-	"github.com/liamg/raft/terminal"
+	"github.com/liamg/aminal/terminal"
 )
 
 func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {

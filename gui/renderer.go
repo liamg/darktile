@@ -4,9 +4,9 @@ import (
 	"math"
 
 	"github.com/go-gl/gl/all-core/gl"
-	"github.com/liamg/raft/buffer"
-	"github.com/liamg/raft/config"
-	"github.com/liamg/raft/glfont"
+	"github.com/liamg/aminal/buffer"
+	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/glfont"
 )
 
 type OpenGLRenderer struct {
