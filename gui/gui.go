@@ -1,10 +1,12 @@
 package gui
 
 import (
+	"bytes"
 	"fmt"
 	"runtime"
 	"time"
 
+	"github.com/gobuffalo/packr"
 	"github.com/liamg/raft/glfont"
 
 	"github.com/go-gl/gl/all-core/gl"
@@ -121,7 +123,7 @@ func (gui *GUI) Render() error {
 	gl.BindFragDataLocation(program, 0, gl.Str("outColour\x00"))
 
 	gui.logger.Debugf("Loading font...")
-	if err := gui.loadFont("./fonts/Hack-Regular.ttf"); err != nil {
+	if err := gui.loadDefaultFont(); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
@@ -244,8 +246,15 @@ func (gui *GUI) Render() error {
 
 }
 
-func (gui *GUI) loadFont(path string) error {
-	font, err := glfont.LoadFont(path, gui.fontScale, gui.width, gui.height)
+func (gui *GUI) loadDefaultFont() error {
+
+	box := packr.NewBox("./packed-fonts")
+	fontBytes, err := box.MustBytes("Hack-Regular.ttf")
+	if err != nil {
+		return fmt.Errorf("Packaged font could not be read: %s", err)
+	}
+
+	font, err := glfont.LoadFont(bytes.NewReader(fontBytes), gui.fontScale, gui.width, gui.height)
 	if err != nil {
 		return fmt.Errorf("LoadFont: %v", err)
 	}
