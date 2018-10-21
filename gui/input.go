@@ -1,6 +1,6 @@
 package gui
 
-import "github.com/go-gl/glfw/v3.2/glfw"
+import "github.com/go-gl/glfw/v3.3/glfw"
 
 // send typed runes straight through to the pty
 func (gui *GUI) char(w *glfw.Window, r rune) {
@@ -28,9 +28,8 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			switch key {
 			case glfw.KeyV:
 				// todo handle both these errors
-				if buf, err := gui.window.GetClipboardString(); err == nil {
-					_ = gui.terminal.Write([]byte(buf))
-				}
+				_ = gui.terminal.Write([]byte(gui.window.GetClipboardString()))
+
 			case glfw.KeySemicolon:
 				gui.config.Slomo = !gui.config.Slomo
 			}

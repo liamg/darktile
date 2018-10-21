@@ -1,4 +1,5 @@
 # RAFT - Golang Terminal Emulator
+[![CircleCI](https://circleci.com/gh/liamg/raft/tree/master.svg?style=svg)](https://circleci.com/gh/liamg/raft/tree/master)
 
 Raft is a modern terminal emulator utilising OpenGL. So far the terminal is very much incomplete, but we're getting there!
 
@@ -7,6 +8,10 @@ Raft is a modern terminal emulator utilising OpenGL. So far the terminal is very
 The project is experimental at the moment, so you probably won't want to rely on Raft as your main terminal for a while.
 
 Ensure you have your latest graphics card drivers installed before use.
+
+## Help Rename This Project!
+
+We're currently looking for a new name! Please add suggestions [here](https://github.com/liamg/raft/issues/2).
 
 ## Aims
 

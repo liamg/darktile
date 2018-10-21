@@ -8,7 +8,7 @@ import (
 	"github.com/liamg/raft/glfont"
 
 	"github.com/go-gl/gl/all-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/liamg/raft/buffer"
 	"github.com/liamg/raft/config"
 	"github.com/liamg/raft/terminal"
@@ -254,8 +254,8 @@ func (gui *GUI) loadFont(path string) error {
 }
 
 func (gui *GUI) createWindow(width int, height int) (*glfw.Window, error) {
-	if err := glfw.Init(); err != nil {
-		return nil, err
+	if !glfw.Init() {
+		return nil, fmt.Errorf("Failed to initialise GLFW")
 	}
 
 	glfw.WindowHint(glfw.Resizable, glfw.True)
@@ -264,10 +264,7 @@ func (gui *GUI) createWindow(width int, height int) (*glfw.Window, error) {
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	window, err := glfw.CreateWindow(width, height, "Terminal", nil, nil)
-	if err != nil {
-		return nil, err
-	}
+	window := glfw.CreateWindow(width, height, "Terminal", nil, nil)
 	window.MakeContextCurrent()
 
 	return window, nil
