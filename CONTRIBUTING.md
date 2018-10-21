@@ -2,6 +2,12 @@
 
 Thanks for considering contributing to Aminal. 
 
+## How do terminals even work?
+
+- [ELI5 - How does a terminal emulator work?](https://www.reddit.com/r/linuxquestions/comments/3ciful/eli5_how_does_a_terminal_emulator_work/)
+- [Xterm Control Sequences](https://www.xfree86.org/4.8.0/ctlseqs.html)
+- [VT100 Programmer Information](https://vt100.net/docs/vt100-ug/chapter3.html)
+
 ## What can I work on?
 
 You can browse the [issues](https://github.com/liamg/aminal/issues) to see what is currently needed.
