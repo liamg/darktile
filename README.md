@@ -55,6 +55,8 @@ Ensure you have your latest graphics card drivers installed before use.
 |-----------------------------|------|-------|
 | Pty allocation              | ✔    | Needs work for OSX + Windows
 | OpenGL rendering            | ✔    |
+| 8-bit (256) colour          | ✔    |
+| 24-bit (true) colour        | ✔    |
 | Resizing/content reordering | ⏳    | 
 | ANSI escape codes           | ⏳    | Most of these are handled now
 | UTF-8 input                 | ✔    | 
