@@ -2,15 +2,20 @@ package terminal
 
 import (
 	"fmt"
+	"strconv"
 
 	"github.com/liamg/aminal/buffer"
+	"github.com/liamg/aminal/config"
 )
 
 func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal) error {
 
+	if len(params) == 0 {
+		return nil
+	}
+
 	for i := range params {
-		param := params[i]
-		switch param {
+		switch params[i] {
 		case "00", "0", "":
 			attr := terminal.ActiveBuffer().CursorAttr()
 			*attr = buffer.CellAttributes{
@@ -109,11 +114,143 @@ func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal
 			terminal.ActiveBuffer().CursorAttr().BgColour = terminal.config.ColourScheme.LightCyan
 		case "107":
 			terminal.ActiveBuffer().CursorAttr().BgColour = terminal.config.ColourScheme.White
+		case "38": // set foreground
+			c, err := terminal.getANSIColour(params[i:])
+			if err != nil {
+				return err
+			}
+			terminal.ActiveBuffer().CursorAttr().FgColour = c
+			return nil
+		case "48": // set background
+			c, err := terminal.getANSIColour(params[i:])
+			if err != nil {
+				return err
+			}
+			terminal.ActiveBuffer().CursorAttr().BgColour = c
+			return nil
 		default:
-			return fmt.Errorf("Unknown SGR control sequence: (ESC[%s%sm)", param, intermediate)
+			return fmt.Errorf("Unknown SGR control sequence: (ESC[%s%sm)", params[i:], intermediate)
 		}
-
-		//terminal.logger.Debugf("SGR control sequence: (ESC[%s%sm)", param, intermediate)
 	}
+
+	//terminal.logger.Debugf("SGR control sequence: (ESC[%s%sm)", param, intermediate)
+
 	return nil
+}
+
+func (terminal *Terminal) getANSIColour(params []string) (config.Colour, error) {
+
+	if len(params) > 2 {
+		switch params[1] {
+		case "5":
+			// 8 bit colour
+			colNum, err := strconv.Atoi(params[2])
+
+			if err != nil || colNum >= 256 || colNum < 0 {
+				return [3]float32{0, 0, 0}, fmt.Errorf("Invalid 8-bit colour specifier")
+			}
+			return terminal.get8BitSGRColour(uint8(colNum)), nil
+
+		case "2":
+			if len(params) < 4 {
+				return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+			}
+			// 24 bit colour
+			if len(params) == 5 { // standard true colour
+
+				r, err := strconv.Atoi(params[2])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				g, err := strconv.Atoi(params[3])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				b, err := strconv.Atoi(params[4])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				return [3]float32{
+					float32(r) / 0xff,
+					float32(g) / 0xff,
+					float32(b) / 0xff,
+				}, nil
+			} else if len(params) > 5 { // ISO/IEC International Standard 8613-6
+				r, err := strconv.Atoi(params[3])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				g, err := strconv.Atoi(params[4])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				b, err := strconv.Atoi(params[5])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				return [3]float32{
+					float32(r) / 0xff,
+					float32(g) / 0xff,
+					float32(b) / 0xff,
+				}, nil
+			}
+		}
+	}
+
+	return [3]float32{}, fmt.Errorf("Unknown ANSI colour format identifier")
+
+}
+
+func (terminal *Terminal) get8BitSGRColour(colNum uint8) [3]float32 {
+
+	// https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
+
+	switch colNum {
+	case 0:
+		return terminal.config.ColourScheme.Black
+	case 1:
+		return terminal.config.ColourScheme.Red
+	case 2:
+		return terminal.config.ColourScheme.Green
+	case 3:
+		return terminal.config.ColourScheme.Yellow
+	case 4:
+		return terminal.config.ColourScheme.Blue
+	case 5:
+		return terminal.config.ColourScheme.Magenta
+	case 6:
+		return terminal.config.ColourScheme.Cyan
+	case 7:
+		return terminal.config.ColourScheme.White
+	case 8:
+		return terminal.config.ColourScheme.DarkGrey
+	case 9:
+		return terminal.config.ColourScheme.LightRed
+	case 10:
+		return terminal.config.ColourScheme.LightGreen
+	case 11:
+		return terminal.config.ColourScheme.LightYellow
+	case 12:
+		return terminal.config.ColourScheme.LightBlue
+	case 13:
+		return terminal.config.ColourScheme.LightMagenta
+	case 14:
+		return terminal.config.ColourScheme.LightCyan
+	case 15:
+		return terminal.config.ColourScheme.White
+	}
+
+	if colNum < 232 {
+
+		index := int(colNum - 16) // 0-216
+		rgb := (index * 0xffffff) / 216
+		r := float32((rgb&0xff0000)>>16) / 0xff
+		g := float32((rgb&0xff00)>>8) / 0xff
+		b := float32(rgb&0xff) / 0xff
+
+		return [3]float32{r, g, b}
+	}
+
+	c := float32(colNum-232) / 0x18
+	return [3]float32{c, c, c}
 }

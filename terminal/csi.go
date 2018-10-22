@@ -52,8 +52,7 @@ func csiInsertLinesHandler(params []string, intermediate string, terminal *Termi
 		}
 	}
 	terminal.logger.Debugf("Inserting %d lines", count)
-	panic("Not supported")
-	return nil
+	return fmt.Errorf("Not supported")
 }
 
 func csiScrollDownHandler(params []string, intermediate string, terminal *Terminal) error {
