@@ -115,31 +115,17 @@ func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal
 	case "107":
 		terminal.ActiveBuffer().CursorAttr().BgColour = terminal.config.ColourScheme.White
 	case "38": // set foreground
-		if len(params) > 2 {
-			switch params[1] {
-			case "5":
-				// 8 bit colour
-				colNum, err := strconv.Atoi(params[2])
-				if err == nil && colNum < 256 && colNum >= 0 {
-					terminal.ActiveBuffer().CursorAttr().FgColour = get8BitSGRColour(uint8(colNum), terminal)
-				}
-			case "2":
-				// 24 bit colour
-			}
+		c, err := terminal.getANSIColour(params)
+		if err != nil {
+			return err
 		}
+		terminal.ActiveBuffer().CursorAttr().FgColour = c
 	case "48": // set background
-		if len(params) > 2 {
-			switch params[1] {
-			case "5":
-				// 8 bit colour
-				colNum, err := strconv.Atoi(params[2])
-				if err == nil && colNum < 256 && colNum >= 0 {
-					terminal.ActiveBuffer().CursorAttr().BgColour = get8BitSGRColour(uint8(colNum), terminal)
-				}
-			case "2":
-				// 24 bit colour
-			}
+		c, err := terminal.getANSIColour(params)
+		if err != nil {
+			return err
 		}
+		terminal.ActiveBuffer().CursorAttr().BgColour = c
 	default:
 		return fmt.Errorf("Unknown SGR control sequence: (ESC[%s%sm)", param, intermediate)
 	}
@@ -149,7 +135,69 @@ func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal
 	return nil
 }
 
-func get8BitSGRColour(colNum uint8, terminal *Terminal) [3]float32 {
+func (terminal *Terminal) getANSIColour(params []string) ([3]float32, error) {
+
+	if len(params) > 2 {
+		switch params[1] {
+		case "5":
+			// 8 bit colour
+			colNum, err := strconv.Atoi(params[2])
+
+			if err != nil || colNum >= 256 || colNum < 0 {
+				return [3]float32{0, 0, 0}, fmt.Errorf("Invalid 8-bit colour specifier")
+			}
+			return terminal.get8BitSGRColour(uint8(colNum)), nil
+
+		case "2":
+			if len(params) < 4 {
+				return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+			}
+			// 24 bit colour
+			if len(params) == 5 { // standard true colour
+				r, err := strconv.Atoi(params[2])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				g, err := strconv.Atoi(params[3])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				b, err := strconv.Atoi(params[4])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				return [3]float32{
+					float32(r) / 0xff,
+					float32(g) / 0xff,
+					float32(b) / 0xff,
+				}, nil
+			} else if len(params) > 5 { // ISO/IEC International Standard 8613-6
+				r, err := strconv.Atoi(params[3])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				g, err := strconv.Atoi(params[4])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				b, err := strconv.Atoi(params[5])
+				if err != nil {
+					return [3]float32{0, 0, 0}, fmt.Errorf("Invalid true colour specifier")
+				}
+				return [3]float32{
+					float32(r) / 0xff,
+					float32(g) / 0xff,
+					float32(b) / 0xff,
+				}, nil
+			}
+		}
+	}
+
+	return [3]float32{}, fmt.Errorf("Unknown ANSI colour format identifier")
+
+}
+
+func (terminal *Terminal) get8BitSGRColour(colNum uint8) [3]float32 {
 
 	// https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
 
