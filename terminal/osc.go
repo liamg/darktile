@@ -39,6 +39,18 @@ func oscHandler(pty chan rune, terminal *Terminal) error {
 	switch pS[0] {
 	case "0", "2":
 		terminal.SetTitle(pT)
+	case "10": // get/set foreground colour
+		if len(pS) > 1 {
+			if pS[1] == "?" {
+				terminal.Write([]byte("\x1b]10;15"))
+			}
+		}
+	case "11": // get/set background colour
+		if len(pS) > 1 {
+			if pS[1] == "?" {
+				terminal.Write([]byte("\x1b]10;0"))
+			}
+		}
 	default:
 		return fmt.Errorf("Unknown OSC control sequence: %s", strings.Join(params, ";"))
 	}

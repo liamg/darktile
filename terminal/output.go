@@ -98,6 +98,7 @@ func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
 		} else {
 			//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
 			if b >= 0x20 {
+				terminal.logger.Debugf("%c", b)
 				terminal.ActiveBuffer().Write(b)
 			} else {
 				terminal.logger.Error("Non-readable rune received: 0x%X", b)

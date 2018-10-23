@@ -75,6 +75,10 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			terminal.UseMainBuffer()
 		}
+	case "?2004":
+		if enabled {
+			return fmt.Errorf("Bracketed paste mode is not yet supported")
+		}
 	default:
 		return fmt.Errorf("Unsupported CSI %sl code", modeStr)
 	}
