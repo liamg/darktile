@@ -1,93 +1,20 @@
 package main
 
 import (
-	"flag"
 	"fmt"
-	"io/ioutil"
 	"os"
 	"os/exec"
 	"syscall"
 
 	"github.com/kr/pty"
-	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/gui"
 	"github.com/liamg/aminal/terminal"
 	"github.com/riywo/loginshell"
-	"go.uber.org/zap"
 )
-
-func getConfig() *config.Config {
-	ignore := false
-	flag.BoolVar(&ignore, "ignore-config", ignore, "Ignore user config files and use defauls")
-	if ignore {
-		return &config.DefaultConfig
-	}
-
-	conf := loadConfigFile()
-
-	flag.BoolVar(&conf.DebugMode, "debug", conf.DebugMode, "Enable debug logging")
-	flag.BoolVar(&conf.Slomo, "slomo", conf.Slomo, "Render in slow motion (useful for debugging)")
-	flag.BoolVar(&conf.Rendering.AlwaysRepaint, "always-repaint", conf.Rendering.AlwaysRepaint, "Always repaint the window, even when no changes have occurred")
-
-	flag.Parse()
-	return conf
-}
-
-func loadConfigFile() *config.Config {
-
-	home := os.Getenv("HOME")
-	if home == "" {
-		return &config.DefaultConfig
-	}
-
-	places := []string{
-		fmt.Sprintf("%s/.aminal.toml", home),
-	}
-
-	for _, place := range places {
-		if b, err := ioutil.ReadFile(place); err == nil {
-			if c, err := config.Parse(b); err == nil {
-				return c
-			} else {
-				fmt.Printf("Invalid config at %s: %s\n", place, err)
-			}
-		}
-	}
-
-	if b, err := config.DefaultConfig.Encode(); err != nil {
-		fmt.Printf("Failed to encode config file: %s\n", err)
-	} else {
-		if err := ioutil.WriteFile(fmt.Sprintf("%s/.aminal.toml", home), b, 0644); err != nil {
-			fmt.Printf("Failed to encode config file: %s\n", err)
-		}
-	}
-	return &config.DefaultConfig
-}
-
-func getLogger(conf *config.Config) (*zap.SugaredLogger, error) {
-
-	var logger *zap.Logger
-	var err error
-	if conf.DebugMode {
-		logger, err = zap.NewDevelopment()
-	} else {
-		loggerConfig := zap.NewProductionConfig()
-		loggerConfig.Encoding = "console"
-		logger, err = loggerConfig.Build()
-	}
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create logger: %s", err)
-	}
-	return logger.Sugar(), nil
-}
 
 func main() {
 
-	// parse this
 	conf := getConfig()
-
-	os.Setenv("TERM", "xterm-256color") // contraversial! easier than installing terminfo everywhere, but obviously going to be slightly different to xterm functionality, so we'll see...
-
 	logger, err := getLogger(conf)
 	if err != nil {
 		fmt.Printf("Failed to create logger: %s\n", err)
@@ -105,6 +32,9 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Failed to ascertain your shell: %s", err)
 	}
+
+	os.Setenv("TERM", "xterm-256color") // contraversial! easier than installing terminfo everywhere, but obviously going to be slightly different to xterm functionality, so we'll see...
+	os.Setenv("COLORTERM", "truecolor")
 
 	shell := exec.Command(shellStr)
 	shell.Stdout = tty
