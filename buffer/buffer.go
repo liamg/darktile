@@ -199,6 +199,53 @@ func (buffer *Buffer) ViewHeight() uint16 {
 	return buffer.viewHeight
 }
 
+func (buffer *Buffer) insertLine() {
+	if !buffer.InScrollableRegion() {
+		pos := buffer.RawLine()
+		out := make([]Line, len(buffer.lines)+1)
+		copy(out[:pos], buffer.lines[:pos])
+		out[pos] = newLine()
+		copy(out[pos+1:], buffer.lines[pos:])
+		buffer.lines = out
+	} else {
+		topIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin))
+		bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
+		before := buffer.lines[:topIndex]
+		after := buffer.lines[bottomIndex+1:]
+		out := make([]Line, len(buffer.lines))
+		copy(out[0:], before)
+
+		pos := buffer.RawLine()
+		for i := topIndex; i <= bottomIndex; i++ {
+			if i < pos {
+				out[i] = buffer.lines[i]
+			} else {
+				out[i+1] = buffer.lines[i]
+			}
+		}
+
+		copy(out[bottomIndex:], after)
+
+		out[pos] = newLine()
+		buffer.lines = out
+	}
+}
+
+func (buffer *Buffer) InsertLines(count int) {
+
+	if buffer.HasScrollableRegion() && !buffer.InScrollableRegion() {
+		// should have no effect outside of scrollable region
+		return
+	}
+
+	buffer.cursorX = 0
+
+	for i := 0; i < count; i++ {
+		buffer.insertLine()
+	}
+
+}
+
 func (buffer *Buffer) Index() {
 
 	// This sequence causes the active position to move downward one line without changing the column position.
@@ -208,13 +255,16 @@ func (buffer *Buffer) Index() {
 
 		if uint(buffer.cursorY) < buffer.bottomMargin {
 			buffer.cursorY++
-			return
 		}
 
-		for i := buffer.topMargin; i < uint(buffer.cursorY); i++ {
+		topIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin))
+		bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
+
+		for i := topIndex; i < bottomIndex; i++ {
 			buffer.lines[i] = buffer.lines[i+1]
 		}
-		buffer.lines[buffer.cursorY] = newLine()
+
+		buffer.lines[buffer.RawLine()] = newLine()
 
 		return
 	}
@@ -231,19 +281,21 @@ func (buffer *Buffer) ReverseIndex() {
 
 		if uint(buffer.cursorY) > buffer.topMargin {
 			buffer.cursorY--
-			return
 		}
 
-		for i := buffer.bottomMargin; i > uint(buffer.cursorY); i-- {
+		topIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin))
+		bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
+
+		for i := bottomIndex; i > topIndex; i-- {
 			buffer.lines[i] = buffer.lines[i-1]
 		}
-		buffer.lines[buffer.cursorY] = newLine()
+
+		buffer.lines[buffer.RawLine()] = newLine()
 
 		return
 	}
 
 	if buffer.cursorY > 0 {
-
 		buffer.cursorY--
 	}
 }
@@ -325,7 +377,7 @@ func (buffer *Buffer) incrementCursorPosition() {
 		buffer.cursorX++
 
 	} else {
-		panic("cursor position invalid")
+		fmt.Println("cursor position invalid")
 	}
 }
 
@@ -352,7 +404,6 @@ func (buffer *Buffer) NewLine() {
 	defer buffer.emitDisplayChange()
 
 	buffer.cursorX = 0
-
 	buffer.Index()
 }
 
@@ -459,7 +510,13 @@ func (buffer *Buffer) EraseLineFromCursor() {
 	defer buffer.emitDisplayChange()
 	line := buffer.getCurrentLine()
 
-	line.cells = line.cells[:buffer.cursorX]
+	if len(line.cells) > 0 {
+		cx := buffer.cursorX
+		if int(cx) >= len(line.cells) {
+			return // nothing to delete
+		}
+		line.cells = line.cells[:buffer.cursorX]
+	}
 
 	max := int(buffer.ViewWidth()) - len(line.cells)
 

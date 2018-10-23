@@ -12,7 +12,7 @@ var ansiSequenceMap = map[rune]escapeSequenceHandler{
 	'8': restoreCursorHandler,
 	'D': indexHandler,
 	'M': reverseIndexHandler,
-	'c': swallowHandler(0), //RIS
+	'c': risHandler,        //RIS
 	'(': swallowHandler(1), // character set bullshit
 	')': swallowHandler(1), // character set bullshit
 	'*': swallowHandler(1), // character set bullshit
@@ -28,6 +28,11 @@ func swallowHandler(n int) func(pty chan rune, terminal *Terminal) error {
 		}
 		return nil
 	}
+}
+
+func risHandler(pty chan rune, terminal *Terminal) error {
+	terminal.ActiveBuffer().Clear()
+	return nil
 }
 
 func indexHandler(pty chan rune, terminal *Terminal) error {
