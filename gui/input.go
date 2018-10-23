@@ -158,8 +158,6 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				if gui.terminal.IsApplicationCursorKeysModeEnabled() {
 					gui.terminal.Write([]byte{
 						0x1b,
-						'O',
-						0x1b,
 					})
 				} else {
 					gui.terminal.Write([]byte{
