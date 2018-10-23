@@ -38,7 +38,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		width:     600,
 		height:    300,
 		terminal:  terminal,
-		fontScale: 14.0,
+		fontScale: 15.0,
 	}
 }
 
