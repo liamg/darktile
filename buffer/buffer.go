@@ -200,6 +200,9 @@ func (buffer *Buffer) ViewHeight() uint16 {
 }
 
 func (buffer *Buffer) insertLine() {
+
+	defer buffer.emitDisplayChange()
+
 	if !buffer.InScrollableRegion() {
 		pos := buffer.RawLine()
 		out := make([]Line, len(buffer.lines)+1)
@@ -251,6 +254,8 @@ func (buffer *Buffer) Index() {
 	// This sequence causes the active position to move downward one line without changing the column position.
 	// If the active position is at the bottom margin, a scroll up is performed."
 
+	defer buffer.emitDisplayChange()
+
 	if buffer.InScrollableRegion() {
 
 		if uint(buffer.cursorY) < buffer.bottomMargin {
@@ -277,6 +282,9 @@ func (buffer *Buffer) Index() {
 }
 
 func (buffer *Buffer) ReverseIndex() {
+
+	defer buffer.emitDisplayChange()
+
 	if buffer.InScrollableRegion() {
 
 		if uint(buffer.cursorY) > buffer.topMargin {
