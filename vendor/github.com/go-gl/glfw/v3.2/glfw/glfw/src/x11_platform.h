@@ -122,8 +122,7 @@ typedef struct _GLFWwindowX11
     // The last position the cursor was warped to by GLFW
     int             warpCursorPosX, warpCursorPosY;
 
-    // The information from the last KeyPress event
-    unsigned int    lastKeyCode;
+    // The time of the last KeyPress event
     Time            lastKeyTime;
 
 } _GLFWwindowX11;

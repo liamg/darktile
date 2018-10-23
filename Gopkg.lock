@@ -20,10 +20,10 @@
   revision = "629e6eb0370bc1987d806c0786368395657324a0"
 
 [[projects]]
-  branch = "3.3-beta"
+  branch = "master"
   name = "github.com/go-gl/glfw"
-  packages = ["v3.3/glfw"]
-  revision = "6e2aad9c205df8e65253545488dd5012bce36960"
+  packages = ["v3.2/glfw"]
+  revision = "691ee1b84c51ae625ed1aafebc915d3db3d63d66"
 
 [[projects]]
   name = "github.com/gobuffalo/packr"
@@ -94,6 +94,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "218dcb5abf7e2d38e2a4be31dbd44ee99e19096ae831c815b961f73c56c37357"
+  inputs-digest = "62428a3f67dc7a8a89ecb5666b6d8a6641788f89c61d0b0b4dd99982923bb0c6"
   solver-name = "gps-cdcl"
   solver-version = 1

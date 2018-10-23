@@ -1,4 +1,4 @@
-# GLFW 3.3 for Go [![Build Status](https://travis-ci.org/go-gl/glfw.svg?branch=master)](https://travis-ci.org/go-gl/glfw) [![GoDoc](https://godoc.org/github.com/go-gl/glfw/v3.3/glfw?status.svg)](https://godoc.org/github.com/go-gl/glfw/v3.3/glfw)
+# GLFW 3.2 for Go [![Build Status](https://travis-ci.org/go-gl/glfw.svg?branch=master)](https://travis-ci.org/go-gl/glfw) [![GoDoc](https://godoc.org/github.com/go-gl/glfw/v3.2/glfw?status.svg)](https://godoc.org/github.com/go-gl/glfw/v3.2/glfw)
 
 ## Installation
 
@@ -10,7 +10,7 @@
 * Go 1.4+ is required on Windows (otherwise you must use MinGW v4.8.1 exactly, see [Go issue 8811](https://github.com/golang/go/issues/8811)).
 
 ```
-go get -u github.com/go-gl/glfw/v3.3/glfw
+go get -u github.com/go-gl/glfw/v3.2/glfw
 ```
 
 ## Usage
@@ -20,7 +20,7 @@ package main
 
 import (
 	"runtime"
-	"github.com/go-gl/glfw/v3.3/glfw"
+	"github.com/go-gl/glfw/v3.2/glfw"
 )
 
 func init() {
@@ -30,14 +30,15 @@ func init() {
 }
 
 func main() {
-	if !glfw.Init() {
-		panic(glfw.GetError())
+	err := glfw.Init()
+	if err != nil {
+		panic(err)
 	}
 	defer glfw.Terminate()
 
-	window := glfw.CreateWindow(640, 480, "Testing", nil, nil)
-	if window == nil {
-		panic(glfw.GetError())
+	window, err := glfw.CreateWindow(640, 480, "Testing", nil, nil)
+	if err != nil {
+		panic(err)
 	}
 
 	window.MakeContextCurrent()
@@ -52,56 +53,8 @@ func main() {
 
 ## Changelog
 
-* Internal error callback is now removed since GLFW now has a method called `GetError`. You can either set a custom error callback via `SetErrorCallback` or you can check for the last error via `GetError`. Due to this, some backward incompatible API changes needed to be made. See below for details.
-* Joystick functions now uses receivers instead of passing the joystick ID as argument.
-* Vulkan methods are intentionally not implemented. `Window.Handle` can be used to create a Vulkan surface via the [this](https://github.com/vulkan-go/vulkan) package.
-
-### GLFW 3.3 Specific Changes
-* Renamed `Window.GLFWWindow` to `Window.Handle`
-* Added function `SetErrorCallback`.
-* Added function `GetError`.
-* Added function `Window.RequestAttention`.
-* Added function `Window.SetAttrib`.
-* Added function `Window.GetContentScale`.
-* Added function `Window.GetOpacity`.
-* Added function `Window.SetOpacity`.
-* Added function `Window.SetMaximizeCallback`.
-* Added function `Window.SetContentScaleCallback`.
-* Added function `Monitor.GetContentScale`.
-* Added function `Monitor.SetUserPointer`.
-* Added function `Monitor.GetUserPointer`.
-* Added function `GetKeyScancode`.
-* Added function `InitHint`.
-* Added function `Joystick.GetHats`.
-* Added function `Joystick.IsGamepad`.
-* Added function `Joystick.GetGUID`.
-* Added function `Joystick.GetGamepadName`.
-* Added function `Joystick.GetGamepadState`.
-* Added function `Joystick.SetUserPointer`.
-* Added function `Joystick.GetUserPointer`.
-* Added function `UpdateGamepadMappings`.
-* Added function `SetX11SelectionString`.
-* Added function `GetX11SelectionString`.
-* Added function `WindowHintString`.
-* Added gamepad button IDs.
-* Added gamepad axis IDs.
-* Added joystick hat state IDs.
-* Added hint `Hovered`.
-* Added hint `CenterCursor`.
-* Added hint `JoystickHatButtons`.
-* Added hint `CocoaChdirResources`.
-* Added hint `CocoaMenubar`.
-* Added hint `TransparentFramebuffer`.
-* Added hint value `OSMesaContextAPI`.
-* `MonitorEvent` renamed to `PeripheralEvent` for reuse with joystick events.
-* `Init` Returns `bool` instead of error.
-* `Joystick.GetButtons` Returns `[]Action` instead of `[]byte`.
-* `SetMonitorCallback` Returns `MonitorCallback`.
-* `Focus` No longer returns an error.
-* `Iconify` No longer returns an error.
-* `Maximize` No longer returns an error.
-* `Restore` No longer returns an error.
-* `GetClipboardString` No longer returns an error.
+* Easy `go get` installation. GLFW source code is now included in-repo and compiled in so you don't have to build GLFW on your own and distribute shared libraries. The revision of GLFW C library used is listed in [GLFW_C_REVISION.txt](https://github.com/go-gl/glfw/blob/master/v3.2/glfw/GLFW_C_REVISION.txt) file.
+* The error callback is now set internally. Functions return an error with corresponding code and description (do a type assertion to glfw3.Error for accessing the variables) if the error is recoverable. If not a panic will occur.
 
 ### GLFW 3.2 Specfic Changes
 * Added function `Window.SetSizeLimits`.
