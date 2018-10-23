@@ -56,33 +56,17 @@ func (buffer *Buffer) GetScrollOffset() uint {
 	return buffer.scrollLinesFromBottom
 }
 
+func (buffer *Buffer) HasScrollableRegion() bool {
+	return buffer.topMargin > 0 || buffer.bottomMargin < uint(buffer.ViewHeight())-1
+}
+
+func (buffer *Buffer) InScrollableRegion() bool {
+	return buffer.HasScrollableRegion() && uint(buffer.cursorY) >= buffer.topMargin && uint(buffer.cursorY) <= buffer.bottomMargin
+}
+
 func (buffer *Buffer) ScrollDown(lines uint16) {
 
 	defer buffer.emitDisplayChange()
-
-	// scrollable region is enabled
-	if buffer.topMargin > 0 || buffer.bottomMargin < uint(buffer.ViewHeight())-1 {
-
-		for c := 0; c < int(lines); c++ {
-
-			for i := buffer.topMargin; i < buffer.bottomMargin; i++ {
-				above := buffer.getViewLine(uint16(i))
-				below := buffer.getViewLine(uint16(i + 1))
-				above.cells = below.cells
-			}
-			final := buffer.getViewLine(uint16(buffer.bottomMargin))
-
-			lineIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin + 1))
-
-			if lineIndex < uint64(len(buffer.lines)) {
-				*final = buffer.lines[lineIndex]
-			} else {
-				*final = newLine()
-			}
-		}
-
-		return
-	}
 
 	if buffer.Height() < int(buffer.ViewHeight()) {
 		return
@@ -97,30 +81,6 @@ func (buffer *Buffer) ScrollDown(lines uint16) {
 func (buffer *Buffer) ScrollUp(lines uint16) {
 
 	defer buffer.emitDisplayChange()
-
-	// scrollable region is enabled
-	if buffer.topMargin > 0 || buffer.bottomMargin < uint(buffer.ViewHeight())-1 {
-
-		for c := 0; c < int(lines); c++ {
-
-			for i := buffer.bottomMargin; i > buffer.topMargin+1; i-- {
-				below := buffer.getViewLine(uint16(i))
-				above := buffer.getViewLine(uint16(i - 1))
-				below.cells = above.cells
-			}
-			final := buffer.getViewLine(uint16(buffer.topMargin))
-
-			lineIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin - 1))
-
-			if lineIndex >= 0 && lineIndex < uint64(len(buffer.lines)) {
-				*final = buffer.lines[lineIndex]
-			} else {
-				*final = newLine()
-			}
-		}
-
-		return
-	}
 
 	if buffer.Height() < int(buffer.ViewHeight()) {
 		return
@@ -201,6 +161,14 @@ func (buffer *Buffer) CursorLine() uint16 {
 	return buffer.cursorY
 }
 
+func (buffer *Buffer) TopMargin() uint {
+	return buffer.topMargin
+}
+
+func (buffer *Buffer) BottomMargin() uint {
+	return buffer.bottomMargin
+}
+
 // translates the cursor line to the raw buffer line
 func (buffer *Buffer) RawLine() uint64 {
 	return buffer.convertViewLineToRawLine(buffer.cursorY)
@@ -231,6 +199,55 @@ func (buffer *Buffer) ViewHeight() uint16 {
 	return buffer.viewHeight
 }
 
+func (buffer *Buffer) Index() {
+
+	// This sequence causes the active position to move downward one line without changing the column position.
+	// If the active position is at the bottom margin, a scroll up is performed."
+
+	if buffer.InScrollableRegion() {
+
+		if uint(buffer.cursorY) < buffer.bottomMargin {
+			buffer.cursorY++
+			return
+		}
+
+		for i := buffer.topMargin; i < uint(buffer.cursorY); i++ {
+			buffer.lines[i] = buffer.lines[i+1]
+		}
+		buffer.lines[buffer.cursorY] = newLine()
+
+		return
+	}
+
+	if buffer.cursorY >= buffer.ViewHeight()-1 {
+		buffer.lines = append(buffer.lines, newLine())
+	} else {
+		buffer.cursorY++
+	}
+}
+
+func (buffer *Buffer) ReverseIndex() {
+	if buffer.InScrollableRegion() {
+
+		if uint(buffer.cursorY) > buffer.topMargin {
+			buffer.cursorY--
+			return
+		}
+
+		for i := buffer.bottomMargin; i > uint(buffer.cursorY); i-- {
+			buffer.lines[i] = buffer.lines[i-1]
+		}
+		buffer.lines[buffer.cursorY] = newLine()
+
+		return
+	}
+
+	if buffer.cursorY > 0 {
+
+		buffer.cursorY--
+	}
+}
+
 // Write will write a rune to the terminal at the position of the cursor, and increment the cursor position
 func (buffer *Buffer) Write(runes ...rune) {
 
@@ -248,16 +265,21 @@ func (buffer *Buffer) Write(runes ...rune) {
 		}
 		line := buffer.getCurrentLine()
 
+		if buffer.replaceMode {
+			for int(buffer.CursorColumn()) >= len(line.cells) {
+				line.cells = append(line.cells, NewBackgroundCell(buffer.cursorAttr.BgColour))
+			}
+			line.cells[buffer.cursorX].attr = buffer.cursorAttr
+			line.cells[buffer.cursorX].setRune(r)
+			buffer.incrementCursorPosition()
+			continue
+		}
+
 		if buffer.CursorColumn() >= buffer.Width() { // if we're after the line, move to next
 
 			if buffer.autoWrap {
-				buffer.cursorX = 0
 
-				if buffer.cursorY >= buffer.ViewHeight()-1 {
-					buffer.lines = append(buffer.lines, newLine())
-				} else {
-					buffer.cursorY++
-				}
+				buffer.NewLine()
 
 				newLine := buffer.getCurrentLine()
 				newLine.setWrapped(true)
@@ -331,24 +353,7 @@ func (buffer *Buffer) NewLine() {
 
 	buffer.cursorX = 0
 
-	if (buffer.topMargin > 0 || buffer.bottomMargin < uint(buffer.ViewHeight())-1) && uint(buffer.cursorY) == buffer.bottomMargin {
-
-		// scrollable region is enabled
-		for i := buffer.topMargin; i < buffer.bottomMargin; i++ {
-			above := buffer.getViewLine(uint16(i))
-			below := buffer.getViewLine(uint16(i + 1))
-			above.cells = below.cells
-		}
-		final := buffer.getViewLine(uint16(buffer.bottomMargin))
-		*final = newLine()
-		return
-	}
-
-	if buffer.cursorY >= buffer.ViewHeight()-1 {
-		buffer.lines = append(buffer.lines, newLine())
-	} else {
-		buffer.cursorY++
-	}
+	buffer.Index()
 }
 
 func (buffer *Buffer) MovePosition(x int16, y int16) {
@@ -373,6 +378,7 @@ func (buffer *Buffer) MovePosition(x int16, y int16) {
 
 func (buffer *Buffer) SetPosition(col uint16, line uint16) {
 	defer buffer.emitDisplayChange()
+
 	if col >= buffer.ViewWidth() {
 		col = buffer.ViewWidth() - 1
 		//logrus.Errorf("Cannot set cursor position: column %d is outside of the current view width (%d columns)", col, buffer.ViewWidth())
@@ -381,12 +387,14 @@ func (buffer *Buffer) SetPosition(col uint16, line uint16) {
 		line = buffer.ViewHeight() - 1
 		//logrus.Errorf("Cannot set cursor position: line %d is outside of the current view height (%d lines)", line, buffer.ViewHeight())
 	}
+
 	buffer.cursorX = col
 	buffer.cursorY = line
 }
 
 func (buffer *Buffer) GetVisibleLines() []Line {
 	lines := []Line{}
+
 	for i := buffer.Height() - int(buffer.ViewHeight()); i < buffer.Height(); i++ {
 		y := i - int(buffer.scrollLinesFromBottom)
 		if y >= 0 && y < len(buffer.lines) {

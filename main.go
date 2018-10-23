@@ -86,7 +86,7 @@ func main() {
 	// parse this
 	conf := getConfig()
 
-	os.Setenv("TERM", "xterm-256color")
+	os.Setenv("TERM", "xterm-256color") // contraversial! easier than installing terminfo everywhere, but obviously going to be slightly different to xterm functionality, so we'll see...
 
 	logger, err := getLogger(conf)
 	if err != nil {
