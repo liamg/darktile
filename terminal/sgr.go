@@ -11,12 +11,12 @@ import (
 func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal) error {
 
 	if len(params) == 0 {
-		return nil
+		params = []string{"0"}
 	}
 
 	for i := range params {
 		switch params[i] {
-		case "00", "0", "":
+		case "00", "0":
 			attr := terminal.ActiveBuffer().CursorAttr()
 			*attr = buffer.CellAttributes{
 				FgColour: terminal.config.ColourScheme.Foreground,

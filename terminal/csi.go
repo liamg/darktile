@@ -6,20 +6,206 @@ import (
 	"strings"
 )
 
-var csiSequenceMap = map[rune]csiSequenceHandler{
-	'd': csiLinePositionAbsolute,
-	'h': csiSetModeHandler,
-	'l': csiResetModeHandler,
-	'm': sgrSequenceHandler,
-	'r': csiSetMarginsHandler,
-	't': csiWindowManipulation,
-	'J': csiEraseInDisplayHandler,
-	'K': csiEraseInLineHandler,
-	'L': csiInsertLinesHandler,
-	'P': csiDeleteHandler,
-	'S': csiScrollUpHandler,
-	'T': csiScrollDownHandler,
-	'X': csiEraseCharactersHandler,
+type csiSequenceHandler func(params []string, intermediate string, terminal *Terminal) error
+
+type csiMapping struct {
+	id             rune
+	handler        csiSequenceHandler
+	description    string
+	expectedParams *expectedParams
+}
+
+type expectedParams struct {
+	min uint8
+	max uint8
+}
+
+var csiSequences = []csiMapping{
+	csiMapping{id: 'd', handler: csiLinePositionAbsolute, expectedParams: &expectedParams{min: 0, max: 1}, description: "Line Position Absolute  [row] (default = [1,column]) (VPA)"},
+	csiMapping{id: 'h', handler: csiSetModeHandler, expectedParams: &expectedParams{min: 1, max: 1}, description: "Set Mode (SM)"},
+	csiMapping{id: 'l', handler: csiResetModeHandler, expectedParams: &expectedParams{min: 1, max: 1}, description: "Reset Mode (RM)"},
+	csiMapping{id: 'm', handler: sgrSequenceHandler, description: "Character Attributes (SGR)"},
+	csiMapping{id: 'r', handler: csiSetMarginsHandler, expectedParams: &expectedParams{min: 2, max: 2}, description: "Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM), VT100"},
+	csiMapping{id: 't', handler: csiWindowManipulation, description: "Window manipulation"},
+	csiMapping{id: 'J', handler: csiEraseInDisplayHandler, description: "Erase in Display (ED), VT100"},
+	csiMapping{id: 'K', handler: csiEraseInLineHandler, description: "Erase in Line (EL), VT100"},
+	csiMapping{id: 'L', handler: csiInsertLinesHandler, description: "Insert Ps Line(s) (default = 1) (IL)"},
+	csiMapping{id: 'P', handler: csiDeleteHandler, description: " Delete Ps Character(s) (default = 1) (DCH)"},
+	csiMapping{id: 'S', handler: csiScrollUpHandler, description: "Scroll up Ps lines (default = 1) (SU), VT420, ECMA-48"},
+	csiMapping{id: 'T', handler: csiScrollDownHandler, description: "Scroll down Ps lines (default = 1) (SD), VT420"},
+	csiMapping{id: 'X', handler: csiEraseCharactersHandler, description: "Erase Ps Character(s) (default = 1) (ECH"},
+	csiMapping{id: 'A', handler: csiCursorUpHandler, description: "Cursor Up Ps Times (default = 1) (CUU)"},
+	csiMapping{id: 'B', handler: csiCursorDownHandler, description: "Cursor Down Ps Times (default = 1) (CUD)"},
+	csiMapping{id: 'C', handler: csiCursorForwardHandler, description: "Cursor Forward Ps Times (default = 1) (CUF)"},
+	csiMapping{id: 'D', handler: csiCursorBackwardHandler, description: "Cursor Backward Ps Times (default = 1) (CUB)"},
+	csiMapping{id: 'E', handler: csiCursorNextLineHandler, description: "Cursor Next Line Ps Times (default = 1) (CNL)"},
+	csiMapping{id: 'F', handler: csiCursorPrecedingLineHandler, description: "Cursor Preceding Line Ps Times (default = 1) (CPL)"},
+	csiMapping{id: 'G', handler: csiCursorCharacterAbsoluteHandler, description: "Cursor Character Absolute  [column] (default = [row,1]) (CHA)"},
+	csiMapping{id: 'H', handler: csiCursorPositionHandler, description: "Cursor Position [row;column] (default = [1,1]) (CUP)"},
+	csiMapping{id: 'f', handler: csiCursorPositionHandler, description: "Horizontal and Vertical Position [row;column] (default = [1,1]) (HVP)"},
+}
+
+func csiHandler(pty chan rune, terminal *Terminal) error {
+	var final rune
+	var b rune
+	param := ""
+	intermediate := ""
+CSI:
+	for {
+		b = <-pty
+		switch true {
+		case b >= 0x30 && b <= 0x3F:
+			param = param + string(b)
+		case b >= 0x20 && b <= 0x2F:
+			//intermediate? useful?
+			intermediate += string(b)
+		case b >= 0x40 && b <= 0x7e:
+			final = b
+			break CSI
+		}
+	}
+
+	params := strings.Split(param, ";")
+	if param == "" {
+		params = []string{}
+	}
+
+	for _, sequence := range csiSequences {
+		if sequence.id == final {
+			if sequence.expectedParams != nil && (uint8(len(params)) < sequence.expectedParams.min || uint8(len(params)) > sequence.expectedParams.max) {
+				continue
+			}
+			terminal.logger.Debugf("CSI 0x%02X (ESC[%s%s%s) %s", final, param, intermediate, string(final), sequence.description)
+			err := sequence.handler(params, intermediate, terminal)
+			terminal.logger.Debugf("After CSI, state: Col %d, Line %d, Top: %d, Bottom %d", terminal.ActiveBuffer().CursorColumn(), terminal.ActiveBuffer().CursorLine(), terminal.ActiveBuffer().TopMargin(), terminal.ActiveBuffer().BottomMargin())
+			return err
+		}
+	}
+
+	return fmt.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
+
+}
+
+func csiCursorUpHandler(params []string, intermediate string, terminal *Terminal) error {
+	distance := 1
+	if len(params) > 0 {
+		var err error
+		distance, err = strconv.Atoi(params[0])
+		if err != nil {
+			distance = 1
+		}
+	}
+	terminal.ActiveBuffer().MovePosition(0, -int16(distance))
+	return nil
+}
+
+func csiCursorDownHandler(params []string, intermediate string, terminal *Terminal) error {
+	distance := 1
+	if len(params) > 0 {
+		var err error
+		distance, err = strconv.Atoi(params[0])
+		if err != nil {
+			distance = 1
+		}
+	}
+
+	terminal.ActiveBuffer().MovePosition(0, int16(distance))
+	return nil
+}
+
+func csiCursorForwardHandler(params []string, intermediate string, terminal *Terminal) error {
+	distance := 1
+	if len(params) > 0 {
+		var err error
+		distance, err = strconv.Atoi(params[0])
+		if err != nil {
+			distance = 1
+		}
+	}
+
+	terminal.ActiveBuffer().MovePosition(int16(distance), 0)
+	return nil
+}
+
+func csiCursorBackwardHandler(params []string, intermediate string, terminal *Terminal) error {
+	distance := 1
+	if len(params) > 0 {
+		var err error
+		distance, err = strconv.Atoi(params[0])
+		if err != nil {
+			distance = 1
+		}
+	}
+
+	terminal.ActiveBuffer().MovePosition(-int16(distance), 0)
+	return nil
+}
+
+func csiCursorNextLineHandler(params []string, intermediate string, terminal *Terminal) error {
+
+	distance := 1
+	if len(params) > 0 {
+		var err error
+		distance, err = strconv.Atoi(params[0])
+		if err != nil {
+			distance = 1
+		}
+	}
+
+	terminal.ActiveBuffer().MovePosition(0, int16(distance))
+	terminal.ActiveBuffer().SetPosition(0, terminal.ActiveBuffer().CursorLine())
+	return nil
+}
+
+func csiCursorPrecedingLineHandler(params []string, intermediate string, terminal *Terminal) error {
+
+	distance := 1
+	if len(params) > 0 {
+		var err error
+		distance, err = strconv.Atoi(params[0])
+		if err != nil {
+			distance = 1
+		}
+	}
+	terminal.ActiveBuffer().MovePosition(0, -int16(distance))
+	terminal.ActiveBuffer().SetPosition(0, terminal.ActiveBuffer().CursorLine())
+	return nil
+}
+
+func csiCursorCharacterAbsoluteHandler(params []string, intermediate string, terminal *Terminal) error {
+	distance := 1
+	if len(params) > 0 {
+		var err error
+		distance, err = strconv.Atoi(params[0])
+		if err != nil || params[0] == "" {
+			distance = 1
+		}
+	}
+
+	terminal.ActiveBuffer().SetPosition(uint16(distance-1), terminal.ActiveBuffer().CursorLine())
+	return nil
+}
+
+func csiCursorPositionHandler(params []string, intermediate string, terminal *Terminal) error {
+	x, y := 1, 1
+	if len(params) == 2 {
+		var err error
+		if params[0] != "" {
+			y, err = strconv.Atoi(string(params[0]))
+			if err != nil {
+				y = 1
+			}
+		}
+		if params[1] != "" {
+			x, err = strconv.Atoi(string(params[1]))
+			if err != nil {
+				x = 1
+			}
+		}
+	}
+
+	terminal.ActiveBuffer().SetPosition(uint16(x-1), uint16(y-1))
+	return nil
 }
 
 func csiScrollUpHandler(params []string, intermediate string, terminal *Terminal) error {
@@ -52,7 +238,10 @@ func csiInsertLinesHandler(params []string, intermediate string, terminal *Termi
 		}
 	}
 	terminal.logger.Debugf("Inserting %d lines", count)
-	return fmt.Errorf("Not supported")
+	for i := 0; i < count; i++ {
+		terminal.ActiveBuffer().Index()
+	}
+	return nil
 }
 
 func csiScrollDownHandler(params []string, intermediate string, terminal *Terminal) error {
@@ -76,6 +265,11 @@ func csiScrollDownHandler(params []string, intermediate string, terminal *Termin
 func csiSetMarginsHandler(params []string, intermediate string, terminal *Terminal) error {
 	top := 1
 	bottom := int(terminal.ActiveBuffer().ViewHeight())
+
+	if len(params) > 2 {
+		return fmt.Errorf("Not set margins")
+	}
+
 	if len(params) > 0 {
 		var err error
 		top, err = strconv.Atoi(params[0])
@@ -86,10 +280,7 @@ func csiSetMarginsHandler(params []string, intermediate string, terminal *Termin
 		if len(params) > 1 {
 			var err error
 			bottom, err = strconv.Atoi(params[1])
-			if err != nil {
-				bottom = 1
-			}
-			if bottom > int(terminal.ActiveBuffer().ViewHeight()) {
+			if err != nil || bottom > int(terminal.ActiveBuffer().ViewHeight()) {
 				bottom = int(terminal.ActiveBuffer().ViewHeight())
 			}
 		}
@@ -127,8 +318,7 @@ func csiSetModeHandler(params []string, intermediate string, terminal *Terminal)
 }
 
 func csiWindowManipulation(params []string, intermediate string, terminal *Terminal) error {
-	// @todo this
-	return nil
+	return fmt.Errorf("Window manipulation is not yet supported")
 }
 
 func csiLinePositionAbsolute(params []string, intermediate string, terminal *Terminal) error {
@@ -144,153 +334,6 @@ func csiLinePositionAbsolute(params []string, intermediate string, terminal *Ter
 	terminal.ActiveBuffer().SetPosition(terminal.ActiveBuffer().CursorColumn(), uint16(row-1))
 
 	return nil
-}
-
-type csiSequenceHandler func(params []string, intermediate string, terminal *Terminal) error
-
-// CSI: Control Sequence Introducer [
-func csiHandler(pty chan rune, terminal *Terminal) error {
-	var final rune
-	var b rune
-	var err error
-	param := ""
-	intermediate := ""
-CSI:
-	for {
-		b = <-pty
-		switch true {
-		case b >= 0x30 && b <= 0x3F:
-			param = param + string(b)
-		case b >= 0x20 && b <= 0x2F:
-			//intermediate? useful?
-			intermediate += string(b)
-		case b >= 0x40 && b <= 0x7e:
-			final = b
-			break CSI
-		}
-	}
-
-	params := strings.Split(param, ";")
-
-	handler, ok := csiSequenceMap[final]
-	if ok {
-		err = handler(params, intermediate, terminal)
-	} else {
-
-		switch final {
-		case 'A':
-			distance := 1
-			if len(params) > 0 {
-				var err error
-				distance, err = strconv.Atoi(params[0])
-				if err != nil {
-					distance = 1
-				}
-			}
-			terminal.ActiveBuffer().MovePosition(0, -int16(distance))
-		case 'B':
-			distance := 1
-			if len(params) > 0 {
-				var err error
-				distance, err = strconv.Atoi(params[0])
-				if err != nil {
-					distance = 1
-				}
-			}
-
-			terminal.ActiveBuffer().MovePosition(0, int16(distance))
-		case 'C':
-
-			distance := 1
-			if len(params) > 0 {
-				var err error
-				distance, err = strconv.Atoi(params[0])
-				if err != nil {
-					distance = 1
-				}
-			}
-
-			terminal.ActiveBuffer().MovePosition(int16(distance), 0)
-
-		case 'D':
-
-			distance := 1
-			if len(params) > 0 {
-				var err error
-				distance, err = strconv.Atoi(params[0])
-				if err != nil {
-					distance = 1
-				}
-			}
-
-			terminal.ActiveBuffer().MovePosition(-int16(distance), 0)
-
-		case 'E':
-			distance := 1
-			if len(params) > 0 {
-				var err error
-				distance, err = strconv.Atoi(params[0])
-				if err != nil {
-					distance = 1
-				}
-			}
-
-			terminal.ActiveBuffer().MovePosition(0, int16(distance))
-			terminal.ActiveBuffer().SetPosition(0, terminal.ActiveBuffer().CursorLine())
-
-		case 'F':
-
-			distance := 1
-			if len(params) > 0 {
-				var err error
-				distance, err = strconv.Atoi(params[0])
-				if err != nil {
-					distance = 1
-				}
-			}
-			terminal.ActiveBuffer().MovePosition(0, -int16(distance))
-			terminal.ActiveBuffer().SetPosition(0, terminal.ActiveBuffer().CursorLine())
-
-		case 'G':
-
-			distance := 1
-			if len(params) > 0 {
-				var err error
-				distance, err = strconv.Atoi(params[0])
-				if err != nil || params[0] == "" {
-					distance = 1
-				}
-			}
-
-			terminal.ActiveBuffer().SetPosition(uint16(distance-1), terminal.ActiveBuffer().CursorLine())
-
-		case 'H', 'f':
-
-			x, y := 1, 1
-			if len(params) == 2 {
-				var err error
-				if params[0] != "" {
-					y, err = strconv.Atoi(string(params[0]))
-					if err != nil {
-						y = 1
-					}
-				}
-				if params[1] != "" {
-					x, err = strconv.Atoi(string(params[1]))
-					if err != nil {
-						x = 1
-					}
-				}
-			}
-
-			terminal.ActiveBuffer().SetPosition(uint16(x-1), uint16(y-1))
-
-		default:
-			err = fmt.Errorf("Unknown CSI control sequence: 0x%02X (ESC[%s%s%s)", final, param, intermediate, string(final))
-		}
-	}
-	fmt.Printf("CSI 0x%02X (ESC[%s%s%s)\n", final, param, intermediate, string(final))
-	return err
 }
 
 func csiDeleteHandler(params []string, intermediate string, terminal *Terminal) error {

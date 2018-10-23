@@ -91,6 +91,7 @@ func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
 		handler, ok := escapeSequenceMap[b]
 
 		if ok {
+			//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
 			if err := handler(pty, terminal); err != nil {
 				terminal.logger.Errorf("Error handling escape sequence: %s", err)
 			}

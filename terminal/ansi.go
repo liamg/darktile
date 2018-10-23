@@ -31,18 +31,12 @@ func swallowHandler(n int) func(pty chan rune, terminal *Terminal) error {
 }
 
 func indexHandler(pty chan rune, terminal *Terminal) error {
-	// @todo is thus right?
-	// "This sequence causes the active position to move downward one line without changing the column position. If the active position is at the bottom margin, a scroll up is performed."
-	if terminal.ActiveBuffer().CursorLine() == terminal.ActiveBuffer().ViewHeight()-1 {
-		terminal.ActiveBuffer().NewLine()
-		return nil
-	}
-	terminal.ActiveBuffer().MovePosition(0, 1)
+	terminal.ActiveBuffer().Index()
 	return nil
 }
 
 func reverseIndexHandler(pty chan rune, terminal *Terminal) error {
-	terminal.ActiveBuffer().MovePosition(0, -1)
+	terminal.ActiveBuffer().ReverseIndex()
 	return nil
 }
 
@@ -62,6 +56,7 @@ func ansiHandler(pty chan rune, terminal *Terminal) error {
 
 	handler, ok := ansiSequenceMap[b]
 	if ok {
+		//terminal.logger.Debugf("Handling ansi sequence %c", b)
 		return handler(pty, terminal)
 	}
 
