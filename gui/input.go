@@ -186,7 +186,7 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 						'M',
 					})
 				} else {
-					gui.terminal.Write([]byte{0x0a})
+					gui.terminal.Write([]byte{0x0d})
 				}
 			case glfw.KeyBackspace:
 				gui.terminal.Write([]byte{0x08})
