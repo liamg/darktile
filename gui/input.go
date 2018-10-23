@@ -27,9 +27,7 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 		case modsPressed(mods, glfw.ModControl, glfw.ModShift):
 			switch key {
 			case glfw.KeyV:
-				// todo handle both these errors
-				_ = gui.terminal.Write([]byte(gui.window.GetClipboardString()))
-
+				_ = gui.terminal.Paste([]byte(gui.window.GetClipboardString()))
 			case glfw.KeySemicolon:
 				gui.config.Slomo = !gui.config.Slomo
 			}
