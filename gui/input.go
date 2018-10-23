@@ -127,33 +127,33 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 					'3', '~',
 				})
 			case glfw.KeyHome:
-				if gui.terminal.IsApplicationCursorKeysModeEnabled() {
-					gui.terminal.Write([]byte{
-						0x1b,
-						'O',
-						'H',
-					})
-				} else {
-					gui.terminal.Write([]byte{
-						0x1b,
-						'[',
-						'H',
-					})
-				}
+				gui.terminal.Write([]byte{
+					0x1b,
+					'[',
+					'1',
+					'~',
+				})
 			case glfw.KeyEnd:
-				if gui.terminal.IsApplicationCursorKeysModeEnabled() {
-					gui.terminal.Write([]byte{
-						0x1b,
-						'O',
-						'F',
-					})
-				} else {
-					gui.terminal.Write([]byte{
-						0x1b,
-						'[',
-						'F',
-					})
-				}
+				gui.terminal.Write([]byte{
+					0x1b,
+					'[',
+					'4',
+					'~',
+				})
+			case glfw.KeyPageUp:
+				gui.terminal.Write([]byte{
+					0x1b,
+					'[',
+					'5',
+					'~',
+				})
+			case glfw.KeyPageDown:
+				gui.terminal.Write([]byte{
+					0x1b,
+					'[',
+					'6',
+					'~',
+				})
 			case glfw.KeyEscape:
 				if gui.terminal.IsApplicationCursorKeysModeEnabled() {
 					gui.terminal.Write([]byte{
