@@ -212,12 +212,21 @@ func (buffer *Buffer) insertLine() {
 		bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
 		before := buffer.lines[:topIndex]
 		after := buffer.lines[bottomIndex+1:]
-		scrollable := buffer.lines[topIndex : bottomIndex+1]
 		out := make([]Line, len(buffer.lines))
 		copy(out[0:], before)
-		copy(out[topIndex+1:], scrollable[0:len(scrollable)-1])
+
+		pos := buffer.RawLine()
+		for i := topIndex; i <= bottomIndex; i++ {
+			if i < pos {
+				out[i] = buffer.lines[i]
+			} else {
+				out[i+1] = buffer.lines[i]
+			}
+		}
+
 		copy(out[bottomIndex:], after)
-		out[topIndex] = newLine()
+
+		out[pos] = newLine()
 		buffer.lines = out
 	}
 }
@@ -248,11 +257,14 @@ func (buffer *Buffer) Index() {
 			buffer.cursorY++
 		}
 
-		for i := buffer.topMargin; i < uint(buffer.bottomMargin); i++ {
+		topIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin))
+		bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
+
+		for i := topIndex; i < bottomIndex; i++ {
 			buffer.lines[i] = buffer.lines[i+1]
 		}
 
-		buffer.lines[buffer.cursorY] = newLine()
+		buffer.lines[buffer.RawLine()] = newLine()
 
 		return
 	}
@@ -271,11 +283,14 @@ func (buffer *Buffer) ReverseIndex() {
 			buffer.cursorY--
 		}
 
-		for i := buffer.bottomMargin; i > uint(buffer.topMargin); i-- {
+		topIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin))
+		bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
+
+		for i := bottomIndex; i > topIndex; i-- {
 			buffer.lines[i] = buffer.lines[i-1]
 		}
 
-		buffer.lines[buffer.cursorY] = newLine()
+		buffer.lines[buffer.RawLine()] = newLine()
 
 		return
 	}
@@ -496,6 +511,10 @@ func (buffer *Buffer) EraseLineFromCursor() {
 	line := buffer.getCurrentLine()
 
 	if len(line.cells) > 0 {
+		cx := buffer.cursorX
+		if int(cx) >= len(line.cells) {
+			return // nothing to delete
+		}
 		line.cells = line.cells[:buffer.cursorX]
 	}
 
