@@ -100,7 +100,7 @@ func (terminal *Terminal) SetBracketedPasteMode(enabled bool) {
 func (terminal *Terminal) CheckDirty() bool {
 	d := terminal.isDirty
 	terminal.isDirty = false
-	return d
+	return d || terminal.ActiveBuffer().IsDirty()
 }
 
 func (terminal *Terminal) SetDirty() {
@@ -164,12 +164,6 @@ func (terminal *Terminal) GetVisibleLines() []buffer.Line {
 
 func (terminal *Terminal) GetCell(col uint16, row uint16) *buffer.Cell {
 	return terminal.ActiveBuffer().GetCell(col, row)
-}
-
-func (terminal *Terminal) AttachDisplayChangeHandler(handler chan bool) {
-	for i := range terminal.buffers {
-		terminal.buffers[i].AttachDisplayChangeHandler(handler)
-	}
 }
 
 func (terminal *Terminal) AttachTitleChangeHandler(handler chan bool) {

@@ -19,6 +19,7 @@ type Buffer struct {
 	bottomMargin          uint // see DECSTBM docs - this is for scrollable regions
 	replaceMode           bool // overwrite character at cursor or insert new
 	autoWrap              bool
+	dirty                 bool
 }
 
 // NewBuffer creates a new terminal buffer
@@ -33,6 +34,14 @@ func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 	b.SetVerticalMargins(0, uint(viewLines-1))
 	b.ResizeView(viewCols, viewLines)
 	return b
+}
+
+func (buffer *Buffer) IsDirty() bool {
+	if !buffer.dirty {
+		return false
+	}
+	buffer.dirty = false
+	return true
 }
 
 func (buffer *Buffer) SetAutoWrap(enabled bool) {
@@ -132,23 +141,8 @@ func (buffer *Buffer) GetCell(viewCol uint16, viewRow uint16) *Cell {
 	return &line.cells[viewCol]
 }
 
-func (buffer *Buffer) AttachDisplayChangeHandler(handler chan bool) {
-	if buffer.displayChangeHandlers == nil {
-		buffer.displayChangeHandlers = []chan bool{}
-	}
-
-	buffer.displayChangeHandlers = append(buffer.displayChangeHandlers, handler)
-}
-
 func (buffer *Buffer) emitDisplayChange() {
-	for _, channel := range buffer.displayChangeHandlers {
-		go func(c chan bool) {
-			select {
-			case c <- true:
-			default:
-			}
-		}(channel)
-	}
+	buffer.dirty = true
 }
 
 // Column returns cursor column
@@ -219,7 +213,7 @@ func (buffer *Buffer) insertLine() {
 		copy(out[0:], before)
 
 		pos := buffer.RawLine()
-		for i := topIndex; i <= bottomIndex; i++ {
+		for i := topIndex; i < bottomIndex; i++ {
 			if i < pos {
 				out[i] = buffer.lines[i]
 			} else {
@@ -227,7 +221,7 @@ func (buffer *Buffer) insertLine() {
 			}
 		}
 
-		copy(out[bottomIndex:], after)
+		copy(out[bottomIndex+1:], after)
 
 		out[pos] = newLine()
 		buffer.lines = out
@@ -260,16 +254,17 @@ func (buffer *Buffer) Index() {
 
 		if uint(buffer.cursorY) < buffer.bottomMargin {
 			buffer.cursorY++
+		} else {
+
+			topIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin))
+			bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
+
+			for i := topIndex; i < bottomIndex; i++ {
+				buffer.lines[i] = buffer.lines[i+1]
+			}
+
+			buffer.lines[bottomIndex] = newLine()
 		}
-
-		topIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin))
-		bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
-
-		for i := topIndex; i < bottomIndex; i++ {
-			buffer.lines[i] = buffer.lines[i+1]
-		}
-
-		buffer.lines[buffer.RawLine()] = newLine()
 
 		return
 	}
@@ -289,17 +284,17 @@ func (buffer *Buffer) ReverseIndex() {
 
 		if uint(buffer.cursorY) > buffer.topMargin {
 			buffer.cursorY--
+		} else {
+
+			topIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin))
+			bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
+
+			for i := bottomIndex; i > topIndex; i-- {
+				buffer.lines[i] = buffer.lines[i-1]
+			}
+
+			buffer.lines[topIndex] = newLine()
 		}
-
-		topIndex := buffer.convertViewLineToRawLine(uint16(buffer.topMargin))
-		bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.bottomMargin))
-
-		for i := bottomIndex; i > topIndex; i-- {
-			buffer.lines[i] = buffer.lines[i-1]
-		}
-
-		buffer.lines[buffer.RawLine()] = newLine()
-
 		return
 	}
 
@@ -520,10 +515,9 @@ func (buffer *Buffer) EraseLineFromCursor() {
 
 	if len(line.cells) > 0 {
 		cx := buffer.cursorX
-		if int(cx) >= len(line.cells) {
-			return // nothing to delete
+		if int(cx) < len(line.cells) {
+			line.cells = line.cells[:buffer.cursorX]
 		}
-		line.cells = line.cells[:buffer.cursorX]
 	}
 
 	max := int(buffer.ViewWidth()) - len(line.cells)
@@ -543,6 +537,15 @@ func (buffer *Buffer) EraseDisplay() {
 			buffer.lines[int(rawLine)].cells = []Cell{}
 		}
 	}
+}
+
+func (buffer *Buffer) DeleteChars(n int) {
+	defer buffer.emitDisplayChange()
+
+	line := buffer.getCurrentLine()
+	before := line.cells[:buffer.cursorX]
+	after := line.cells[int(buffer.cursorX)+n:]
+	line.cells = append(before, after...)
 }
 
 func (buffer *Buffer) EraseCharacters(n int) {

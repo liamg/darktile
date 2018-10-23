@@ -28,7 +28,7 @@ var csiSequences = []csiMapping{
 	csiMapping{id: 'l', handler: csiResetModeHandler, expectedParams: &expectedParams{min: 1, max: 1}, description: "Reset Mode (RM)"},
 	csiMapping{id: 'm', handler: sgrSequenceHandler, description: "Character Attributes (SGR)"},
 	csiMapping{id: 'n', handler: csiDeviceStatusReportHandler, description: "Device Status Report (DSR)"},
-	csiMapping{id: 'r', handler: csiSetMarginsHandler, expectedParams: &expectedParams{min: 2, max: 2}, description: "Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM), VT100"},
+	csiMapping{id: 'r', handler: csiSetMarginsHandler, expectedParams: &expectedParams{min: 0, max: 2}, description: "Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM), VT100"},
 	csiMapping{id: 't', handler: csiWindowManipulation, description: "Window manipulation"},
 	csiMapping{id: 'A', handler: csiCursorUpHandler, description: "Cursor Up Ps Times (default = 1) (CUU)"},
 	csiMapping{id: 'B', handler: csiCursorDownHandler, description: "Cursor Down Ps Times (default = 1) (CUD)"},
@@ -77,8 +77,9 @@ CSI:
 			if sequence.expectedParams != nil && (uint8(len(params)) < sequence.expectedParams.min || uint8(len(params)) > sequence.expectedParams.max) {
 				continue
 			}
-			terminal.logger.Debugf("CSI 0x%02X (ESC[%s%s%s) %s", final, param, intermediate, string(final), sequence.description)
+			x, y := terminal.ActiveBuffer().CursorColumn(), terminal.ActiveBuffer().CursorLine()
 			err := sequence.handler(params, intermediate, terminal)
+			terminal.logger.Debugf("CSI 0x%02X (ESC[%s%s%s) %s - %d,%d -> %d,%d", final, param, intermediate, string(final), sequence.description, x, y, terminal.ActiveBuffer().CursorColumn(), terminal.ActiveBuffer().CursorLine())
 			return err
 		}
 	}
@@ -377,8 +378,7 @@ func csiDeleteHandler(params []string, intermediate string, terminal *Terminal) 
 		}
 	}
 
-	terminal.ActiveBuffer().EraseCharacters(n)
-
+	terminal.ActiveBuffer().DeleteChars(n)
 	return nil
 }
 

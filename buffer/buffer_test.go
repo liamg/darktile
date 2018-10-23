@@ -3,7 +3,6 @@ package buffer
 import (
 	"strings"
 	"testing"
-	"time"
 
 	"github.com/stretchr/testify/require"
 
@@ -296,29 +295,6 @@ func TestGetCellWithBadCursor(t *testing.T) {
 func TestCursorAttr(t *testing.T) {
 	b := NewBuffer(80, 2, CellAttributes{})
 	assert.Equal(t, &b.cursorAttr, b.CursorAttr())
-}
-
-func TestAttachingHandlers(t *testing.T) {
-	b := NewBuffer(80, 2, CellAttributes{})
-	displayHandler := make(chan bool, 1)
-	b.AttachDisplayChangeHandler(displayHandler)
-	require.Equal(t, 1, len(b.displayChangeHandlers))
-	assert.Equal(t, b.displayChangeHandlers[0], displayHandler)
-}
-
-func TestEmitDisplayHandlers(t *testing.T) {
-	b := NewBuffer(80, 2, CellAttributes{})
-	displayHandler := make(chan bool, 1)
-	b.AttachDisplayChangeHandler(displayHandler)
-	b.emitDisplayChange()
-	time.Sleep(time.Millisecond * 50)
-	ok := false
-	select {
-	case <-displayHandler:
-		ok = true
-	default:
-	}
-	assert.True(t, ok)
 }
 
 func TestCursorPositionQuerying(t *testing.T) {
