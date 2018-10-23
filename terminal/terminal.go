@@ -32,20 +32,21 @@ const (
 )
 
 type Terminal struct {
-	buffers           []*buffer.Buffer
-	activeBufferIndex uint8
-	lock              sync.Mutex
-	pty               *os.File
-	logger            *zap.SugaredLogger
-	title             string
-	size              Winsize
-	config            *config.Config
-	titleHandlers     []chan bool
-	pauseChan         chan bool
-	resumeChan        chan bool
-	modes             Modes
-	mouseMode         MouseMode
-	isDirty           bool
+	buffers            []*buffer.Buffer
+	activeBufferIndex  uint8
+	lock               sync.Mutex
+	pty                *os.File
+	logger             *zap.SugaredLogger
+	title              string
+	size               Winsize
+	config             *config.Config
+	titleHandlers      []chan bool
+	pauseChan          chan bool
+	resumeChan         chan bool
+	modes              Modes
+	mouseMode          MouseMode
+	bracketedPasteMode bool
+	isDirty            bool
 }
 
 type Modes struct {
@@ -90,6 +91,10 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 		},
 	}
 
+}
+
+func (terminal *Terminal) SetBracketedPasteMode(enabled bool) {
+	terminal.bracketedPasteMode = enabled
 }
 
 func (terminal *Terminal) CheckDirty() bool {
@@ -210,6 +215,15 @@ func (terminal *Terminal) SetTitle(title string) {
 
 // Write sends data, i.e. locally typed keystrokes to the pty
 func (terminal *Terminal) Write(data []byte) error {
+	_, err := terminal.pty.Write(data)
+	return err
+}
+
+func (terminal *Terminal) Paste(data []byte) error {
+
+	if terminal.bracketedPasteMode {
+		data = []byte(fmt.Sprintf("\x1b[200~%s\x1b[201~", string(data)))
+	}
 	_, err := terminal.pty.Write(data)
 	return err
 }
