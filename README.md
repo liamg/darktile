@@ -49,22 +49,22 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ## Planned Features
 
-| Feature                     | Done | Notes                                                              |
-| --------------------------- | ---- | ------------------------------------------------------------------ |
-| Pty allocation              | ✔    | Needs work for OSX + Windows                                       |
+| Feature                     | Done | Notes |
+|-----------------------------|------|-------|
+| Pty allocation              | ✔    | 
 | OpenGL rendering            | ✔    |
 | 8-bit (256) colour          | ✔    |
 | 24-bit (true) colour        | ✔    |
-| Resizing/content reordering | ⏳   |
-| ANSI escape codes           | ⏳   | Most of these are handled now                                      |
-| UTF-8 input                 | ✔    |
-| UTF-8 output                | ✔    | Works as long as the font in use supports the relevant characters. |
-| Copy/paste                  |      | Paste working, no mouse interaction for copy                       |
-| Customisable colour schemes | ✔    | Complete, but the config file has no entry for this yet            |
-| Config file                 | ⏳   | Minimal options atm                                                |
-| Scrolling                   | ⏳   | Infinite buffer implemented, need GUI scrollbar & render updates   |
-| Mouse interaction           |      |
-| Sweet render effects        |      |
+| Resizing/content reordering | ✔    | 
+| ANSI escape codes           | ✔    | 
+| UTF-8 input                 | ✔    | 
+| UTF-8 output                | ✔    | Works as long as the font in use supports the relevant characters.
+| Copy/paste                  |      | Paste working, no mouse interaction for copy
+| Customisable colour schemes | ✔    | Complete, but the config file has no entry for this yet 
+| Config file                 | ✔    | Minimal options atm
+| Scrolling                   | ✔    | 
+| Mouse interaction           |      | 
+| Sweet render effects        |      | 
 
 ## Keyboard Shortcuts
 
