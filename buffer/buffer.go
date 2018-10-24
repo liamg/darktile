@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"fmt"
+	"net/url"
 	"time"
 )
 
@@ -47,6 +48,45 @@ func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 	return b
 }
 
+func (buffer *Buffer) GetURLAtPosition(col uint16, row uint16) string {
+
+	cell := buffer.GetCell(col, row)
+	if cell == nil || cell.Rune() == 0x00 {
+		return ""
+	}
+
+	candidate := ""
+
+	for i := col; i >= 0; i-- {
+		cell := buffer.GetCell(i, row)
+		if cell == nil {
+			break
+		}
+		if isRuneURLSelectionMarker(cell.Rune()) {
+			break
+		}
+		candidate = fmt.Sprintf("%c%s", cell.Rune(), candidate)
+	}
+
+	for i := col + 1; i < buffer.viewWidth; i++ {
+		cell := buffer.GetCell(i, row)
+		if cell == nil {
+			break
+		}
+		if isRuneURLSelectionMarker(cell.Rune()) {
+			break
+		}
+		candidate = fmt.Sprintf("%s%c", candidate, cell.Rune())
+	}
+
+	// check if url
+	_, err := url.ParseRequestURI(candidate)
+	if err != nil {
+		return ""
+	}
+	return candidate
+}
+
 func (buffer *Buffer) SelectWordAtPosition(col uint16, row uint16) {
 
 	cell := buffer.GetCell(col, row)
@@ -62,7 +102,7 @@ func (buffer *Buffer) SelectWordAtPosition(col uint16, row uint16) {
 		if cell == nil {
 			break
 		}
-		if isRuneSelectionMarker(cell.Rune()) {
+		if isRuneWordSelectionMarker(cell.Rune()) {
 			break
 		}
 		start = i
@@ -73,7 +113,7 @@ func (buffer *Buffer) SelectWordAtPosition(col uint16, row uint16) {
 		if cell == nil {
 			break
 		}
-		if isRuneSelectionMarker(cell.Rune()) {
+		if isRuneWordSelectionMarker(cell.Rune()) {
 			break
 		}
 		end = i
@@ -92,9 +132,18 @@ func (buffer *Buffer) SelectWordAtPosition(col uint16, row uint16) {
 }
 
 // bounds for word selection
-func isRuneSelectionMarker(r rune) bool {
+func isRuneWordSelectionMarker(r rune) bool {
 	switch r {
 	case ',', ' ', ':', ';', 0, '\'', '"', '[', ']', '(', ')', '{', '}':
+		return true
+	}
+
+	return false
+}
+
+func isRuneURLSelectionMarker(r rune) bool {
+	switch r {
+	case ' ', 0, '\'', '"', '{', '}':
 		return true
 	}
 

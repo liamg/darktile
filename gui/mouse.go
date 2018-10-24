@@ -3,6 +3,8 @@ package gui
 import (
 	"fmt"
 	"math"
+	"os/exec"
+	"runtime"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/liamg/aminal/terminal"
@@ -10,11 +12,33 @@ import (
 
 func (gui *GUI) mouseMoveCallback(w *glfw.Window, xpos float64, ypos float64) {
 
+	px, py := w.GetCursorPos()
+	x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
+	y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
 	if gui.mouseDown {
-		px, py := w.GetCursorPos()
-		x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
-		y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
 		gui.terminal.ActiveBuffer().EndSelection(x, y, false)
+	}
+
+	if url := gui.terminal.ActiveBuffer().GetURLAtPosition(x, y); url != "" {
+		w.SetCursor(glfw.CreateStandardCursor(glfw.HandCursor))
+	} else {
+		w.SetCursor(glfw.CreateStandardCursor(glfw.ArrowCursor))
+	}
+}
+
+func (gui *GUI) launchTarget(target string) {
+
+	cmd := "xdg-open"
+
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "open"
+	case "windows":
+		cmd = "start"
+	}
+
+	if err := exec.Command(cmd, target).Run(); err != nil {
+		gui.logger.Errorf("Failed to launch external command %s: %s", cmd, err)
 	}
 }
 
@@ -33,6 +57,9 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 	} else if action == glfw.Release {
 		gui.mouseDown = false
 		gui.terminal.ActiveBuffer().EndSelection(x, y, true)
+		if url := gui.terminal.ActiveBuffer().GetURLAtPosition(x, y); url != "" {
+			go gui.launchTarget(url)
+		}
 	}
 	// https://www.xfree86.org/4.8.0/ctlseqs.html
 
