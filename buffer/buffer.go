@@ -610,6 +610,8 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 	line := buffer.getCurrentLine()
 	cXFromEndOfLine := len(line.cells) - int(buffer.cursorX+1)
 
+	cursorYMovement := 0
+
 	if width < buffer.viewWidth { // wrap lines if we're shrinking
 		for i := 0; i < len(buffer.lines); i++ {
 			line := &buffer.lines[i]
@@ -627,6 +629,10 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 						nextLine.cells = append(sillyCells, nextLine.cells...)
 						continue
 					}
+				}
+
+				if i+1 <= int(buffer.cursorY) {
+					cursorYMovement++
 				}
 
 				newLine := newLine()
@@ -657,6 +663,11 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 				}
 				line.cells = append(line.cells, nextLine.cells[:moveCount]...)
 				if moveCount == len(nextLine.cells) {
+
+					if i+offset <= int(buffer.cursorY) {
+						cursorYMovement--
+					}
+
 					// if we unwrapped all cells off the next line, delete it
 					buffer.lines = append(buffer.lines[:i+offset], buffer.lines[i+offset+1:]...)
 
@@ -679,7 +690,7 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 	if buffer.cursorY >= buffer.viewHeight-1 {
 		buffer.cursorY = buffer.viewHeight - 1
 	} else {
-		buffer.cursorY = buffer.viewHeight - fromBottom
+		buffer.cursorY = (buffer.viewHeight - fromBottom) + uint16(cursorYMovement)
 		if int(buffer.cursorY) >= buffer.Height() {
 			buffer.cursorY = uint16(buffer.Height() - 1)
 		}
