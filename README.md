@@ -64,6 +64,7 @@ Ensure you have your latest graphics card drivers installed before use.
 | Config file                 | ✔    |
 | Scrolling                   | ✔    | 
 | Mouse interaction           | ✔    | 
+| Clickable URLs              | ✔    |
 | Sweet render effects        |      | 
 
 ## Keyboard Shortcuts
