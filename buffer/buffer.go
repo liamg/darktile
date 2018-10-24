@@ -671,21 +671,19 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 		}
 	}
 
-	// @todo handle vertical resize?
-
-	if buffer.Height() < int(buffer.viewHeight) {
-		// we might need to move back up if the buffer is now smaller
-		if int(buffer.cursorY) < buffer.Height()-1 {
-			buffer.cursorY = uint16(buffer.Height() - 1)
-		} else {
-			buffer.cursorY = uint16(buffer.Height() - 1)
-		}
-	} else {
-		buffer.cursorY = buffer.viewHeight - 1
-	}
+	fromBottom := buffer.viewHeight - buffer.cursorY
 
 	buffer.viewWidth = width
 	buffer.viewHeight = height
+
+	if buffer.cursorY >= buffer.viewHeight-1 {
+		buffer.cursorY = buffer.viewHeight - 1
+	} else {
+		buffer.cursorY = buffer.viewHeight - fromBottom
+		if int(buffer.cursorY) >= buffer.Height() {
+			buffer.cursorY = uint16(buffer.Height() - 1)
+		}
+	}
 
 	// position cursorX
 	line = buffer.getCurrentLine()
