@@ -25,6 +25,7 @@ type GUI struct {
 	width      int //window width in pixels
 	height     int //window height in pixels
 	font       *glfont.Font
+	boldFont   *glfont.Font
 	fontScale  float32
 	renderer   *OpenGLRenderer
 	colourAttr uint32
@@ -38,7 +39,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		width:     600,
 		height:    300,
 		terminal:  terminal,
-		fontScale: 15.0,
+		fontScale: 14.0,
 	}
 }
 
@@ -55,6 +56,9 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	gui.logger.Debugf("Updating font resolution...")
 	if gui.font != nil {
 		gui.font.UpdateResolution((width), (height))
+	}
+	if gui.boldFont != nil {
+		gui.boldFont.UpdateResolution((width), (height))
 	}
 
 	gui.logger.Debugf("Setting renderer area...")
@@ -123,7 +127,7 @@ func (gui *GUI) Render() error {
 
 	titleChan := make(chan bool, 1)
 
-	gui.renderer = NewOpenGLRenderer(gui.config, gui.font, 0, 0, gui.width, gui.height, gui.colourAttr, program)
+	gui.renderer = NewOpenGLRenderer(gui.config, gui.font, gui.boldFont, 0, 0, gui.width, gui.height, gui.colourAttr, program)
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
@@ -250,6 +254,21 @@ func (gui *GUI) loadDefaultFont() error {
 		return fmt.Errorf("LoadFont: %v", err)
 	}
 	gui.font = font
+
+	{
+		fontBytes, err := box.MustBytes("Hack-Bold.ttf")
+		if err != nil {
+			return fmt.Errorf("Packaged font could not be read: %s", err)
+		}
+
+		font, err := glfont.LoadFont(bytes.NewReader(fontBytes), gui.fontScale, gui.width, gui.height)
+		if err != nil {
+			return fmt.Errorf("LoadFont: %v", err)
+		}
+
+		gui.boldFont = font
+	}
+
 	return nil
 }
 

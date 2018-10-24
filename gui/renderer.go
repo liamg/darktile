@@ -11,6 +11,7 @@ import (
 
 type OpenGLRenderer struct {
 	font          *glfont.Font
+	boldFont      *glfont.Font
 	areaWidth     int
 	areaHeight    int
 	areaX         int
@@ -126,7 +127,7 @@ func (rect *rectangle) Free() {
 	gl.DeleteBuffers(1, &rect.cv)
 }
 
-func NewOpenGLRenderer(config *config.Config, font *glfont.Font, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
+func NewOpenGLRenderer(config *config.Config, font *glfont.Font, boldFont *glfont.Font, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
 	r := &OpenGLRenderer{
 		areaWidth:     areaWidth,
 		areaHeight:    areaHeight,
@@ -138,7 +139,7 @@ func NewOpenGLRenderer(config *config.Config, font *glfont.Font, areaX int, area
 		colourAttr:    colourAttr,
 		program:       program,
 	}
-	r.SetFont(font)
+	r.SetFont(font, boldFont)
 	return r
 }
 
@@ -151,11 +152,12 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	r.areaHeight = areaHeight
 	r.areaX = areaX
 	r.areaY = areaY
-	r.SetFont(r.font)
+	r.SetFont(r.font, r.boldFont)
 }
 
-func (r *OpenGLRenderer) SetFont(font *glfont.Font) { // @todo check for monospace and return error if not?
+func (r *OpenGLRenderer) SetFont(font *glfont.Font, bold *glfont.Font) { // @todo check for monospace and return error if not?
 	r.font = font
+	r.boldFont = bold
 	r.cellWidth, _ = font.Size("X")
 	r.cellHeight = font.LineHeight() // vertical padding
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
@@ -229,8 +231,15 @@ func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint) {
 	y := (float32(row+1) * r.cellHeight) - (r.font.LinePadding())
 
 	if cell.Attr().Bold { // bold means draw text again one pixel to right, so it's fatter
+		if r.boldFont != nil {
+			y := (float32(row+1) * r.cellHeight) - (r.boldFont.LinePadding())
+			r.boldFont.SetColor(fg[0], fg[1], fg[2], alpha)
+			r.boldFont.Print(x, y, string(cell.Rune()))
+			return
+		}
 		r.font.Print(x+1, y, string(cell.Rune()))
 	}
+
 	r.font.Print(x, y, string(cell.Rune()))
 
 }
