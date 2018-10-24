@@ -22,5 +22,6 @@ var DefaultConfig = Config{
 		LightMagenta: strToColourNoErr("#ff99a1"),
 		LightCyan:    strToColourNoErr("#9ed9d8"),
 		White:        strToColourNoErr("#f6f6c9"),
+		Selection:    strToColourNoErr("#333366"),
 	},
 }

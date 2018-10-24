@@ -2,6 +2,7 @@ package buffer
 
 import (
 	"fmt"
+	"time"
 )
 
 type Buffer struct {
@@ -20,6 +21,16 @@ type Buffer struct {
 	replaceMode           bool // overwrite character at cursor or insert new
 	autoWrap              bool
 	dirty                 bool
+	selectionStart        *Position
+	selectionEnd          *Position
+	selectionComplete     bool // whether the selected text can update or whether it is final
+	selectionExpanded     bool // whether the selection to word expansion has already run on this point
+	selectionClickTime    time.Time
+}
+
+type Position struct {
+	Line int
+	Col  int
 }
 
 // NewBuffer creates a new terminal buffer
@@ -34,6 +45,183 @@ func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 	b.SetVerticalMargins(0, uint(viewLines-1))
 	b.ResizeView(viewCols, viewLines)
 	return b
+}
+
+func (buffer *Buffer) SelectWordAtPosition(col uint16, row uint16) {
+
+	cell := buffer.GetCell(col, row)
+	if cell == nil || cell.Rune() == 0x00 {
+		return
+	}
+
+	start := col
+	end := col
+
+	for i := col; i >= 0; i-- {
+		cell := buffer.GetCell(i, row)
+		if cell == nil {
+			break
+		}
+		if isRuneSelectionMarker(cell.Rune()) {
+			break
+		}
+		start = i
+	}
+
+	for i := col; i < buffer.viewWidth; i++ {
+		cell := buffer.GetCell(i, row)
+		if cell == nil {
+			break
+		}
+		if isRuneSelectionMarker(cell.Rune()) {
+			break
+		}
+		end = i
+	}
+
+	buffer.selectionStart = &Position{
+		Col:  int(start),
+		Line: int(buffer.convertViewLineToRawLine(row)),
+	}
+	buffer.selectionEnd = &Position{
+		Col:  int(end),
+		Line: int(buffer.convertViewLineToRawLine(row)),
+	}
+	buffer.emitDisplayChange()
+
+}
+
+// bounds for word selection
+func isRuneSelectionMarker(r rune) bool {
+	switch r {
+	case ',', ' ', ':', ';', 0, '\'', '"', '[', ']', '(', ')', '{', '}':
+		return true
+	}
+
+	return false
+}
+
+func (buffer *Buffer) GetSelectedText() string {
+	if buffer.selectionStart == nil || buffer.selectionEnd == nil {
+		return ""
+	}
+
+	text := ""
+
+	for row := buffer.selectionStart.Line; row <= buffer.selectionEnd.Line; row++ {
+
+		if row >= len(buffer.lines) {
+			break
+		}
+
+		line := buffer.lines[row]
+
+		minX := 0
+		maxX := int(buffer.viewWidth) - 1
+		if row == buffer.selectionStart.Line {
+			minX = buffer.selectionStart.Col
+		} else if !line.wrapped {
+			text += "\n"
+		}
+		if row == buffer.selectionEnd.Line {
+			maxX = buffer.selectionEnd.Col
+		}
+
+		for col := minX; col <= maxX; col++ {
+			if col >= len(line.cells) {
+				break
+			}
+			cell := line.cells[col]
+			text += string(cell.Rune())
+		}
+
+	}
+
+	return text
+}
+
+func (buffer *Buffer) StartSelection(col uint16, row uint16) {
+	if buffer.selectionComplete {
+		buffer.selectionEnd = nil
+
+		if buffer.selectionStart != nil && time.Since(buffer.selectionClickTime) < time.Millisecond*500 {
+			if buffer.selectionExpanded {
+				//select whole line!
+				buffer.selectionStart = &Position{
+					Col:  0,
+					Line: int(buffer.convertViewLineToRawLine(row)),
+				}
+				buffer.selectionEnd = &Position{
+					Col:  int(buffer.ViewWidth() - 1),
+					Line: int(buffer.convertViewLineToRawLine(row)),
+				}
+				buffer.emitDisplayChange()
+			} else {
+				buffer.SelectWordAtPosition(col, row)
+				buffer.selectionExpanded = true
+			}
+			return
+		}
+
+		buffer.selectionExpanded = false
+	}
+
+	buffer.selectionComplete = false
+	buffer.selectionStart = &Position{
+		Col:  int(col),
+		Line: int(buffer.convertViewLineToRawLine(row)),
+	}
+	buffer.selectionClickTime = time.Now()
+}
+
+func (buffer *Buffer) EndSelection(col uint16, row uint16, complete bool) {
+
+	if buffer.selectionComplete {
+		return
+	}
+
+	buffer.selectionComplete = complete
+
+	defer buffer.emitDisplayChange()
+
+	if buffer.selectionStart == nil {
+		buffer.selectionEnd = nil
+		return
+	}
+
+	if int(col) == buffer.selectionStart.Col && int(buffer.convertViewLineToRawLine(row)) == int(buffer.selectionStart.Line) && complete {
+		return
+	}
+
+	buffer.selectionEnd = &Position{
+		Col:  int(col),
+		Line: int(buffer.convertViewLineToRawLine(row)),
+	}
+}
+
+func (buffer *Buffer) InSelection(col uint16, row uint16) bool {
+
+	if buffer.selectionStart == nil || buffer.selectionEnd == nil {
+		return false
+	}
+
+	var x1, x2, y1, y2 int
+
+	// first, let's put the selection points in the correct order, earliest first
+	if buffer.selectionStart.Line > buffer.selectionEnd.Line || (buffer.selectionStart.Line == buffer.selectionEnd.Line && buffer.selectionStart.Col > buffer.selectionEnd.Col) {
+		y2 = buffer.selectionStart.Line
+		y1 = buffer.selectionEnd.Line
+		x2 = buffer.selectionStart.Col
+		x1 = buffer.selectionEnd.Col
+	} else {
+		y1 = buffer.selectionStart.Line
+		y2 = buffer.selectionEnd.Line
+		x1 = buffer.selectionStart.Col
+		x2 = buffer.selectionEnd.Col
+	}
+
+	rawY := int(buffer.convertViewLineToRawLine(row))
+	return (rawY > y1 || (rawY == y1 && int(col) >= x1)) && (rawY < y2 || (rawY == y2 && int(col) <= x2))
 }
 
 func (buffer *Buffer) IsDirty() bool {

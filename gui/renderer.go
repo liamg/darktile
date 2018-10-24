@@ -192,16 +192,21 @@ func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
 	rect.Draw()
 }
 
-func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor bool) {
+func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor bool, colour *config.Colour) {
 
 	var bg [3]float32
 
-	if cursor {
-		bg = r.config.ColourScheme.Cursor
-	} else if cell.Attr().Reverse {
-		bg = cell.Fg()
+	if colour != nil {
+		bg = *colour
 	} else {
-		bg = cell.Bg()
+
+		if cursor {
+			bg = r.config.ColourScheme.Cursor
+		} else if cell.Attr().Reverse {
+			bg = cell.Fg()
+		} else {
+			bg = cell.Bg()
+		}
 	}
 
 	if bg != r.config.ColourScheme.Background {
@@ -211,14 +216,18 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 	}
 }
 
-func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint) {
+func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint, colour *config.Colour) {
 
 	var fg [3]float32
 
-	if cell.Attr().Reverse {
-		fg = cell.Bg()
+	if colour != nil {
+		fg = *colour
 	} else {
-		fg = cell.Fg()
+		if cell.Attr().Reverse {
+			fg = cell.Bg()
+		} else {
+			fg = cell.Fg()
+		}
 	}
 
 	var alpha float32 = 1
@@ -227,12 +236,12 @@ func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint) {
 	}
 	r.font.SetColor(fg[0], fg[1], fg[2], alpha)
 
-	x := float32(col) * r.cellWidth
-	y := (float32(row+1) * r.cellHeight) - (r.font.LinePadding())
+	x := float32(r.areaX) + float32(col)*r.cellWidth
+	y := float32(r.areaY) + (float32(row+1) * r.cellHeight) - (r.font.LinePadding())
 
 	if cell.Attr().Bold { // bold means draw text again one pixel to right, so it's fatter
 		if r.boldFont != nil {
-			y := (float32(row+1) * r.cellHeight) - (r.boldFont.LinePadding())
+			y := float32(r.areaY) + (float32(row+1) * r.cellHeight) - (r.boldFont.LinePadding())
 			r.boldFont.SetColor(fg[0], fg[1], fg[2], alpha)
 			r.boldFont.Print(x, y, string(cell.Rune()))
 			return

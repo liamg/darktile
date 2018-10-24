@@ -29,6 +29,7 @@ type GUI struct {
 	fontScale  float32
 	renderer   *OpenGLRenderer
 	colourAttr uint32
+	mouseDown  bool
 }
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
@@ -134,6 +135,7 @@ func (gui *GUI) Render() error {
 	gui.window.SetCharCallback(gui.char)
 	gui.window.SetScrollCallback(gui.glfwScrollCallback)
 	gui.window.SetMouseButtonCallback(gui.mouseButtonCallback)
+	gui.window.SetCursorPosCallback(gui.mouseMoveCallback)
 	gui.window.SetRefreshCallback(func(w *glfw.Window) {
 		gui.terminal.SetDirty()
 	})
@@ -224,9 +226,16 @@ func (gui *GUI) Render() error {
 						cy = cy + uint(gui.terminal.GetScrollOffset())
 						cursor = cx == uint(x) && cy == uint(y)
 					}
-					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor)
+
+					var colour *config.Colour
+
+					if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
+						colour = &gui.config.ColourScheme.Selection
+					}
+
+					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour)
 					if hasText {
-						gui.renderer.DrawCellText(cell, uint(x), uint(y))
+						gui.renderer.DrawCellText(cell, uint(x), uint(y), nil)
 					}
 				}
 			}

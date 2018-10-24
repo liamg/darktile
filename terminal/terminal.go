@@ -62,11 +62,6 @@ type Winsize struct {
 	y      uint16 //ignored, but necessary for ioctl calls
 }
 
-type Position struct {
-	Line int
-	Col  int
-}
-
 func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Terminal {
 
 	return &Terminal{
@@ -92,7 +87,6 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 	}
 
 }
-
 func (terminal *Terminal) SetBracketedPasteMode(enabled bool) {
 	terminal.bracketedPasteMode = enabled
 }
