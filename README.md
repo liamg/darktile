@@ -1,9 +1,10 @@
 # Aminal - A Modern Terminal Emulator
+
 [![CircleCI](https://circleci.com/gh/liamg/aminal/tree/master.svg?style=svg)](https://circleci.com/gh/liamg/aminal/tree/master)
 
 Aminal is a modern terminal emulator implemented in Golang and utilising OpenGL. So far the terminal is very much incomplete, but we're getting there!
 
-![Example screenshot](demo.png)
+![Example screenshot](demo.gif)
 
 The project is experimental at the moment, so you probably won't want to rely on Aminal as your main terminal for a while.
 
@@ -31,7 +32,6 @@ Ensure you have your latest graphics card drivers installed before use.
 <img alt="Overheating" src="https://imgs.xkcd.com/comics/workflow.png"/>
 </p>
 
-
 ## Build Dependencies
 
 - Go 1.10.3+
@@ -39,15 +39,13 @@ Ensure you have your latest graphics card drivers installed before use.
 - On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
 - On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
 
-
 ## Platform Support
 
-| Platform | Supported  |
-|----------|------------|
-| Linux    | ✔
-| MacOSX   | ⏳
-| Windows  | ⏳
-
+| Platform | Supported |
+| -------- | --------- |
+| Linux    | ✔         |
+| MacOSX   | ⏳        |
+| Windows  | ⏳        |
 
 ## Planned Features
 
@@ -70,11 +68,11 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ## Keyboard Shortcuts
 
-| Operation          | Key(s)              |
-|--------------------|---------------------|
-| Paste              | ctrl + shift + v
-| Toggle slomo       | ctrl + shift + ;
-| Interrupt (SIGINT) | ctrl + c
+| Operation          | Key(s)           |
+| ------------------ | ---------------- |
+| Paste              | ctrl + shift + v |
+| Toggle slomo       | ctrl + shift + ; |
+| Interrupt (SIGINT) | ctrl + c         |
 
 ## Configuration
 
@@ -84,10 +82,8 @@ You can ignore the config and use defaults by specifying `--ignore-config` as a 
 
 ### Config Options/CLI Flags
 
-| CLI Flag           | Config Section      | Config Name            | Type    | Default      | Description |
-|--------------------|---------------------|------------------------|---------|--------------|-------------|
-| --debug            | _root_              | debug                  | boolean | false        | Enable debug mode, with debug logging and debug info terminal overlay.
-| --slomo            | _root_              | slomo                  | boolean | false        | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging.
-| --always-repaint   | rendering           | always_repaint         | boolean | false        | Redraw the terminal GUI constantly, even when no changes have occurred.
-
-
+| CLI Flag         | Config Section | Config Name    | Type    | Default | Description                                                                                                                   |
+| ---------------- | -------------- | -------------- | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| --debug          | _root_         | debug          | boolean | false   | Enable debug mode, with debug logging and debug info terminal overlay.                                                        |
+| --slomo          | _root_         | slomo          | boolean | false   | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging. |
+| --always-repaint | rendering      | always_repaint | boolean | false   | Redraw the terminal GUI constantly, even when no changes have occurred.                                                       |
