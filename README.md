@@ -58,18 +58,19 @@ Ensure you have your latest graphics card drivers installed before use.
 | Resizing/content reordering | ✔    | 
 | ANSI escape codes           | ✔    | 
 | UTF-8 input                 | ✔    | 
-| UTF-8 output                | ✔    | Works as long as the font in use supports the relevant characters.
-| Copy/paste                  |      | Paste working, no mouse interaction for copy
-| Customisable colour schemes | ✔    | Complete, but the config file has no entry for this yet 
-| Config file                 | ✔    | Minimal options atm
+| UTF-8 output                | ✔    | 
+| Copy/paste                  | ✔    | 
+| Customisable colour schemes | ✔    | 
+| Config file                 | ✔    |
 | Scrolling                   | ✔    | 
-| Mouse interaction           |      | 
+| Mouse interaction           | ✔    | 
 | Sweet render effects        |      | 
 
 ## Keyboard Shortcuts
 
 | Operation          | Key(s)           |
 | ------------------ | ---------------- |
+| Copy               | ctrl + shift + c |
 | Paste              | ctrl + shift + v |
 | Toggle slomo       | ctrl + shift + ; |
 | Interrupt (SIGINT) | ctrl + c         |

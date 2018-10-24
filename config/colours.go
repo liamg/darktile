@@ -73,4 +73,5 @@ type ColourScheme struct {
 	LightMagenta Colour `toml:"light_magenta"`
 	LightCyan    Colour `toml:"light_cyan"`
 	White        Colour `toml:"white"`
+	Selection    Colour `toml:"selection"`
 }

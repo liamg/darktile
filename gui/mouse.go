@@ -8,8 +8,32 @@ import (
 	"github.com/liamg/aminal/terminal"
 )
 
+func (gui *GUI) mouseMoveCallback(w *glfw.Window, xpos float64, ypos float64) {
+
+	if gui.mouseDown {
+		px, py := w.GetCursorPos()
+		x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
+		y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
+		gui.terminal.ActiveBuffer().EndSelection(x, y, false)
+	}
+}
+
 func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 
+	// before we forward clicks on (below), we need to handle them locally for url clicking, text highlighting etc.
+	px, py := w.GetCursorPos()
+	x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
+	y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
+	tx := int(x) + 1 // vt100 is 1 indexed
+	ty := int(y) + 1
+
+	if action == glfw.Press {
+		gui.mouseDown = true
+		gui.terminal.ActiveBuffer().StartSelection(x, y)
+	} else if action == glfw.Release {
+		gui.mouseDown = false
+		gui.terminal.ActiveBuffer().EndSelection(x, y, true)
+	}
 	// https://www.xfree86.org/4.8.0/ctlseqs.html
 
 	/*
@@ -40,10 +64,7 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 
 		if action == glfw.Press {
 			b := rune(button)
-			px, py := w.GetCursorPos()
-			x := int(math.Floor(px/float64(gui.renderer.CellWidth()))) + 1
-			y := int(math.Floor(py/float64(gui.renderer.CellHeight()))) + 1
-			packet := fmt.Sprintf("\x1b[M%c%c%c", (rune(b + 32)), (rune(x + 32)), (rune(y + 32)))
+			packet := fmt.Sprintf("\x1b[M%c%c%c", (rune(b + 32)), (rune(tx + 32)), (rune(ty + 32)))
 
 			gui.terminal.Write([]byte(packet))
 		}
@@ -96,10 +117,8 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 		if mod&glfw.ModControl > 0 {
 			b |= 16
 		}
-		px, py := w.GetCursorPos()
-		x := int(math.Floor(px/float64(gui.renderer.CellWidth()))) + 1
-		y := int(math.Floor(py/float64(gui.renderer.CellHeight()))) + 1
-		packet := fmt.Sprintf("\x1b[M%c%c%c", (rune(b + 32)), (rune(x + 32)), (rune(y + 32)))
+
+		packet := fmt.Sprintf("\x1b[M%c%c%c", (rune(b + 32)), (rune(tx + 32)), (rune(ty + 32)))
 		gui.logger.Infof("Sending mouse packet: '%v'", packet)
 		gui.terminal.Write([]byte(packet))
 
