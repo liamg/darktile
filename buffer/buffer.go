@@ -616,8 +616,6 @@ func (buffer *Buffer) incrementCursorPosition() {
 
 		buffer.cursorX++
 
-	} else {
-		fmt.Println("cursor position invalid")
 	}
 }
 
@@ -780,7 +778,13 @@ func (buffer *Buffer) DeleteChars(n int) {
 	defer buffer.emitDisplayChange()
 
 	line := buffer.getCurrentLine()
+	if int(buffer.cursorX) >= len(line.cells) {
+		return
+	}
 	before := line.cells[:buffer.cursorX]
+	if int(buffer.cursorX)+n >= len(line.cells) {
+		n = len(line.cells) - int(buffer.cursorX)
+	}
 	after := line.cells[int(buffer.cursorX)+n:]
 	line.cells = append(before, after...)
 }

@@ -37,8 +37,8 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 	return &GUI{
 		config:    config,
 		logger:    logger,
-		width:     600,
-		height:    300,
+		width:     800,
+		height:    600,
 		terminal:  terminal,
 		fontScale: 14.0,
 	}
@@ -54,16 +54,21 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	gui.width = width
 	gui.height = height
 
+	ww, wh := w.GetSize()
+
+	hScale := float32(ww) / float32(width)
+	vScale := float32(wh) / float32(height)
+
 	gui.logger.Debugf("Updating font resolution...")
 	if gui.font != nil {
-		gui.font.UpdateResolution((width), (height))
+		gui.font.UpdateResolution(int(float32(width)*hScale), int(float32(height)*vScale))
 	}
 	if gui.boldFont != nil {
-		gui.boldFont.UpdateResolution((width), (height))
+		gui.boldFont.UpdateResolution(int(float32(width)*hScale), int(float32(height)*vScale))
 	}
 
 	gui.logger.Debugf("Setting renderer area...")
-	gui.renderer.SetArea(0, 0, gui.width, gui.height)
+	gui.renderer.SetArea(0, 0, int(float32(width)*hScale), int(float32(height)*vScale))
 
 	gui.logger.Debugf("Calculating size in cols/rows...")
 	cols, rows := gui.renderer.GetTermSize()
@@ -106,7 +111,7 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Creating window...")
 	var err error
-	gui.window, err = gui.createWindow(500, 300)
+	gui.window, err = gui.createWindow(gui.width, gui.height)
 	if err != nil {
 		return fmt.Errorf("Failed to create window: %s", err)
 	}
@@ -144,7 +149,7 @@ func (gui *GUI) Render() error {
 			gui.terminal.SetDirty()
 		}
 	})
-	w, h := gui.window.GetSize()
+	w, h := gui.window.GetFramebufferSize()
 	gui.resize(gui.window, w, h)
 
 	gui.logger.Debugf("Starting pty read handling...")

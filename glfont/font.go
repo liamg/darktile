@@ -14,6 +14,8 @@ import (
 	"golang.org/x/image/math/fixed"
 )
 
+const DPI = 72
+
 // A Font allows rendering of text to an OpenGL context.
 type Font struct {
 	characters  map[rune]*character
@@ -213,7 +215,7 @@ func (f *Font) GetRune(r rune) (*character, error) {
 	//create new face to measure glyph diamensions
 	ttfFace := truetype.NewFace(f.ttf, &truetype.Options{
 		Size:    float64(f.scale),
-		DPI:     72,
+		DPI:     DPI,
 		Hinting: font.HintingFull,
 	})
 
@@ -257,7 +259,7 @@ func (f *Font) GetRune(r rune) (*character, error) {
 
 	//create a freetype context for drawing
 	c := freetype.NewContext()
-	c.SetDPI(72)
+	c.SetDPI(DPI)
 	c.SetFont(f.ttf)
 	c.SetFontSize(float64(f.scale))
 	c.SetClip(rgba.Bounds())
