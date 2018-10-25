@@ -41,7 +41,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale float32) (*Font, error)
 
 	ttfFace := truetype.NewFace(f.ttf, &truetype.Options{
 		Size:    float64(f.scale),
-		DPI:     72,
+		DPI:     DPI,
 		Hinting: font.HintingFull,
 	})
 
