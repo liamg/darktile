@@ -23,6 +23,7 @@ If applicable, add screenshots to help explain your problem.
 **Environment (please complete the following information):**
  - OS + Version: [e.g. Ubuntu 18.04] - On Linux run `cat /etc/*release`
  - Go Version [e.g. 1.10.1] - Run `go version`
+ - Shell [e.g. Bash/Zsh] - Run `echo $0`
 
 **Additional context**
 Add any other context about the problem here.
