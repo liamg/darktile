@@ -644,7 +644,7 @@ func (buffer *Buffer) CarriageReturn() {
 func (buffer *Buffer) Tab() {
 	defer buffer.emitDisplayChange()
 	tabSize := 4
-	shift := int(buffer.cursorX) % tabSize
+	shift := int(buffer.cursorX-1) % tabSize
 	if shift == 0 {
 		shift = tabSize
 	}
