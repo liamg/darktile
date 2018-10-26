@@ -554,6 +554,9 @@ func (buffer *Buffer) Write(runes ...rune) {
 		} else if r == 0x0d {
 			buffer.CarriageReturn()
 			continue
+		} else if r == 0x9 {
+			buffer.Tab()
+			continue
 		}
 		line := buffer.getCurrentLine()
 
@@ -636,6 +639,18 @@ func (buffer *Buffer) Backspace() {
 func (buffer *Buffer) CarriageReturn() {
 	defer buffer.emitDisplayChange()
 	buffer.cursorX = 0
+}
+
+func (buffer *Buffer) Tab() {
+	defer buffer.emitDisplayChange()
+	tabSize := 4
+	shift := int(buffer.cursorX) % tabSize
+	if shift == 0 {
+		shift = tabSize
+	}
+	for i := 0; i < shift; i++ {
+		buffer.Write(' ')
+	}
 }
 
 func (buffer *Buffer) NewLine() {
