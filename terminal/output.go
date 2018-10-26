@@ -26,8 +26,12 @@ var escapeSequenceMap = map[rune]escapeSequenceHandler{
 }
 
 func newLineSequenceHandler(pty chan rune, terminal *Terminal) error {
-	terminal.logger.Debugf("New line!")
 	terminal.ActiveBuffer().NewLine()
+	return nil
+}
+
+func tabSequenceHandler(pty chan rune, terminal *Terminal) error {
+	terminal.ActiveBuffer().Tab()
 	return nil
 }
 
@@ -58,11 +62,6 @@ func shiftOutSequenceHandler(pty chan rune, terminal *Terminal) error {
 
 func shiftInSequenceHandler(pty chan rune, terminal *Terminal) error {
 	terminal.logger.Errorf("Received shift in")
-	return nil
-}
-
-func tabSequenceHandler(pty chan rune, terminal *Terminal) error {
-	terminal.logger.Errorf("Received tab")
 	return nil
 }
 
