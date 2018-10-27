@@ -32,6 +32,7 @@ const (
 )
 
 type Terminal struct {
+	program            uint32
 	buffers            []*buffer.Buffer
 	activeBufferIndex  uint8
 	lock               sync.Mutex
@@ -47,6 +48,8 @@ type Terminal struct {
 	mouseMode          MouseMode
 	bracketedPasteMode bool
 	isDirty            bool
+	charWidth          float32
+	charHeight         float32
 }
 
 type Modes struct {
@@ -87,6 +90,11 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 	}
 
 }
+
+func (terminal *Terminal) SetProgram(program uint32) {
+	terminal.program = program
+}
+
 func (terminal *Terminal) SetBracketedPasteMode(enabled bool) {
 	terminal.bracketedPasteMode = enabled
 }
@@ -135,6 +143,11 @@ func (terminal *Terminal) ScrollDown(lines uint16) {
 	terminal.logger.Infof("Scrolling down %d", lines)
 	terminal.ActiveBuffer().ScrollDown(lines)
 
+}
+
+func (terminal *Terminal) SetCharSize(w float32, h float32) {
+	terminal.charWidth = w
+	terminal.charHeight = h
 }
 
 func (terminal *Terminal) ScrollUp(lines uint16) {

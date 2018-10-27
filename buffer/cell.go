@@ -1,8 +1,15 @@
 package buffer
 
+import (
+	"image"
+
+	"github.com/go-gl/gl/all-core/gl"
+)
+
 type Cell struct {
-	r    rune
-	attr CellAttributes
+	r     rune
+	attr  CellAttributes
+	image *image.RGBA
 }
 
 type CellAttributes struct {
@@ -14,6 +21,59 @@ type CellAttributes struct {
 	Blink     bool
 	Reverse   bool
 	Hidden    bool
+}
+
+func (cell *Cell) Image() *image.RGBA {
+	return cell.image
+}
+
+func (cell *Cell) SetImage(img *image.RGBA) {
+
+	cell.image = img
+
+}
+
+func (cell *Cell) DrawImage(x, y float32) {
+
+	if cell.image == nil {
+		return
+	}
+
+	var tex uint32
+	gl.GenTextures(1, &tex)
+	gl.BindTexture(gl.TEXTURE_2D, tex)
+	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+
+	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+	gl.TexImage2D(
+		gl.TEXTURE_2D,
+		0,
+		gl.RGBA,
+		int32(cell.image.Bounds().Size().X),
+		int32(cell.image.Bounds().Size().Y),
+		0,
+		gl.RGBA,
+		gl.UNSIGNED_BYTE,
+		gl.Ptr(cell.image.Pix),
+	)
+	gl.BindTexture(gl.TEXTURE_2D, 0)
+
+	var w float32 = float32(cell.image.Bounds().Size().X)
+	var h float32 = float32(cell.image.Bounds().Size().Y)
+
+	var readFboId uint32
+	gl.GenFramebuffers(1, &readFboId)
+	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, readFboId)
+	gl.FramebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+		gl.TEXTURE_2D, tex, 0)
+	gl.BlitFramebuffer(0, 0, int32(w), int32(h),
+		int32(x), int32(y), int32(x+w), int32(y+h),
+		gl.COLOR_BUFFER_BIT, gl.LINEAR)
+	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, 0)
+	gl.DeleteFramebuffers(1, &readFboId)
 }
 
 func (cell *Cell) Attr() CellAttributes {
