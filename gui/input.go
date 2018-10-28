@@ -55,6 +55,26 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				gui.logger.Debugf("Sending CTRL^C")
 				gui.terminal.Write([]byte{0x3}) // send EOT
 				return
+			case glfw.KeyD:
+				gui.logger.Debugf("Sending CTRL^D")
+				gui.terminal.Write([]byte{0x4}) // send EOT
+				return
+			case glfw.KeyH:
+				gui.logger.Debugf("Sending CTRL^H")
+				gui.terminal.Write([]byte{0x08})
+				return
+			case glfw.KeyJ:
+				gui.logger.Debugf("Sending CTRL^J")
+				gui.terminal.Write([]byte{0x0a})
+				return
+			case glfw.KeyM:
+				gui.logger.Debugf("Sending CTRL^M")
+				gui.terminal.Write([]byte{0x0d})
+				return
+			case glfw.KeyX:
+				gui.logger.Debugf("Sending CTRL^X")
+				gui.terminal.Write([]byte{0x18})
+				return
 			}
 		case modsPressed(mods, glfw.ModAlt, glfw.ModShift):
 			modStr = "4"
@@ -199,6 +219,10 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				})
 			}
 		case glfw.KeyEnter:
+			gui.terminal.Write([]byte{
+				0x0d,
+			})
+		case glfw.KeyKPEnter:
 			if gui.terminal.IsApplicationCursorKeysModeEnabled() {
 				gui.terminal.Write([]byte{
 					0x1b,
@@ -206,7 +230,9 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 					'M',
 				})
 			} else {
-				gui.terminal.Write([]byte{0x0d})
+				gui.terminal.Write([]byte{
+					0x0d,
+				})
 			}
 		case glfw.KeyBackspace:
 			gui.terminal.Write([]byte{0x08})
