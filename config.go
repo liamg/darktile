@@ -21,7 +21,6 @@ func getConfig() *config.Config {
 	flag.StringVar(&conf.Shell, "shell", conf.Shell, "Specify the shell to use")
 	flag.BoolVar(&conf.DebugMode, "debug", conf.DebugMode, "Enable debug logging")
 	flag.BoolVar(&conf.Slomo, "slomo", conf.Slomo, "Render in slow motion (useful for debugging)")
-	flag.BoolVar(&conf.Rendering.AlwaysRepaint, "always-repaint", conf.Rendering.AlwaysRepaint, "Always repaint the window, even when no changes have occurred")
 
 	flag.Parse()
 	return conf
