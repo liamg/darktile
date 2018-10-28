@@ -10,9 +10,14 @@ The project is experimental at the moment, so you probably won't want to rely on
 
 Ensure you have your latest graphics card drivers installed before use.
 
+Sixels are now supported.
+
+![Example sixel](sixel.png)
+
+
 ## Aims
 
-- Full unicode support
+- Unicode support
 - OpenGL rendering
 - Full customisation options
 - True colour support
@@ -23,6 +28,7 @@ Ensure you have your latest graphics card drivers installed before use.
 - Resize logic that wraps/unwraps lines _correctly_
 - Bullshit graphical effects
 - Multi platform support
+- Sixel support
 
 ## What isn't supported?
 
@@ -32,13 +38,6 @@ Ensure you have your latest graphics card drivers installed before use.
 <img alt="Overheating" src="https://imgs.xkcd.com/comics/workflow.png"/>
 </p>
 
-## Build Dependencies
-
-- Go 1.10.3+
-- On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
-- On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
-- On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
-
 ## Platform Support
 
 | Platform | Supported |
@@ -47,25 +46,12 @@ Ensure you have your latest graphics card drivers installed before use.
 | MacOSX   | ⏳        |
 | Windows  | ⏳        |
 
-## Planned Features
+## Build Dependencies
 
-| Feature                     | Done | Notes |
-|-----------------------------|------|-------|
-| Pty allocation              | ✔    | 
-| OpenGL rendering            | ✔    |
-| 8-bit (256) colour          | ✔    |
-| 24-bit (true) colour        | ✔    |
-| Resizing/content reordering | ✔    | 
-| ANSI escape codes           | ✔    | 
-| UTF-8 input                 | ✔    | 
-| UTF-8 output                | ✔    | 
-| Copy/paste                  | ✔    | 
-| Customisable colour schemes | ✔    | 
-| Config file                 | ✔    |
-| Scrolling                   | ✔    | 
-| Mouse interaction           | ✔    | 
-| Clickable URLs              | ✔    |
-| Sweet render effects        |      | 
+- Go 1.10.3+
+- On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
+- On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
+- On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
 
 ## Keyboard Shortcuts
 

@@ -12,6 +12,7 @@ var ansiSequenceMap = map[rune]escapeSequenceHandler{
 	'8': restoreCursorHandler,
 	'D': indexHandler,
 	'M': reverseIndexHandler,
+	'P': sixelHandler,
 	'c': risHandler,        //RIS
 	'(': swallowHandler(1), // character set bullshit
 	')': swallowHandler(1), // character set bullshit

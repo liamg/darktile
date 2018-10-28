@@ -214,6 +214,7 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 		rect.setColour(bg)
 		rect.Draw()
 	}
+
 }
 
 func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint, colour *config.Colour) {

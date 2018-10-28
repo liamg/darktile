@@ -81,6 +81,8 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	gui.logger.Debugf("Setting viewport size...")
 	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
 
+	gui.terminal.SetCharSize(gui.renderer.cellWidth, gui.renderer.cellHeight)
+
 	gui.logger.Debugf("Resize complete!")
 
 }
@@ -191,6 +193,8 @@ func (gui *GUI) Render() error {
 		}
 	}()
 
+	gui.terminal.SetProgram(program)
+
 	for !gui.window.ShouldClose() {
 
 		select {
@@ -242,10 +246,20 @@ func (gui *GUI) Render() error {
 					if hasText {
 						gui.renderer.DrawCellText(cell, uint(x), uint(y), nil)
 					}
+
+					if cell.Image() != nil {
+						ix := float32(x) * gui.renderer.cellWidth
+						iy := float32(gui.height) - (float32(y+1) * gui.renderer.cellHeight)
+						iy -= float32(cell.Image().Bounds().Size().Y)
+						gl.UseProgram(program)
+						cell.DrawImage(ix, iy)
+					}
+
 				}
 			}
 
 			gui.window.SwapBuffers()
+
 		}
 
 	}
