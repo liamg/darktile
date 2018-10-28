@@ -2,9 +2,11 @@ package terminal
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
 	"math"
+	"strings"
 
-	"github.com/go-gl/gl/all-core/gl"
 	"github.com/liamg/aminal/sixel"
 )
 
@@ -18,7 +20,9 @@ func sixelHandler(pty chan rune, terminal *Terminal) error {
 			_ = <-pty // swallow \ or bell
 			break
 		}
-		data = append(data, b)
+		if b >= 33 {
+			data = append(data, b)
+		}
 	}
 
 	six, err := sixel.ParseString(string(data))
@@ -26,20 +30,42 @@ func sixelHandler(pty chan rune, terminal *Terminal) error {
 		return fmt.Errorf("Failed to parse sixel data: %s", err)
 	}
 
+	originalImage := six.RGBA()
+
+	w := originalImage.Bounds().Size().X
+	h := originalImage.Bounds().Size().Y
+
 	x, y := terminal.ActiveBuffer().CursorColumn(), terminal.ActiveBuffer().CursorLine()
-	terminal.ActiveBuffer().Write(' ')
-	cell := terminal.ActiveBuffer().GetCell(x, y)
-	if cell == nil {
-		return fmt.Errorf("Missing cell for sixel")
+
+	fromBottom := int(terminal.ActiveBuffer().ViewHeight() - y)
+	lines := int(math.Ceil(float64(h) / float64(terminal.charHeight)))
+	if fromBottom < lines+2 {
+		y -= (uint16(lines+2) - uint16(fromBottom))
 	}
-
-	gl.UseProgram(terminal.program)
-	cell.SetImage(six.RGBA())
-
-	imageHeight := float64(cell.Image().Bounds().Size().Y)
-	lines := int(math.Ceil(imageHeight / float64(terminal.charHeight)))
-	for l := 0; l <= int(lines+1); l++ {
+	for l := 0; l <= int(lines); l++ {
+		terminal.ActiveBuffer().Write([]rune(strings.Repeat(" ", int(terminal.ActiveBuffer().ViewWidth())))...)
 		terminal.ActiveBuffer().NewLine()
+	}
+	cols := int(math.Ceil(float64(w) / float64(terminal.charWidth)))
+
+	for offsetY := 0; offsetY < lines-1; offsetY++ {
+		for offsetX := 0; offsetX < cols-1; offsetX++ {
+
+			cell := terminal.ActiveBuffer().GetCell(x+uint16(offsetX), y+uint16((lines-2)-offsetY))
+			if cell == nil {
+				continue
+			}
+			img := originalImage.SubImage(image.Rect(
+				offsetX*int(terminal.charWidth),
+				offsetY*int(terminal.charHeight),
+				(offsetX*int(terminal.charWidth))+int(terminal.charWidth),
+				(offsetY*int(terminal.charHeight))+int(terminal.charHeight),
+			))
+
+			rgba := image.NewRGBA(image.Rect(0, 0, int(terminal.charWidth), int(terminal.charHeight)))
+			draw.Draw(rgba, rgba.Bounds(), img, img.Bounds().Min, draw.Src)
+			cell.SetImage(rgba)
+		}
 	}
 
 	return nil

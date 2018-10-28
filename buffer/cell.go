@@ -40,11 +40,11 @@ func (cell *Cell) DrawImage(x, y float32) {
 	}
 
 	var tex uint32
+	gl.Enable(gl.TEXTURE_2D)
 	gl.GenTextures(1, &tex)
 	gl.BindTexture(gl.TEXTURE_2D, tex)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
 
@@ -60,6 +60,9 @@ func (cell *Cell) DrawImage(x, y float32) {
 		gl.Ptr(cell.image.Pix),
 	)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
+	gl.Disable(gl.TEXTURE_2D)
+
+	gl.Disable(gl.BLEND)
 
 	var w float32 = float32(cell.image.Bounds().Size().X)
 	var h float32 = float32(cell.image.Bounds().Size().Y)
@@ -67,6 +70,7 @@ func (cell *Cell) DrawImage(x, y float32) {
 	var readFboId uint32
 	gl.GenFramebuffers(1, &readFboId)
 	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, readFboId)
+
 	gl.FramebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
 		gl.TEXTURE_2D, tex, 0)
 	gl.BlitFramebuffer(0, 0, int32(w), int32(h),
@@ -74,6 +78,7 @@ func (cell *Cell) DrawImage(x, y float32) {
 		gl.COLOR_BUFFER_BIT, gl.LINEAR)
 	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, 0)
 	gl.DeleteFramebuffers(1, &readFboId)
+
 }
 
 func (cell *Cell) Attr() CellAttributes {

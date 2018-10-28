@@ -6,8 +6,6 @@ import (
 	"image/color"
 	"strconv"
 	"strings"
-
-	"github.com/go-gl/gl/v2.1/gl"
 )
 
 type Sixel struct {
@@ -32,7 +30,7 @@ func decompress(data string) string {
 				inMarker = true
 				countStr = ""
 			} else {
-				output = fmt.Sprintf("%s%c", output, r)
+				output += string(r)
 			}
 			continue
 		}
@@ -41,9 +39,7 @@ func decompress(data string) string {
 			countStr = fmt.Sprintf("%s%c", countStr, r)
 		} else {
 			count, _ := strconv.Atoi(countStr)
-			for i := 0; i < count; i++ {
-				output = fmt.Sprintf("%s%c", output, r)
-			}
+			output += strings.Repeat(string(r), count)
 			inMarker = false
 		}
 	}
@@ -85,9 +81,9 @@ func ParseString(data string) (*Sixel, error) {
 					ratio = 5
 				case "2":
 					ratio = 3
-				case "", "3", "4", "5", "6":
+				case "3", "4", "5", "6":
 					ratio = 2
-				case "7", "8", "9":
+				case "7", "8", "9", "":
 					ratio = 1
 				}
 				if len(headers) > 1 {
@@ -165,37 +161,6 @@ func ParseString(data string) (*Sixel, error) {
 	return &six, nil
 }
 
-func (six *Sixel) Draw() error {
-	rgba := six.RGBA()
-
-	var handle uint32
-	gl.GenTextures(1, &handle)
-
-	target := uint32(gl.TEXTURE_2D)
-	internalFmt := int32(gl.SRGB_ALPHA)
-	format := uint32(gl.RGBA)
-	width := int32(rgba.Rect.Size().X)
-	height := int32(rgba.Rect.Size().Y)
-	pixType := uint32(gl.UNSIGNED_BYTE)
-	dataPtr := gl.Ptr(rgba.Pix)
-
-	gl.ActiveTexture(gl.TEXTURE0)
-	gl.BindTexture(target, handle)
-
-	// set the texture wrapping/filtering options (applies to current bound texture obj)
-	// TODO-cs
-	//gl.TexParameteri(texture.target, gl.TEXTURE_WRAP_R, wrapR)
-	//gl.TexParameteri(texture.target, gl.TEXTURE_WRAP_S, wrapS)
-	gl.TexParameteri(target, gl.TEXTURE_MIN_FILTER, gl.LINEAR) // minification filter
-	gl.TexParameteri(target, gl.TEXTURE_MAG_FILTER, gl.LINEAR) // magnification filter
-
-	gl.TexImage2D(target, 0, internalFmt, width, height, 0, format, pixType, dataPtr)
-
-	// unbind
-	gl.BindTexture(target, 0)
-	return nil
-}
-
 func (six *Sixel) setPixel(x, y uint, c colour, vhRatio uint) {
 
 	if six.px == nil {
@@ -227,11 +192,11 @@ func (six *Sixel) RGBA() *image.RGBA {
 
 	for x, r := range six.px {
 		for y, colour := range r {
-			rgba.SetRGBA(int(x), int(six.height)-int(y), color.RGBA{
-				colour[0],
-				colour[1],
-				colour[2],
-				255,
+			rgba.Set(int(x), int(six.height)-int(y), color.RGBA{
+				R: colour[0],
+				G: colour[1],
+				B: colour[2],
+				A: 255,
 			})
 		}
 	}
