@@ -74,4 +74,4 @@ You can ignore the config and use defaults by specifying `--ignore-config` as a 
 | ---------------- | -------------- | -------------- | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
 | --debug          | _root_         | debug          | boolean | false   | Enable debug mode, with debug logging and debug info terminal overlay.                                                        |
 | --slomo          | _root_         | slomo          | boolean | false   | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging. |
-| --always-repaint | rendering      | always_repaint | boolean | false   | Redraw the terminal GUI constantly, even when no changes have occurred.                                                       |
+| --shell [shell]  | _root_         | shell          | string  | User's shell | Use the specified shell program instead of the user's usual one.                                                         |
