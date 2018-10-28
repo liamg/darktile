@@ -33,6 +33,10 @@ func main() {
 		logger.Fatalf("Failed to ascertain your shell: %s", err)
 	}
 
+	if conf.Shell != "" {
+		shellStr = conf.Shell
+	}
+
 	os.Setenv("TERM", "xterm-256color") // contraversial! easier than installing terminfo everywhere, but obviously going to be slightly different to xterm functionality, so we'll see...
 	os.Setenv("COLORTERM", "truecolor")
 

@@ -395,7 +395,7 @@ func csiEraseInDisplayHandler(params []string, intermediate string, terminal *Te
 		terminal.ActiveBuffer().EraseDisplayFromCursor()
 	case "1":
 		terminal.ActiveBuffer().EraseDisplayToCursor()
-	case "2":
+	case "2", "3":
 		terminal.ActiveBuffer().EraseDisplay()
 	default:
 		return fmt.Errorf("Unsupported ED: CSI %s J", n)

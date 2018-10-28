@@ -11,6 +11,7 @@ type Config struct {
 	Rendering    RenderingConfig `toml:"rendering"`
 	Slomo        bool            `toml:"slomo"`
 	ColourScheme ColourScheme    `toml:"colours"`
+	Shell        string          `toml:"shell"`
 }
 
 type RenderingConfig struct {
