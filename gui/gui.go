@@ -3,6 +3,7 @@ package gui
 import (
 	"bytes"
 	"fmt"
+	"os/exec"
 	"runtime"
 	"time"
 
@@ -18,29 +19,32 @@ import (
 )
 
 type GUI struct {
-	window     *glfw.Window
-	logger     *zap.SugaredLogger
-	config     *config.Config
-	terminal   *terminal.Terminal
-	width      int //window width in pixels
-	height     int //window height in pixels
-	font       *glfont.Font
-	boldFont   *glfont.Font
-	fontScale  float32
-	renderer   *OpenGLRenderer
-	colourAttr uint32
-	mouseDown  bool
+	window        *glfw.Window
+	logger        *zap.SugaredLogger
+	config        *config.Config
+	terminal      *terminal.Terminal
+	width         int //window width in pixels
+	height        int //window height in pixels
+	font          *glfont.Font
+	boldFont      *glfont.Font
+	fontScale     float32
+	renderer      *OpenGLRenderer
+	colourAttr    uint32
+	mouseDown     bool
+	overlay       overlay
+	terminalAlpha float32
 }
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
 
 	return &GUI{
-		config:    config,
-		logger:    logger,
-		width:     800,
-		height:    600,
-		terminal:  terminal,
-		fontScale: 14.0,
+		config:        config,
+		logger:        logger,
+		width:         800,
+		height:        600,
+		terminal:      terminal,
+		fontScale:     14.0,
+		terminalAlpha: 1,
 	}
 }
 
@@ -85,14 +89,6 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	gui.logger.Debugf("Resize complete!")
 
-}
-
-func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
-	if yoff > 0 {
-		gui.terminal.ScrollUp(1)
-	} else {
-		gui.terminal.ScrollDown(1)
-	}
 }
 
 func (gui *GUI) getTermSize() (uint, uint) {
@@ -242,15 +238,17 @@ func (gui *GUI) Render() error {
 						colour = &gui.config.ColourScheme.Selection
 					}
 
-					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour)
+					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
 					if hasText {
-						gui.renderer.DrawCellText(cell, uint(x), uint(y), nil)
+						gui.renderer.DrawCellText(cell, uint(x), uint(y), 1.0, nil)
 					}
 
 					gui.renderer.DrawCellImage(cell, uint(x), uint(y))
 
 				}
 			}
+
+			gui.renderOverlay()
 
 			gui.window.SwapBuffers()
 
@@ -339,4 +337,20 @@ func (gui *GUI) createProgram() (uint32, error) {
 	gl.LinkProgram(prog)
 
 	return prog, nil
+}
+
+func (gui *GUI) launchTarget(target string) {
+
+	cmd := "xdg-open"
+
+	switch runtime.GOOS {
+	case "darwin":
+		cmd = "open"
+	case "windows":
+		cmd = "start"
+	}
+
+	if err := exec.Command(cmd, target).Run(); err != nil {
+		gui.logger.Errorf("Failed to launch external command %s: %s", cmd, err)
+	}
 }

@@ -16,8 +16,9 @@ import (
 )
 
 const (
-	MainBuffer uint8 = 0
-	AltBuffer  uint8 = 1
+	MainBuffer     uint8 = 0
+	AltBuffer      uint8 = 1
+	InternalBuffer uint8 = 2
 )
 
 type MouseMode uint
@@ -50,6 +51,7 @@ type Terminal struct {
 	isDirty            bool
 	charWidth          float32
 	charHeight         float32
+	lastBuffer         uint8
 }
 
 type Modes struct {
@@ -69,6 +71,10 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 
 	return &Terminal{
 		buffers: []*buffer.Buffer{
+			buffer.NewBuffer(1, 1, buffer.CellAttributes{
+				FgColour: config.ColourScheme.Foreground,
+				BgColour: config.ColourScheme.Background,
+			}),
 			buffer.NewBuffer(1, 1, buffer.CellAttributes{
 				FgColour: config.ColourScheme.Foreground,
 				BgColour: config.ColourScheme.Background,
@@ -131,8 +137,23 @@ func (terminal *Terminal) UseAltBuffer() {
 	terminal.SetSize(uint(terminal.size.Width), uint(terminal.size.Height))
 }
 
+func (terminal *Terminal) UseInternalBuffer() {
+	terminal.pauseChan <- true
+	terminal.activeBufferIndex = InternalBuffer
+	terminal.SetSize(uint(terminal.size.Width), uint(terminal.size.Height))
+}
+
+func (terminal *Terminal) ExitInternalBuffer() {
+	terminal.activeBufferIndex = terminal.lastBuffer
+	terminal.resumeChan <- true
+}
+
 func (terminal *Terminal) ActiveBuffer() *buffer.Buffer {
 	return terminal.buffers[terminal.activeBufferIndex]
+}
+
+func (terminal *Terminal) UsingMainBuffer() bool {
+	return terminal.activeBufferIndex == MainBuffer
 }
 
 func (terminal *Terminal) GetScrollOffset() uint {
@@ -140,7 +161,6 @@ func (terminal *Terminal) GetScrollOffset() uint {
 }
 
 func (terminal *Terminal) ScrollDown(lines uint16) {
-	terminal.logger.Infof("Scrolling down %d", lines)
 	terminal.ActiveBuffer().ScrollDown(lines)
 
 }
@@ -151,7 +171,6 @@ func (terminal *Terminal) SetCharSize(w float32, h float32) {
 }
 
 func (terminal *Terminal) ScrollUp(lines uint16) {
-	terminal.logger.Infof("Scrolling up %d", lines)
 	terminal.ActiveBuffer().ScrollUp(lines)
 }
 

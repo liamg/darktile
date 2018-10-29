@@ -195,7 +195,7 @@ func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
 	rect.Draw()
 }
 
-func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor bool, colour *config.Colour) {
+func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor bool, colour *config.Colour, force bool) {
 
 	var bg [3]float32
 
@@ -212,7 +212,7 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 		}
 	}
 
-	if bg != r.config.ColourScheme.Background {
+	if bg != r.config.ColourScheme.Background || force {
 		rect := r.getRectangle(col, row)
 		rect.setColour(bg)
 		rect.Draw()
@@ -220,23 +220,20 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 
 }
 
-func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint, colour *config.Colour) {
+func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint, alpha float32, colour *[3]float32) {
 
 	var fg [3]float32
 
 	if colour != nil {
 		fg = *colour
+	} else if cell.Attr().Reverse {
+		fg = cell.Bg()
 	} else {
-		if cell.Attr().Reverse {
-			fg = cell.Bg()
-		} else {
-			fg = cell.Fg()
-		}
+		fg = cell.Fg()
 	}
 
-	var alpha float32 = 1
 	if cell.Attr().Dim {
-		alpha = 0.5
+		alpha = 0.5 * alpha
 	}
 	r.font.SetColor(fg[0], fg[1], fg[2], alpha)
 

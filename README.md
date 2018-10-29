@@ -10,7 +10,11 @@ The project is experimental at the moment, so you probably won't want to rely on
 
 Ensure you have your latest graphics card drivers installed before use.
 
-Sixels are now supported.
+## Contextual Hints
+
+![Example hint](hint.png)
+
+## Sixel Support
 
 ![Example sixel](sixel.png)
 
@@ -55,13 +59,18 @@ Sixels are now supported.
 
 ## Keyboard Shortcuts
 
-| Operation          | Key(s)           |
-| ------------------ | ---------------- |
-| Copy               | ctrl + shift + c |
-| Paste              | ctrl + shift + v |
-| Toggle slomo       | ctrl + shift + ; |
-| Interrupt (SIGINT) | ctrl + c         |
-
+| Operation             | Key(s)               |
+| --------------------- | -------------------- |
+| Select text           | click + drag         |
+| Select word           | double click         |
+| Select line           | triple click         |
+| Copy                  | ctrl + shift + c     |
+| Paste                 | ctrl + shift + v     |
+| Google selected text  | ctrl + shift + g     |
+| Report bug in aminal  | ctrl + shift + r     |
+| Explain text          | ctrl + shift + click |
+| Toggle slomo          | ctrl + shift + ;     |
+ 
 ## Configuration
 
 Aminal looks for a config file in `~/.aminal.toml`, and will write one there the first time it runs, if it doesn't already exist.
