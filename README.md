@@ -21,7 +21,7 @@ Sixels are now supported.
 - OpenGL rendering
 - Full customisation options
 - True colour support
-- Support for commmon ANSI escape sequences a la xterm
+- Support for common ANSI escape sequences a la xterm
 - Scrollback buffer
 - Clipboard access
 - Clickable URLs
