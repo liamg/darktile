@@ -88,12 +88,12 @@
 [[projects]]
   branch = "master"
   name = "golang.org/x/image"
-  packages = ["font","math/fixed"]
+  packages = ["bmp","font","math/fixed"]
   revision = "991ec62608f3c0da01d400756917825d1e2fd528"
 
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "62428a3f67dc7a8a89ecb5666b6d8a6641788f89c61d0b0b4dd99982923bb0c6"
+  inputs-digest = "6f1eff05a1c5ca969d1f54eb8002e3213fda92b99a459e6729098b2497de5b8c"
   solver-name = "gps-cdcl"
   solver-version = 1

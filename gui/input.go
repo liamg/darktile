@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"net/url"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -22,7 +23,14 @@ func modsPressed(pressed glfw.ModifierKey, mods ...glfw.ModifierKey) bool {
 }
 
 func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+
 	if action == glfw.Repeat || action == glfw.Press {
+
+		if gui.overlay != nil {
+			if key == glfw.KeyEscape {
+				gui.setOverlay(nil)
+			}
+		}
 
 		gui.logger.Debugf("KEY PRESS: key=0x%X scan=0x%X", key, scancode)
 
@@ -39,6 +47,13 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			case glfw.KeyC:
 				gui.window.SetClipboardString(gui.terminal.ActiveBuffer().GetSelectedText())
 				return
+			case glfw.KeyG:
+				keywords := gui.terminal.ActiveBuffer().GetSelectedText()
+				if keywords != "" {
+					gui.launchTarget(fmt.Sprintf("https://www.google.com/search?q=%s", url.QueryEscape(keywords)))
+				}
+			case glfw.KeyR:
+				gui.launchTarget("https://github.com/liamg/aminal/issues/new/choose")
 			case glfw.KeyV:
 				if s, err := gui.window.GetClipboardString(); err == nil {
 					_ = gui.terminal.Paste([]byte(s))
