@@ -247,13 +247,7 @@ func (gui *GUI) Render() error {
 						gui.renderer.DrawCellText(cell, uint(x), uint(y), nil)
 					}
 
-					if cell.Image() != nil {
-						ix := float32(x) * gui.renderer.cellWidth
-						iy := float32(gui.height) - (float32(y+1) * gui.renderer.cellHeight)
-						iy -= float32(cell.Image().Bounds().Size().Y)
-						gl.UseProgram(program)
-						cell.DrawImage(ix, iy)
-					}
+					gui.renderer.DrawCellImage(cell, uint(x), uint(y))
 
 				}
 			}

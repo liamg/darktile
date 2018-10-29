@@ -1,6 +1,7 @@
 package gui
 
 import (
+	"image"
 	"math"
 
 	"github.com/go-gl/gl/all-core/gl"
@@ -25,6 +26,7 @@ type OpenGLRenderer struct {
 	config        *config.Config
 	colourAttr    uint32
 	program       uint32
+	textureMap    map[*image.RGBA]uint32
 }
 
 type rectangle struct {
@@ -138,6 +140,7 @@ func NewOpenGLRenderer(config *config.Config, font *glfont.Font, boldFont *glfon
 		config:        config,
 		colourAttr:    colourAttr,
 		program:       program,
+		textureMap:    map[*image.RGBA]uint32{},
 	}
 	r.SetFont(font, boldFont)
 	return r
@@ -251,5 +254,66 @@ func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint, colo
 	}
 
 	r.font.Print(x, y, string(cell.Rune()))
+
+}
+
+func (r *OpenGLRenderer) DrawCellImage(cell buffer.Cell, col uint, row uint) {
+
+	img := cell.Image()
+
+	if img == nil {
+		return
+	}
+
+	ix := float32(col) * r.cellWidth
+	iy := float32(r.areaHeight) - (float32(row+1) * r.cellHeight)
+	iy -= float32(cell.Image().Bounds().Size().Y)
+	gl.UseProgram(r.program)
+
+	var tex uint32
+
+	tex, ok := r.textureMap[img]
+	if !ok {
+		gl.Enable(gl.TEXTURE_2D)
+		gl.GenTextures(1, &tex)
+		gl.BindTexture(gl.TEXTURE_2D, tex)
+		gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MIN_FILTER, gl.NEAREST)
+		gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
+		gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_S, gl.CLAMP_TO_EDGE)
+		gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_WRAP_T, gl.CLAMP_TO_EDGE)
+
+		gl.TexImage2D(
+			gl.TEXTURE_2D,
+			0,
+			gl.RGBA,
+			int32(img.Bounds().Size().X),
+			int32(img.Bounds().Size().Y),
+			0,
+			gl.RGBA,
+			gl.UNSIGNED_BYTE,
+			gl.Ptr(img.Pix),
+		)
+		gl.BindTexture(gl.TEXTURE_2D, 0)
+		gl.Disable(gl.TEXTURE_2D)
+
+		gl.Disable(gl.BLEND)
+
+		r.textureMap[img] = tex
+	}
+
+	var w float32 = float32(img.Bounds().Size().X)
+	var h float32 = float32(img.Bounds().Size().Y)
+
+	var readFboId uint32
+	gl.GenFramebuffers(1, &readFboId)
+	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, readFboId)
+
+	gl.FramebufferTexture2D(gl.READ_FRAMEBUFFER, gl.COLOR_ATTACHMENT0,
+		gl.TEXTURE_2D, tex, 0)
+	gl.BlitFramebuffer(0, 0, int32(w), int32(h),
+		int32(ix), int32(iy), int32(ix+w), int32(iy+h),
+		gl.COLOR_BUFFER_BIT, gl.LINEAR)
+	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, 0)
+	gl.DeleteFramebuffers(1, &readFboId)
 
 }
