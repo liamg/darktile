@@ -18,7 +18,6 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ![Example sixel](sixel.png)
 
-
 ## Aims
 
 - Unicode support
@@ -50,27 +49,38 @@ Ensure you have your latest graphics card drivers installed before use.
 | MacOSX   | ⏳        |
 | Windows  | ⏳        |
 
-## Build Dependencies
+## Quick Start
+
+### Dependencies
 
 - [Go 1.11+](https://golang.org/dl/)
 - On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
 - On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
 - On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
 
+### Build
+
+```
+git clone https://github.com/liamg/aminal.git
+cd aminal
+go build
+./aminal
+```
+
 ## Keyboard Shortcuts
 
-| Operation             | Key(s)               |
-| --------------------- | -------------------- |
-| Select text           | click + drag         |
-| Select word           | double click         |
-| Select line           | triple click         |
-| Copy                  | ctrl + shift + c     |
-| Paste                 | ctrl + shift + v     |
-| Google selected text  | ctrl + shift + g     |
-| Report bug in aminal  | ctrl + shift + r     |
-| Explain text          | ctrl + shift + click |
-| Toggle slomo          | ctrl + shift + ;     |
- 
+| Operation            | Key(s)               |
+| -------------------- | -------------------- |
+| Select text          | click + drag         |
+| Select word          | double click         |
+| Select line          | triple click         |
+| Copy                 | ctrl + shift + c     |
+| Paste                | ctrl + shift + v     |
+| Google selected text | ctrl + shift + g     |
+| Report bug in aminal | ctrl + shift + r     |
+| Explain text         | ctrl + shift + click |
+| Toggle slomo         | ctrl + shift + ;     |
+
 ## Configuration
 
 Aminal looks for a config file in `~/.aminal.toml`, and will write one there the first time it runs, if it doesn't already exist.
@@ -79,8 +89,8 @@ You can ignore the config and use defaults by specifying `--ignore-config` as a 
 
 ### Config Options/CLI Flags
 
-| CLI Flag         | Config Section | Config Name    | Type    | Default | Description                                                                                                                   |
-| ---------------- | -------------- | -------------- | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| --debug          | _root_         | debug          | boolean | false   | Enable debug mode, with debug logging and debug info terminal overlay.                                                        |
-| --slomo          | _root_         | slomo          | boolean | false   | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging. |
-| --shell [shell]  | _root_         | shell          | string  | User's shell | Use the specified shell program instead of the user's usual one.                                                         |
+| CLI Flag        | Config Section | Config Name | Type    | Default      | Description                                                                                                                   |
+| --------------- | -------------- | ----------- | ------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| --debug         | _root_         | debug       | boolean | false        | Enable debug mode, with debug logging and debug info terminal overlay.                                                        |
+| --slomo         | _root_         | slomo       | boolean | false        | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging. |
+| --shell [shell] | _root_         | shell       | string  | User's shell | Use the specified shell program instead of the user's usual one.                                                              |
