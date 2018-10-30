@@ -69,18 +69,18 @@ go build
 
 ## Keyboard Shortcuts
 
-| Operation             | Key(s)               |
-| --------------------- | -------------------- |
-| Select text           | click + drag         |
-| Select word           | double click         |
-| Select line           | triple click         |
-| Copy                  | ctrl + shift + c     |
-| Paste                 | ctrl + shift + v     |
-| Google selected text  | ctrl + shift + g     |
-| Report bug in aminal  | ctrl + shift + r     |
-| Explain text          | ctrl + shift + click |
-| Toggle slomo          | ctrl + shift + ;     |
- 
+| Operation            | Key(s)               |
+| -------------------- | -------------------- |
+| Select text          | click + drag         |
+| Select word          | double click         |
+| Select line          | triple click         |
+| Copy                 | ctrl + shift + c     |
+| Paste                | ctrl + shift + v     |
+| Google selected text | ctrl + shift + g     |
+| Report bug in aminal | ctrl + shift + r     |
+| Explain text         | ctrl + shift + click |
+| Toggle slomo         | ctrl + shift + ;     |
+
 ## Configuration
 
 Aminal looks for a config file in `~/.aminal.toml`, and will write one there the first time it runs, if it doesn't already exist.
@@ -89,8 +89,8 @@ You can ignore the config and use defaults by specifying `--ignore-config` as a 
 
 ### Config Options/CLI Flags
 
-| CLI Flag         | Config Section | Config Name    | Type    | Default | Description                                                                                                                   |
-| ---------------- | -------------- | -------------- | ------- | ------- | ----------------------------------------------------------------------------------------------------------------------------- |
-| --debug          | _root_         | debug          | boolean | false   | Enable debug mode, with debug logging and debug info terminal overlay.                                                        |
-| --slomo          | _root_         | slomo          | boolean | false   | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging. |
-| --shell [shell]  | _root_         | shell          | string  | User's shell | Use the specified shell program instead of the user's usual one.                                                         |
+| CLI Flag        | Config Section | Config Name | Type    | Default      | Description                                                                                                                   |
+| --------------- | -------------- | ----------- | ------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| --debug         | _root_         | debug       | boolean | false        | Enable debug mode, with debug logging and debug info terminal overlay.                                                        |
+| --slomo         | _root_         | slomo       | boolean | false        | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging. |
+| --shell [shell] | _root_         | shell       | string  | User's shell | Use the specified shell program instead of the user's usual one.                                                              |
