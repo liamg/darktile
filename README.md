@@ -52,7 +52,7 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ## Build Dependencies
 
-- Go 1.11+
+- [Go 1.11+](https://godoc.org/golang.org/dl/go1.11)
 - On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
 - On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
 - On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
