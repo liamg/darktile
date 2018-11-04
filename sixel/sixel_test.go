@@ -1,14 +1,9 @@
 package sixel
 
 import (
-	"bytes"
-	"io"
-	"log"
-	"os"
 	"testing"
 
 	"github.com/stretchr/testify/require"
-	"golang.org/x/image/bmp"
 )
 
 // from https://en.wikipedia.org/wiki/Sixel
@@ -25,20 +20,5 @@ func TestParsing(t *testing.T) {
 
 	img := six.RGBA()
 	require.NotNil(t, img)
-
-	var imageBuf bytes.Buffer
-	err = bmp.Encode(io.Writer(&imageBuf), img)
-
-	if err != nil {
-		log.Panic(err)
-	}
-
-	// Write to file.
-	fo, err := os.Create("img.bmp")
-	if err != nil {
-		panic(err)
-	}
-	defer fo.Close()
-	fo.Write(imageBuf.Bytes())
 
 }
