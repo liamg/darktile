@@ -75,6 +75,7 @@ go build
 | Select word          | double click         |
 | Select line          | triple click         |
 | Copy                 | ctrl + shift + c     |
+| Toggle debug display | ctrl + shift + d     |
 | Paste                | ctrl + shift + v     |
 | Google selected text | ctrl + shift + g     |
 | Report bug in aminal | ctrl + shift + r     |
