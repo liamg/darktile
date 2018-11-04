@@ -69,29 +69,83 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 		case modsPressed(mods, glfw.ModControl):
 			modStr = "5"
 			switch key {
+			case glfw.KeyA:
+				gui.terminal.Write([]byte{0x1})
+				return
+			case glfw.KeyB:
+				gui.terminal.Write([]byte{0x2})
+				return
 			case glfw.KeyC: // ctrl^c
-				gui.logger.Debugf("Sending CTRL^C")
 				gui.terminal.Write([]byte{0x3}) // send EOT
 				return
 			case glfw.KeyD:
-				gui.logger.Debugf("Sending CTRL^D")
 				gui.terminal.Write([]byte{0x4}) // send EOT
 				return
+			case glfw.KeyE:
+				gui.terminal.Write([]byte{0x5})
+				return
+			case glfw.KeyF:
+				gui.terminal.Write([]byte{0x6})
+				return
+			case glfw.KeyG:
+				gui.terminal.Write([]byte{0x7})
+				return
 			case glfw.KeyH:
-				gui.logger.Debugf("Sending CTRL^H")
 				gui.terminal.Write([]byte{0x08})
 				return
+			case glfw.KeyI:
+				gui.terminal.Write([]byte{0x9})
+				return
 			case glfw.KeyJ:
-				gui.logger.Debugf("Sending CTRL^J")
 				gui.terminal.Write([]byte{0x0a})
 				return
+			case glfw.KeyK:
+				gui.terminal.Write([]byte{0x0b})
+				return
+			case glfw.KeyL:
+				gui.terminal.Write([]byte{0x0c})
+				return
 			case glfw.KeyM:
-				gui.logger.Debugf("Sending CTRL^M")
 				gui.terminal.Write([]byte{0x0d})
 				return
+			case glfw.KeyN:
+				gui.terminal.Write([]byte{0x0e})
+				return
+			case glfw.KeyO:
+				gui.terminal.Write([]byte{0x0f})
+				return
+			case glfw.KeyP:
+				gui.terminal.Write([]byte{0x10})
+				return
+			case glfw.KeyQ:
+				gui.terminal.Write([]byte{0x11})
+				return
+			case glfw.KeyR:
+				gui.terminal.Write([]byte{0x12})
+				return
+			case glfw.KeyS:
+				gui.terminal.Write([]byte{0x13})
+				return
+			case glfw.KeyT:
+				gui.terminal.Write([]byte{0x14})
+				return
+			case glfw.KeyU:
+				gui.terminal.Write([]byte{0x15})
+				return
+			case glfw.KeyV:
+				gui.terminal.Write([]byte{0x16})
+				return
+			case glfw.KeyW:
+				gui.terminal.Write([]byte{0x17})
+				return
 			case glfw.KeyX:
-				gui.logger.Debugf("Sending CTRL^X")
 				gui.terminal.Write([]byte{0x18})
+				return
+			case glfw.KeyY:
+				gui.terminal.Write([]byte{0x19})
+				return
+			case glfw.KeyZ:
+				gui.terminal.Write([]byte{0x1a})
 				return
 			}
 		case modsPressed(mods, glfw.ModAlt, glfw.ModShift):

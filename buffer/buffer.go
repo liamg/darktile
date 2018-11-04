@@ -79,6 +79,10 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, row uint16) string {
 		candidate = fmt.Sprintf("%s%c", candidate, cell.Rune())
 	}
 
+	if candidate == "" || candidate[0] == '/' {
+		return ""
+	}
+
 	// check if url
 	_, err := url.ParseRequestURI(candidate)
 	if err != nil {
