@@ -47,6 +47,9 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			case glfw.KeyC:
 				gui.window.SetClipboardString(gui.terminal.ActiveBuffer().GetSelectedText())
 				return
+			case glfw.KeyD:
+				gui.showDebugInfo = !gui.showDebugInfo
+				gui.terminal.SetDirty()
 			case glfw.KeyG:
 				keywords := gui.terminal.ActiveBuffer().GetSelectedText()
 				if keywords != "" {
