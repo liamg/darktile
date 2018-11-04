@@ -413,6 +413,14 @@ func (buffer *Buffer) convertViewLineToRawLine(viewLine uint16) uint64 {
 	return uint64(int(viewLine) + (rawHeight - int(buffer.viewHeight)))
 }
 
+func (buffer *Buffer) convertRawLineToViewLine(rawLine uint64) uint16 {
+	rawHeight := buffer.Height()
+	if int(buffer.viewHeight) > rawHeight {
+		return uint16(rawLine)
+	}
+	return uint16(int(rawLine) - (rawHeight - int(buffer.viewHeight)))
+}
+
 // Width returns the width of the buffer in columns
 func (buffer *Buffer) Width() uint16 {
 	return buffer.viewWidth
@@ -938,19 +946,14 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 		}
 	}
 
-	fromBottom := buffer.viewHeight - buffer.cursorY
-
 	buffer.viewWidth = width
 	buffer.viewHeight = height
 
-	if buffer.cursorY >= buffer.viewHeight-1 {
-		buffer.cursorY = buffer.viewHeight - 1
-	} else {
-		buffer.cursorY = (buffer.viewHeight - fromBottom) + uint16(cursorYMovement)
-		if int(buffer.cursorY) >= buffer.Height() {
-			buffer.cursorY = uint16(buffer.Height() - 1)
-		}
+	cY := uint16(len(buffer.lines) - 1)
+	if cY >= buffer.viewHeight {
+		cY = buffer.viewHeight - 1
 	}
+	buffer.cursorY = cY
 
 	// position cursorX
 	line = buffer.getCurrentLine()

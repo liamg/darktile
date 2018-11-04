@@ -289,13 +289,12 @@ func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
 	terminal.size.Width = uint16(newCols)
 	terminal.size.Height = uint16(newLines)
 
-	terminal.ActiveBuffer().ResizeView(terminal.size.Width, terminal.size.Height)
-
 	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, uintptr(terminal.pty.Fd()),
 		uintptr(syscall.TIOCSWINSZ), uintptr(unsafe.Pointer(&terminal.size)))
 	if err != 0 {
 		return fmt.Errorf("Failed to set terminal size vai ioctl: Error no %d", err)
 	}
 
+	terminal.ActiveBuffer().ResizeView(terminal.size.Width, terminal.size.Height)
 	return nil
 }

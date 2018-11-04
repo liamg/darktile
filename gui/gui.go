@@ -33,6 +33,7 @@ type GUI struct {
 	mouseDown     bool
 	overlay       overlay
 	terminalAlpha float32
+	showDebugInfo bool
 }
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
@@ -249,6 +250,21 @@ func (gui *GUI) Render() error {
 			}
 
 			gui.renderOverlay()
+
+			if gui.showDebugInfo {
+				gui.textbox(2, 2, fmt.Sprintf(`Debug Panel
+===========
+Cursor:      %d,%d
+View Size:   %d,%d
+Buffer Size: %d lines
+`,
+					gui.terminal.GetLogicalCursorX(),
+					gui.terminal.GetLogicalCursorY(),
+					gui.terminal.ActiveBuffer().ViewWidth(),
+					gui.terminal.ActiveBuffer().ViewHeight(),
+					gui.terminal.ActiveBuffer().Height(),
+				))
+			}
 
 			gui.window.SwapBuffers()
 
