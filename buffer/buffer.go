@@ -638,6 +638,17 @@ func (buffer *Buffer) Backspace() {
 
 func (buffer *Buffer) CarriageReturn() {
 	defer buffer.emitDisplayChange()
+	for {
+		line := buffer.getCurrentLine()
+		if line == nil {
+			break
+		}
+		if line.wrapped && buffer.cursorY > 0 {
+			buffer.cursorY--
+		} else {
+			break
+		}
+	}
 	buffer.cursorX = 0
 }
 

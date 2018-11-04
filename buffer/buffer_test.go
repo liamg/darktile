@@ -223,9 +223,37 @@ func TestClearWithFullView(t *testing.T) {
 
 func TestCarriageReturn(t *testing.T) {
 	b := NewBuffer(80, 20, CellAttributes{})
-	b.Write([]rune("hello!\rsecret")...)
+	b.Write([]rune("hello!")...)
+	b.CarriageReturn()
+	b.Write([]rune("secret")...)
 	lines := b.GetVisibleLines()
 	assert.Equal(t, "secret", lines[0].String())
+}
+
+func TestCarriageReturnOnFullLine(t *testing.T) {
+	b := NewBuffer(20, 20, CellAttributes{})
+	b.Write([]rune("abcdeabcdeabcdeabcde")...)
+	b.CarriageReturn()
+	b.Write([]rune("xxxxxxxxxxxxxxxxxxxx")...)
+	lines := b.GetVisibleLines()
+	assert.Equal(t, "xxxxxxxxxxxxxxxxxxxx", lines[0].String())
+}
+
+func TestCarriageReturnOnOverflowedLine(t *testing.T) {
+	b := NewBuffer(20, 20, CellAttributes{})
+	b.Write([]rune("abcdeabcdeabcdeabcdezzzzz")...)
+	b.CarriageReturn()
+	b.Write([]rune("xxxxxxxxxxxxxxxxxxxx")...)
+	lines := b.GetVisibleLines()
+	assert.Equal(t, "xxxxxxxxxxxxxxxxxxxx", lines[0].String())
+}
+
+func TestCarriageReturnOnFullLastLine(t *testing.T) {
+	b := NewBuffer(20, 2, CellAttributes{})
+	b.Write([]rune("\nabcdeabcdeabcdeabcde\rxxxxxxxxxxxxxxxxxxxx")...)
+	lines := b.GetVisibleLines()
+	assert.Equal(t, "", lines[0].String())
+	assert.Equal(t, "xxxxxxxxxxxxxxxxxxxx", lines[1].String())
 }
 
 func TestCarriageReturnOnWrappedLine(t *testing.T) {
@@ -253,11 +281,10 @@ func TestCarriageReturnOnOverWrappedLine(t *testing.T) {
 	b := NewBuffer(6, 10, CellAttributes{})
 	b.Write([]rune("hello there!\rsecret sauce")...)
 	lines := b.GetVisibleLines()
-	require.Equal(t, 3, len(lines))
-	assert.Equal(t, "hello", lines[0].String())
-	assert.Equal(t, "secret", lines[1].String())
+	require.Equal(t, 2, len(lines))
+	assert.Equal(t, "secret", lines[0].String())
 	assert.True(t, b.lines[1].wrapped)
-	assert.Equal(t, " sauce", lines[2].String())
+	assert.Equal(t, " sauce", lines[1].String())
 }
 
 func TestCarriageReturnOnLineThatDoesntExist(t *testing.T) {
