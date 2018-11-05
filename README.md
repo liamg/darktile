@@ -33,14 +33,6 @@ Ensure you have your latest graphics card drivers installed before use.
 - Multi platform support
 - Sixel support
 
-## What isn't supported?
-
-- Suspend/Continue (\^S, \^Q). This is archaic bullshit that annoys more people than it helps. Basically:
-
-<p align="center">
-<img alt="Overheating" src="https://imgs.xkcd.com/comics/workflow.png"/>
-</p>
-
 ## Platform Support
 
 | Platform | Supported |
@@ -59,6 +51,8 @@ Ensure you have your latest graphics card drivers installed before use.
 - On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
 
 ### Build
+
+Building requires Go 1.11 (for `go mod`).
 
 ```
 git clone https://github.com/liamg/aminal.git
@@ -79,7 +73,6 @@ go build
 | Paste                | ctrl + shift + v     |
 | Google selected text | ctrl + shift + g     |
 | Report bug in aminal | ctrl + shift + r     |
-| Explain text         | ctrl + shift + click |
 | Toggle slomo         | ctrl + shift + ;     |
 
 ## Configuration
