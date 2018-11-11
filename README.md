@@ -1,6 +1,7 @@
 # Aminal - A Modern Terminal Emulator
 
 [![CircleCI](https://circleci.com/gh/liamg/aminal/tree/master.svg?style=svg)](https://circleci.com/gh/liamg/aminal/tree/master)
+[![GoReportCard](https://goreportcard.com/badge/github.com/liamg/aminal)](https://goreportcard.com/report/github.com/liamg/aminal)
 
 Aminal is a modern terminal emulator implemented in Golang and utilising OpenGL. Whilst the basic functionality is in place, we're not yet at the stage to make a public release. Feel free to build and play with it though!
 
