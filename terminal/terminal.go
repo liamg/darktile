@@ -68,8 +68,7 @@ type Winsize struct {
 }
 
 func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Terminal {
-
-	return &Terminal{
+	t := &Terminal{
 		buffers: []*buffer.Buffer{
 			buffer.NewBuffer(1, 1, buffer.CellAttributes{
 				FgColour: config.ColourScheme.Foreground,
@@ -94,6 +93,8 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 			ShowCursor: true,
 		},
 	}
+
+	return t
 
 }
 

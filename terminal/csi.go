@@ -124,7 +124,7 @@ func csiCursorUpHandler(params []string, intermediate string, terminal *Terminal
 	if len(params) > 0 {
 		var err error
 		distance, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || distance < 1 {
 			distance = 1
 		}
 	}
@@ -137,7 +137,7 @@ func csiCursorDownHandler(params []string, intermediate string, terminal *Termin
 	if len(params) > 0 {
 		var err error
 		distance, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || distance < 1 {
 			distance = 1
 		}
 	}
@@ -151,7 +151,7 @@ func csiCursorForwardHandler(params []string, intermediate string, terminal *Ter
 	if len(params) > 0 {
 		var err error
 		distance, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || distance < 1 {
 			distance = 1
 		}
 	}
@@ -165,7 +165,7 @@ func csiCursorBackwardHandler(params []string, intermediate string, terminal *Te
 	if len(params) > 0 {
 		var err error
 		distance, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || distance < 1 {
 			distance = 1
 		}
 	}
@@ -180,7 +180,7 @@ func csiCursorNextLineHandler(params []string, intermediate string, terminal *Te
 	if len(params) > 0 {
 		var err error
 		distance, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || distance < 1 {
 			distance = 1
 		}
 	}
@@ -196,7 +196,7 @@ func csiCursorPrecedingLineHandler(params []string, intermediate string, termina
 	if len(params) > 0 {
 		var err error
 		distance, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || distance < 1 {
 			distance = 1
 		}
 	}
@@ -225,13 +225,13 @@ func csiCursorPositionHandler(params []string, intermediate string, terminal *Te
 		var err error
 		if params[0] != "" {
 			y, err = strconv.Atoi(string(params[0]))
-			if err != nil {
+			if err != nil || y < 1 {
 				y = 1
 			}
 		}
 		if params[1] != "" {
 			x, err = strconv.Atoi(string(params[1]))
-			if err != nil {
+			if err != nil || x < 1 {
 				x = 1
 			}
 		}
@@ -249,7 +249,7 @@ func csiScrollUpHandler(params []string, intermediate string, terminal *Terminal
 	if len(params) == 1 {
 		var err error
 		distance, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || distance < 1 {
 			distance = 1
 		}
 	}
@@ -266,7 +266,7 @@ func csiInsertLinesHandler(params []string, intermediate string, terminal *Termi
 	if len(params) == 1 {
 		var err error
 		count, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || count < 1 {
 			count = 1
 		}
 	}
@@ -284,7 +284,7 @@ func csiScrollDownHandler(params []string, intermediate string, terminal *Termin
 	if len(params) == 1 {
 		var err error
 		distance, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || distance < 1 {
 			distance = 1
 		}
 	}
@@ -305,14 +305,14 @@ func csiSetMarginsHandler(params []string, intermediate string, terminal *Termin
 	if len(params) > 0 {
 		var err error
 		top, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || top < 1 {
 			top = 1
 		}
 
 		if len(params) > 1 {
 			var err error
 			bottom, err = strconv.Atoi(params[1])
-			if err != nil || bottom > int(terminal.ActiveBuffer().ViewHeight()) {
+			if err != nil || bottom > int(terminal.ActiveBuffer().ViewHeight()) || bottom < 1 {
 				bottom = int(terminal.ActiveBuffer().ViewHeight())
 			}
 		}
@@ -331,7 +331,7 @@ func csiEraseCharactersHandler(params []string, intermediate string, terminal *T
 	if len(params) > 0 {
 		var err error
 		count, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || count < 1 {
 			count = 1
 		}
 	}
@@ -358,7 +358,7 @@ func csiLinePositionAbsolute(params []string, intermediate string, terminal *Ter
 	if len(params) > 0 {
 		var err error
 		row, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || row < 1 {
 			row = 1
 		}
 	}
@@ -373,7 +373,7 @@ func csiDeleteHandler(params []string, intermediate string, terminal *Terminal) 
 	if len(params) >= 1 {
 		var err error
 		n, err = strconv.Atoi(params[0])
-		if err != nil {
+		if err != nil || n < 1 {
 			n = 1
 		}
 	}

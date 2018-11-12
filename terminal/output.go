@@ -87,6 +87,8 @@ func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
 
 		b := <-pty
 
+		terminal.logger.Debugf("0x%q", string(b))
+
 		handler, ok := escapeSequenceMap[b]
 
 		if ok {
