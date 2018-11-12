@@ -239,15 +239,6 @@ func TestCarriageReturnOnFullLine(t *testing.T) {
 	assert.Equal(t, "xxxxxxxxxxxxxxxxxxxx", lines[0].String())
 }
 
-func TestCarriageReturnOnOverflowedLine(t *testing.T) {
-	b := NewBuffer(20, 20, CellAttributes{})
-	b.Write([]rune("abcdeabcdeabcdeabcdezzzzz")...)
-	b.CarriageReturn()
-	b.Write([]rune("xxxxxxxxxxxxxxxxxxxx")...)
-	lines := b.GetVisibleLines()
-	assert.Equal(t, "xxxxxxxxxxxxxxxxxxxx", lines[0].String())
-}
-
 func TestCarriageReturnOnFullLastLine(t *testing.T) {
 	b := NewBuffer(20, 2, CellAttributes{})
 	b.Write([]rune("\nabcdeabcdeabcdeabcde\rxxxxxxxxxxxxxxxxxxxx")...)
@@ -261,30 +252,6 @@ func TestCarriageReturnOnWrappedLine(t *testing.T) {
 	b.Write([]rune("hello!\rsecret")...)
 	lines := b.GetVisibleLines()
 	assert.Equal(t, "secret", lines[0].String())
-}
-
-func TestCarriageReturnOnOverWrappedLine(t *testing.T) {
-
-	/*
-		|hello
-		|secret
-		| sauce
-		|
-		|
-		|
-		|
-		|
-		|
-		|
-	*/
-
-	b := NewBuffer(6, 10, CellAttributes{})
-	b.Write([]rune("hello there!\rsecret sauce")...)
-	lines := b.GetVisibleLines()
-	require.Equal(t, 2, len(lines))
-	assert.Equal(t, "secret", lines[0].String())
-	assert.True(t, b.lines[1].wrapped)
-	assert.Equal(t, " sauce", lines[1].String())
 }
 
 func TestCarriageReturnOnLineThatDoesntExist(t *testing.T) {
@@ -408,24 +375,6 @@ func TestBackspace(t *testing.T) {
 	b.Write([]rune("p")...)
 	lines := b.GetVisibleLines()
 	assert.Equal(t, "helpo", lines[0].String())
-}
-
-func TestBackspaceWithWrap(t *testing.T) {
-	b := NewBuffer(10, 5, CellAttributes{})
-	b.Write([]rune("hellohellohello")...)
-	b.Backspace()
-	b.Backspace()
-	b.Backspace()
-	b.Backspace()
-	b.Backspace()
-	b.Backspace()
-	b.Backspace()
-	b.Backspace()
-	b.Backspace()
-	b.Backspace()
-	b.EraseLineFromCursor()
-	lines := b.GetVisibleLines()
-	assert.Equal(t, "hello", lines[0].String())
 }
 
 func TestHorizontalResizeView(t *testing.T) {
