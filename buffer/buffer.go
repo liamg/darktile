@@ -573,6 +573,12 @@ func (buffer *Buffer) Write(runes ...rune) {
 		line := buffer.getCurrentLine()
 
 		if buffer.replaceMode {
+
+			if buffer.CursorColumn() >= buffer.Width() {
+				// @todo replace rune at position 0 on next line down
+				return
+			}
+
 			for int(buffer.CursorColumn()) >= len(line.cells) {
 				line.cells = append(line.cells, NewBackgroundCell(buffer.cursorAttr.BgColour))
 			}
@@ -589,7 +595,6 @@ func (buffer *Buffer) Write(runes ...rune) {
 				buffer.NewLine()
 
 				newLine := buffer.getCurrentLine()
-				newLine.setWrapped(true)
 				if len(newLine.cells) == 0 {
 					newLine.cells = []Cell{{}}
 				}
@@ -598,8 +603,8 @@ func (buffer *Buffer) Write(runes ...rune) {
 				cell.attr = buffer.cursorAttr
 
 			} else {
-				buffer.cursorX = buffer.Width() - 1
-				inc = false
+				// no more room on line and wrapping is disabled
+				return
 			}
 
 			// @todo if next line is wrapped then prepend to it and shuffle characters along line, wrapping to next if necessary
@@ -650,6 +655,7 @@ func (buffer *Buffer) Backspace() {
 
 func (buffer *Buffer) CarriageReturn() {
 	defer buffer.emitDisplayChange()
+
 	for {
 		line := buffer.getCurrentLine()
 		if line == nil {
@@ -661,6 +667,7 @@ func (buffer *Buffer) CarriageReturn() {
 			break
 		}
 	}
+
 	buffer.cursorX = 0
 }
 
