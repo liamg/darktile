@@ -27,6 +27,7 @@ type OpenGLRenderer struct {
 	colourAttr    uint32
 	program       uint32
 	textureMap    map[*image.RGBA]uint32
+	fontMap       *FontMap
 }
 
 type rectangle struct {
@@ -129,7 +130,7 @@ func (rect *rectangle) Free() {
 	gl.DeleteBuffers(1, &rect.cv)
 }
 
-func NewOpenGLRenderer(config *config.Config, font *glfont.Font, boldFont *glfont.Font, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
+func NewOpenGLRenderer(config *config.Config, fontMap *FontMap, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
 	r := &OpenGLRenderer{
 		areaWidth:     areaWidth,
 		areaHeight:    areaHeight,
@@ -141,8 +142,9 @@ func NewOpenGLRenderer(config *config.Config, font *glfont.Font, boldFont *glfon
 		colourAttr:    colourAttr,
 		program:       program,
 		textureMap:    map[*image.RGBA]uint32{},
+		fontMap:       fontMap,
 	}
-	r.SetFont(font, boldFont)
+	r.SetArea(areaX, areaY, areaWidth, areaHeight)
 	return r
 }
 
@@ -155,14 +157,9 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	r.areaHeight = areaHeight
 	r.areaX = areaX
 	r.areaY = areaY
-	r.SetFont(r.font, r.boldFont)
-}
-
-func (r *OpenGLRenderer) SetFont(font *glfont.Font, bold *glfont.Font) { // @todo check for monospace and return error if not?
-	r.font = font
-	r.boldFont = bold
-	r.cellWidth, _ = font.Size("X")
-	r.cellHeight = font.LineHeight() // vertical padding
+	f := r.fontMap.GetFont('X')
+	r.cellWidth, _ = f.Size("X")
+	r.cellHeight = f.LineHeight() // vertical padding
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
 	r.rectangles = map[[2]uint]*rectangle{}
@@ -232,26 +229,20 @@ func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint, alph
 		fg = cell.Fg()
 	}
 
+	f := r.fontMap.GetFont(cell.Rune())
+	if cell.Attr().Bold {
+		f = r.fontMap.GetBoldFont(cell.Rune())
+	}
+
 	if cell.Attr().Dim {
 		alpha = 0.5 * alpha
 	}
-	r.font.SetColor(fg[0], fg[1], fg[2], alpha)
+	f.SetColor(fg[0], fg[1], fg[2], alpha)
 
 	x := float32(r.areaX) + float32(col)*r.cellWidth
-	y := float32(r.areaY) + (float32(row+1) * r.cellHeight) - (r.font.LinePadding())
+	y := float32(r.areaY) + (float32(row+1) * r.cellHeight) - (f.LinePadding())
 
-	if cell.Attr().Bold { // bold means draw text again one pixel to right, so it's fatter
-		if r.boldFont != nil {
-			y := float32(r.areaY) + (float32(row+1) * r.cellHeight) - (r.boldFont.LinePadding())
-			r.boldFont.SetColor(fg[0], fg[1], fg[2], alpha)
-			r.boldFont.Print(x, y, string(cell.Rune()))
-			return
-		}
-		r.font.Print(x+1, y, string(cell.Rune()))
-	}
-
-	r.font.Print(x, y, string(cell.Rune()))
-
+	f.Print(x, y, string(cell.Rune()))
 }
 
 func (r *OpenGLRenderer) DrawCellImage(cell buffer.Cell, col uint, row uint) {
