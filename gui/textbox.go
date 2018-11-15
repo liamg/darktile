@@ -87,11 +87,13 @@ DONE:
 
 	x := (float32(col) * gui.renderer.cellWidth)
 
-	gui.font.SetColor(0.2, 1, 0.2, 1)
+	f := gui.fontMap.GetFont('X')
+
+	f.SetColor(0.2, 1, 0.2, 1)
 
 	for i, line := range lines {
-		y := (float32(row+1+uint16(i)) * gui.renderer.cellHeight) - (gui.font.LinePadding())
-		gui.font.Print(x, y, fmt.Sprintf(" %s", line))
+		y := (float32(row+1+uint16(i)) * gui.renderer.cellHeight) - (f.LinePadding())
+		f.Print(x, y, fmt.Sprintf(" %s", line))
 	}
 
 }

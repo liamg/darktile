@@ -1,14 +1,10 @@
 package gui
 
 import (
-	"bytes"
 	"fmt"
 	"os/exec"
 	"runtime"
 	"time"
-
-	"github.com/gobuffalo/packr"
-	"github.com/liamg/aminal/glfont"
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -25,8 +21,7 @@ type GUI struct {
 	terminal      *terminal.Terminal
 	width         int //window width in pixels
 	height        int //window height in pixels
-	font          *glfont.Font
-	boldFont      *glfont.Font
+	fontMap       *FontMap
 	fontScale     float32
 	renderer      *OpenGLRenderer
 	colourAttr    uint32
@@ -64,13 +59,8 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	hScale := float32(ww) / float32(width)
 	vScale := float32(wh) / float32(height)
 
-	gui.logger.Debugf("Updating font resolution...")
-	if gui.font != nil {
-		gui.font.UpdateResolution(int(float32(width)*hScale), int(float32(height)*vScale))
-	}
-	if gui.boldFont != nil {
-		gui.boldFont.UpdateResolution(int(float32(width)*hScale), int(float32(height)*vScale))
-	}
+	gui.logger.Debugf("Updating font resolutions...")
+	gui.fontMap.UpdateResolution(int(float32(width)*hScale), int(float32(height)*vScale))
 
 	gui.logger.Debugf("Setting renderer area...")
 	gui.renderer.SetArea(0, 0, int(float32(width)*hScale), int(float32(height)*vScale))
@@ -126,13 +116,13 @@ func (gui *GUI) Render() error {
 	gl.BindFragDataLocation(program, 0, gl.Str("outColour\x00"))
 
 	gui.logger.Debugf("Loading font...")
-	if err := gui.loadDefaultFont(); err != nil {
+	if err := gui.loadFonts(); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
 	titleChan := make(chan bool, 1)
 
-	gui.renderer = NewOpenGLRenderer(gui.config, gui.font, gui.boldFont, 0, 0, gui.width, gui.height, gui.colourAttr, program)
+	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width, gui.height, gui.colourAttr, program)
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
@@ -275,37 +265,6 @@ Buffer Size: %d lines
 	gui.logger.Debugf("Stopping render...")
 	return nil
 
-}
-
-func (gui *GUI) loadDefaultFont() error {
-
-	box := packr.NewBox("./packed-fonts")
-	fontBytes, err := box.MustBytes("Hack-Regular.ttf")
-	if err != nil {
-		return fmt.Errorf("Packaged font could not be read: %s", err)
-	}
-
-	font, err := glfont.LoadFont(bytes.NewReader(fontBytes), gui.fontScale, gui.width, gui.height)
-	if err != nil {
-		return fmt.Errorf("LoadFont: %v", err)
-	}
-	gui.font = font
-
-	{
-		fontBytes, err := box.MustBytes("Hack-Bold.ttf")
-		if err != nil {
-			return fmt.Errorf("Packaged font could not be read: %s", err)
-		}
-
-		font, err := glfont.LoadFont(bytes.NewReader(fontBytes), gui.fontScale, gui.width, gui.height)
-		if err != nil {
-			return fmt.Errorf("LoadFont: %v", err)
-		}
-
-		gui.boldFont = font
-	}
-
-	return nil
 }
 
 func (gui *GUI) createWindow(width int, height int) (*glfw.Window, error) {
