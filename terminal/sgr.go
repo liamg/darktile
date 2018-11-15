@@ -3,6 +3,7 @@ package terminal
 import (
 	"fmt"
 	"strconv"
+	"strings"
 
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
@@ -15,7 +16,10 @@ func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal
 	}
 
 	for i := range params {
-		switch params[i] {
+
+		p := strings.Replace(strings.Replace(params[i], "[", "", -1), "]", "", -1)
+
+		switch p {
 		case "00", "0":
 			attr := terminal.ActiveBuffer().CursorAttr()
 			*attr = buffer.CellAttributes{
@@ -38,6 +42,8 @@ func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal
 			terminal.ActiveBuffer().CursorAttr().Bold = false
 		case "22":
 			terminal.ActiveBuffer().CursorAttr().Dim = false
+		case "23":
+			// not italic
 		case "24":
 			terminal.ActiveBuffer().CursorAttr().Underline = false
 		case "25":
@@ -46,6 +52,8 @@ func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal
 			terminal.ActiveBuffer().CursorAttr().Reverse = false
 		case "28":
 			terminal.ActiveBuffer().CursorAttr().Hidden = false
+		case "29":
+			// not strikethrough
 		case "39":
 			terminal.ActiveBuffer().CursorAttr().FgColour = terminal.config.ColourScheme.Foreground
 		case "30":

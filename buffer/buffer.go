@@ -442,6 +442,11 @@ func (buffer *Buffer) ViewHeight() uint16 {
 	return buffer.viewHeight
 }
 
+func (buffer *Buffer) deleteLine() {
+	index := int(buffer.RawLine())
+	buffer.lines = buffer.lines[:index+copy(buffer.lines[index:], buffer.lines[index+1:])]
+}
+
 func (buffer *Buffer) insertLine() {
 
 	defer buffer.emitDisplayChange()
@@ -488,6 +493,21 @@ func (buffer *Buffer) InsertLines(count int) {
 
 	for i := 0; i < count; i++ {
 		buffer.insertLine()
+	}
+
+}
+
+func (buffer *Buffer) DeleteLines(count int) {
+
+	if buffer.HasScrollableRegion() && !buffer.InScrollableRegion() {
+		// should have no effect outside of scrollable region
+		return
+	}
+
+	buffer.cursorX = 0
+
+	for i := 0; i < count; i++ {
+		buffer.deleteLine()
 	}
 
 }

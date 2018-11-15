@@ -41,6 +41,7 @@ var csiSequences = []csiMapping{
 	{id: 'J', handler: csiEraseInDisplayHandler, description: "Erase in Display (ED), VT100"},
 	{id: 'K', handler: csiEraseInLineHandler, description: "Erase in Line (EL), VT100"},
 	{id: 'L', handler: csiInsertLinesHandler, description: "Insert Ps Line(s) (default = 1) (IL)"},
+	{id: 'M', handler: csiDeleteLinesHandler, description: "Delete Ps Line(s) (default = 1) (DL)"},
 	{id: 'P', handler: csiDeleteHandler, description: " Delete Ps Character(s) (default = 1) (DCH)"},
 	{id: 'S', handler: csiScrollUpHandler, description: "Scroll up Ps lines (default = 1) (SU), VT420, ECMA-48"},
 	{id: 'T', handler: csiScrollDownHandler, description: "Scroll down Ps lines (default = 1) (SD), VT420"},
@@ -272,6 +273,24 @@ func csiInsertLinesHandler(params []string, intermediate string, terminal *Termi
 	}
 
 	terminal.ActiveBuffer().InsertLines(count)
+
+	return nil
+}
+
+func csiDeleteLinesHandler(params []string, intermediate string, terminal *Terminal) error {
+	count := 1
+	if len(params) > 1 {
+		return fmt.Errorf("Not supported")
+	}
+	if len(params) == 1 {
+		var err error
+		count, err = strconv.Atoi(params[0])
+		if err != nil || count < 1 {
+			count = 1
+		}
+	}
+
+	terminal.ActiveBuffer().DeleteLines(count)
 
 	return nil
 }
