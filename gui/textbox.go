@@ -79,20 +79,23 @@ DONE:
 		addLine()
 	}
 
+	gui.renderer.Clean()
+
+	bg := [3]float32{0, 0, 0}
+
 	for hx := col; hx < col+uint16(longestLine)+2; hx++ {
 		for hy := row - 1; hy < row+uint16(len(lines))+1; hy++ {
-			gui.renderer.DrawCellBg(buffer.NewBackgroundCell([3]float32{0, 0, 0}), uint(hx), uint(hy), false, nil, true)
+			gui.renderer.DrawCellBg(buffer.NewBackgroundCell(bg), uint(hx), uint(hy), false, nil , true)
 		}
 	}
 
-	x := (float32(col) * gui.renderer.cellWidth)
+	x := float32(col) * gui.renderer.cellWidth
 
 	f := gui.fontMap.GetFont('X')
-
 	f.SetColor(0.2, 1, 0.2, 1)
 
 	for i, line := range lines {
-		y := (float32(row+1+uint16(i)) * gui.renderer.cellHeight) - (f.LinePadding())
+		y := float32(row+1+uint16(i)) * gui.renderer.cellHeight
 		f.Print(x, y, fmt.Sprintf(" %s", line))
 	}
 

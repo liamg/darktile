@@ -203,15 +203,11 @@ func (gui *GUI) Render() error {
 				for x := 0; x < colCount; x++ {
 
 					cell := defaultCell
-					hasText := false
 
 					if y < len(lines) {
 						cells := lines[y].Cells()
 						if x < len(cells) {
 							cell = cells[x]
-							if cell.Rune() != 0 && cell.Rune() != 32 {
-								hasText = true
-							}
 						}
 					}
 
@@ -230,12 +226,28 @@ func (gui *GUI) Render() error {
 					}
 
 					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
+					gui.renderer.DrawCellImage(cell, uint(x), uint(y))
+				}
+			}
+			for y := 0; y < lineCount; y++ {
+				for x := 0; x < colCount; x++ {
+
+					cell := defaultCell
+					hasText := false
+
+					if y < len(lines) {
+						cells := lines[y].Cells()
+						if x < len(cells) {
+							cell = cells[x]
+							if cell.Rune() != 0 && cell.Rune() != 32 {
+								hasText = true
+							}
+						}
+					}
+
 					if hasText {
 						gui.renderer.DrawCellText(cell, uint(x), uint(y), 1.0, nil)
 					}
-
-					gui.renderer.DrawCellImage(cell, uint(x), uint(y))
-
 				}
 			}
 

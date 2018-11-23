@@ -12,12 +12,12 @@ func (gui *GUI) getPackedFont(name string) (*glfont.Font, error) {
 	box := packr.NewBox("./packed-fonts")
 	fontBytes, err := box.MustBytes(name)
 	if err != nil {
-		return nil, fmt.Errorf("Packaged font '%s' could not be read: %s", name, err)
+		return nil, fmt.Errorf("packaged font '%s' could not be read: %s", name, err)
 	}
 
 	font, err := glfont.LoadFont(bytes.NewReader(fontBytes), gui.fontScale, gui.width, gui.height)
 	if err != nil {
-		return nil, fmt.Errorf("Font '%s' failed to load: %v", name, err)
+		return nil, fmt.Errorf("font '%s' failed to load: %v", name, err)
 	}
 
 	return font, nil
@@ -25,30 +25,21 @@ func (gui *GUI) getPackedFont(name string) (*glfont.Font, error) {
 
 func (gui *GUI) loadFonts() error {
 
-	defaultFont, err := gui.getPackedFont("Hack-Regular.ttf")
+	// from https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack
+
+	defaultFont, err := gui.getPackedFont("Hack Regular Nerd Font Complete.ttf")
 	if err != nil {
 		return err
 	}
 
-	boldFont, err := gui.getPackedFont("Hack-Bold.ttf")
+	boldFont, err := gui.getPackedFont("Hack Bold Nerd Font Complete.ttf")
 	if err != nil {
 		return err
 	}
 
 	gui.fontMap = NewFontMap(defaultFont, boldFont)
 
-	// add special font usage here
-
-	noto, err := gui.getPackedFont("NotoEmoji-Regular.ttf")
-	if err != nil {
-		return err
-	}
-
-	// misc symbols, lightning bolt etc.
-	gui.fontMap.setOverrideRange(0x2600, 0x26FF, noto)
-
-	// emoji
-	gui.fontMap.setOverrideRange(0x1F600, 0x1F64F, noto)
+	// add special non-ascii fonts here
 
 	return nil
 }

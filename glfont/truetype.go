@@ -6,7 +6,6 @@ import (
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/golang/freetype/truetype"
-	"golang.org/x/image/font"
 )
 
 type character struct {
@@ -37,16 +36,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale float32) (*Font, error)
 	}
 	f.SetColor(1.0, 1.0, 1.0, 1.0) //set default white
 
-	sample := "abcdefghijklmnopqrstuvqxyzABCDEFGHIJKLMNOPQRSTUVWXYZ█"
-
-	ttfFace := truetype.NewFace(f.ttf, &truetype.Options{
-		Size:    float64(f.scale),
-		DPI:     DPI,
-		Hinting: font.HintingFull,
-	})
-
-	_, h := f.Size(sample)
-	f.linePadding = h - float32(ttfFace.Metrics().Height>>6)
+	_, h := f.MaxSize()
 	f.lineHeight = h
 
 	gl.BindTexture(gl.TEXTURE_2D, 0)

@@ -48,15 +48,20 @@ func (r *OpenGLRenderer) CellHeight() float32 {
 	return r.cellHeight
 }
 
+func (r *OpenGLRenderer) Clean() {
+	r.rectangles = map[[2]uint]*rectangle{}
+}
+
 func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
 
 	halfAreaWidth := float32(r.areaWidth / 2)
 	halfAreaHeight := float32(r.areaHeight / 2)
 
+
 	x = (x - halfAreaWidth) / halfAreaWidth
-	y = -(y - halfAreaHeight) / halfAreaHeight
+	y = -(y - ( halfAreaHeight)) / halfAreaHeight
 	w := r.cellWidth / halfAreaWidth
-	h := r.cellHeight / halfAreaHeight
+	h := (r.cellHeight ) / halfAreaHeight
 
 	rect := &rectangle{
 		points: []float32{
@@ -158,32 +163,26 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	r.areaX = areaX
 	r.areaY = areaY
 	f := r.fontMap.GetFont('X')
+	_, r.cellHeight = f.MaxSize()
 	r.cellWidth, _ = f.Size("X")
-	r.cellHeight = f.LineHeight() // vertical padding
+	 //= f.LineHeight()   // includes vertical padding
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
 	r.rectangles = map[[2]uint]*rectangle{}
 }
 
 func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
-	if rect, ok := r.rectangles[[2]uint{col, row}]; ok {
-		return rect
-	}
-	return r.generateRectangle(col, row)
-}
 
-func (r *OpenGLRenderer) generateRectangle(col uint, line uint) *rectangle {
-
-	rect, ok := r.rectangles[[2]uint{col, line}]
+	rect, ok := r.rectangles[[2]uint{col, row}]
 	if ok {
 		rect.Free()
 	}
 
-	// rounding to whole pixels makes everything nice
 	x := float32(float32(col) * r.cellWidth)
-	y := float32((float32(line) * r.cellHeight)) + r.cellHeight
-	r.rectangles[[2]uint{col, line}] = r.newRectangle(x, y, r.colourAttr)
-	return r.rectangles[[2]uint{col, line}]
+	y := float32(float32(row) * r.cellHeight) + r.cellHeight
+
+	r.rectangles[[2]uint{col, row}] = r.newRectangle(x, y, r.colourAttr)
+	return r.rectangles[[2]uint{col, row}]
 }
 
 func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
@@ -240,7 +239,7 @@ func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint, alph
 	f.SetColor(fg[0], fg[1], fg[2], alpha)
 
 	x := float32(r.areaX) + float32(col)*r.cellWidth
-	y := float32(r.areaY) + (float32(row+1) * r.cellHeight) - (f.LinePadding())
+	y := float32(r.areaY) + (float32(row+1) * r.cellHeight) + f.MinY()
 
 	f.Print(x, y, string(cell.Rune()))
 }
@@ -289,8 +288,8 @@ func (r *OpenGLRenderer) DrawCellImage(cell buffer.Cell, col uint, row uint) {
 		r.textureMap[img] = tex
 	}
 
-	var w float32 = float32(img.Bounds().Size().X)
-	var h float32 = float32(img.Bounds().Size().Y)
+	var w = float32(img.Bounds().Size().X)
+	var h = float32(img.Bounds().Size().Y)
 
 	var readFboId uint32
 	gl.GenFramebuffers(1, &readFboId)
