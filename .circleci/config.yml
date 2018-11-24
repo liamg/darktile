@@ -39,15 +39,17 @@ jobs:
     docker:
       - image: circleci/golang:latest
     steps:
-      - run: mkdir -p release/bin/darwin
-      - run: mkdir -p release/bin/linux
+      - run: mkdir -p artifacts
       - attach_workspace:
-          at: release
+          at: artifacts
       - run:
           name: "Publish Release on GitHub"
           command: |
             go get github.com/tcnksm/ghr
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} release/bin/
+            mkdir -p release
+            cp artifacts/bin/linux/* release/
+            cp artifacts/bin/darwin/* release/
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} release/
 workflows:
   version: 2
   build:
