@@ -36,4 +36,4 @@ build-linux:
 .PHONY:	build-darwin
 build-darwin:
 	mkdir -p bin/darwin
-	xgo -x -v -ldflags "-X main.Version='${CIRCLE_TAG}'" --targets=darwin/amd64 -out bin/darwin/${BINARY}-darwin-amd64 .
+	xgo -x -v -ldflags "-X main.Version='${CIRCLE_TAG}'" --targets=darwin/amd64 -out bin/darwin/${BINARY} .
