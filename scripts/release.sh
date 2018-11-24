@@ -13,6 +13,9 @@ mkdir -p release/bin/linux/i386/
 # build for osx using xgo - this cannot be used for linux builds due to missing deps in the xgo containers
 xgo --targets=darwin/amd64 --dest=release/bin/darwin/amd64 -out ${BINARY} .
 
+GOOS=linux GOARCH=386 go build -o release/bin/linux/i386/aminal
+GOOS=linux GOARCH=amd64 go build -o release/bin/linux/amd64/aminal
+
 exit 0
 
 
