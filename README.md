@@ -19,7 +19,7 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ![Example sixel](sixel.png)
 
-## Aims
+## Features
 
 - Unicode support
 - OpenGL rendering
