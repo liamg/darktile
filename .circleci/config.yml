@@ -3,11 +3,80 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build:
+  test:
     docker:
       # specify the version
       - image: liamg/golang-opengl
-    working_directory: /aminal
+    working_directory: /go/src/github.com/liamg/aminal
     steps:
       - checkout
-      - run: go test -v ./...
+      - run: make test
+  build-linux:
+    docker:
+      - image: liamg/golang-opengl
+    working_directory: /go/src/github.com/liamg/aminal
+    requires:
+      - build
+    steps:
+      - checkout
+      - run: make build-linux
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - linux
+  build-darwin:
+    docker:
+      - image: karalabe/xgo-latest:latest
+    working_directory: /go/src/github.com/liamg/aminal
+    steps:
+      - checkout
+      - run: make build-darwin
+      - run: cp /build/bin/darwin/* bin/darwin/
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - darwin
+  release:
+    docker:
+      - image: circleci/golang:latest
+    steps:
+      - run: mkdir -p artifacts
+      - attach_workspace:
+          at: artifacts
+      - run:
+          name: "Publish Release on GitHub"
+          command: |
+            mkdir -p release
+            cp artifacts/linux/* release/
+            cp artifacts/darwin/* release/
+            go get github.com/tcnksm/ghr
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} release/
+workflows:
+  version: 2
+  build:
+    jobs:
+      - test:
+          filters:
+            tags:
+              only: /^v.*/
+      - build-darwin:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
+      - build-linux:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
+      - release:
+          requires:
+            - build-linux
+            - build-darwin
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
