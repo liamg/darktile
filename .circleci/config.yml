@@ -7,7 +7,7 @@ jobs:
     docker:
       # specify the version
       - image: liamg/golang-opengl
-    working_directory: /aminal
+    working_directory: /go/src/github.com/liamg/aminal
     steps:
       - checkout
       - run: go test -v ./...
