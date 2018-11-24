@@ -21,6 +21,7 @@ jobs:
     steps:
       - checkout
       - run: make release
+      - run: tree release
     filters:
       tags:
         only: /.*/
