@@ -44,10 +44,10 @@ workflows:
   build:
     jobs:
       - test
-      - build-darwin
+      - build-darwin:
           requires:
             - test
-      - build-linux
+      - build-linux:
           requires:
             - test
       - release:
