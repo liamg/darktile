@@ -482,6 +482,16 @@ func (buffer *Buffer) insertLine() {
 	}
 }
 
+func (buffer *Buffer) InsertBlankCharacters(count int) {
+
+	index := int(buffer.RawLine())
+	for i := 0; i < count; i++ {
+		cells := buffer.lines[index].cells
+		c := Cell{}
+		buffer.lines[index].cells = append(cells[:buffer.cursorX], append([]Cell{c}, cells[buffer.cursorX:]...)...)
+	}
+}
+
 func (buffer *Buffer) InsertLines(count int) {
 
 	if buffer.HasScrollableRegion() && !buffer.InScrollableRegion() {

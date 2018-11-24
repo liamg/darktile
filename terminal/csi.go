@@ -46,6 +46,7 @@ var csiSequences = []csiMapping{
 	{id: 'S', handler: csiScrollUpHandler, description: "Scroll up Ps lines (default = 1) (SU), VT420, ECMA-48"},
 	{id: 'T', handler: csiScrollDownHandler, description: "Scroll down Ps lines (default = 1) (SD), VT420"},
 	{id: 'X', handler: csiEraseCharactersHandler, description: "Erase Ps Character(s) (default = 1) (ECH"},
+	{id: '@', handler: csiInsertBlankCharactersHandler, description: "Insert Ps (Blank) Character(s) (default = 1) (ICH)"},
 }
 
 func csiHandler(pty chan rune, terminal *Terminal) error {
@@ -256,6 +257,24 @@ func csiScrollUpHandler(params []string, intermediate string, terminal *Terminal
 	}
 	terminal.logger.Debugf("Scrolling up %d", distance)
 	terminal.ScrollUp(uint16(distance))
+	return nil
+}
+
+func csiInsertBlankCharactersHandler(params []string, intermediate string, terminal *Terminal) error {
+	count := 1
+	if len(params) > 1 {
+		return fmt.Errorf("Not supported")
+	}
+	if len(params) == 1 {
+		var err error
+		count, err = strconv.Atoi(params[0])
+		if err != nil || count < 1 {
+			count = 1
+		}
+	}
+
+	terminal.ActiveBuffer().InsertBlankCharacters(count)
+
 	return nil
 }
 
