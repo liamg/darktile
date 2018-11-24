@@ -48,8 +48,8 @@ jobs:
       - image: circleci/golang:latest
     steps:
       - attach_workspace:
-        # Must be absolute path or relative path from working_directory
-        at: ./workspace
+          # Must be absolute path or relative path from working_directory
+          at: ./workspace
       - run:
         name: "Publish Release on GitHub"
         command: |
