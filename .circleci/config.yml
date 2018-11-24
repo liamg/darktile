@@ -13,7 +13,6 @@ jobs:
       - run: make test
   build-linux:
     docker:
-      # specify the version
       - image: liamg/golang-opengl
     working_directory: /go/src/github.com/liamg/aminal
     requires:
@@ -22,25 +21,18 @@ jobs:
       - checkout
       - run: make build-linux
       - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is 
-          # taken to be the root directory of the workspace.
           root: .
-          # Must be relative path from root
           paths:
             - bin/linux
   build-darwin:
     docker:
-      # specify the version
       - image: karalabe/xgo-latest:latest
     working_directory: /go/src/github.com/liamg/aminal
     steps:
       - checkout
       - run: make build-darwin
       - persist_to_workspace:
-          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is 
-          # taken to be the root directory of the workspace.
           root: .
-          # Must be relative path from root
           paths:
             - bin/darwin
   release:
@@ -48,7 +40,6 @@ jobs:
       - image: circleci/golang:latest
     steps:
       - attach_workspace:
-          # Must be absolute path or relative path from working_directory
           at: ./workspace
       - run:
           name: "Publish Release on GitHub"

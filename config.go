@@ -9,7 +9,13 @@ import (
 	"github.com/liamg/aminal/config"
 )
 
+var Version string
+
 func getConfig() *config.Config {
+
+	showVersion := false
+	flag.BoolVar(&showVersion, "version", showVersion, "Output version information")
+
 	ignore := false
 	flag.BoolVar(&ignore, "ignore-config", ignore, "Ignore user config files and use defauls")
 	if ignore {
@@ -23,6 +29,15 @@ func getConfig() *config.Config {
 	flag.BoolVar(&conf.Slomo, "slomo", conf.Slomo, "Render in slow motion (useful for debugging)")
 
 	flag.Parse()
+
+	if showVersion {
+		if Version == "" {
+			Version = "development"
+		}
+		fmt.Printf("Aminal %s\n", Version)
+		os.Exit(0)
+	}
+
 	return conf
 }
 
