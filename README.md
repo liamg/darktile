@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/liamg/aminal/tree/master.svg?style=svg)](https://circleci.com/gh/liamg/aminal/tree/master)
 [![GoReportCard](https://goreportcard.com/badge/github.com/liamg/aminal)](https://goreportcard.com/report/github.com/liamg/aminal)
 
-Aminal is a modern terminal emulator implemented in Golang and utilising OpenGL. Whilst the basic functionality is in place, we're not yet at the stage to make a public release. Feel free to build and play with it though!
+Aminal is a modern terminal emulator for Mac/Linux implemented in Golang and utilising OpenGL. Feel free to build and play with it though!
 
 ![Example screenshot](demo.gif)
 
@@ -34,30 +34,27 @@ Ensure you have your latest graphics card drivers installed before use.
 - Multi platform support
 - Sixel support
 
-## Platform Support
-
-| Platform | Supported |
-| -------- | --------- |
-| Linux    | ✔         |
-| MacOSX   | ⏳        |
-| Windows  | ⏳        |
-
 ## Quick Start
 
-### Dependencies
+### Installation
 
-- [Go 1.11+](https://golang.org/dl/)
-- On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
-- On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
-- On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
+#### Prebuilt Binaries
 
-### Build
+Prebuilt binaries are available for Linux and OSX on the [releases](https://github.com/liamg/aminal/releases) page. 
 
-Building requires Go 1.11 (for `go mod`).
+Download the binary and `sudo cp aminal-* /usr/local/bin/aminal`.
+
+#### Install with Go
 
 ```
 go get -u https://github.com/liamg/aminal
 ```
+
+### Build Dependencies
+
+- On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
+- On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
+- On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
 
 ## Keyboard Shortcuts
 
