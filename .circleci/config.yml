@@ -59,13 +59,22 @@ workflows:
   version: 2
   build:
     jobs:
-      - test
+      - test:
+          filters:
+            tags:
+              only: /.*/
       - build-darwin:
           requires:
             - test
+          filters:
+            tags:
+              only: /.*/
       - build-linux:
           requires:
             - test
+          filters:
+            tags:
+              only: /.*/
       - release:
           requires:
             - build-linux
