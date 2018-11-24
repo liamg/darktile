@@ -56,10 +56,7 @@ Ensure you have your latest graphics card drivers installed before use.
 Building requires Go 1.11 (for `go mod`).
 
 ```
-git clone https://github.com/liamg/aminal.git
-cd aminal
-go build
-./aminal
+go get -u https://github.com/liamg/aminal
 ```
 
 ## Keyboard Shortcuts

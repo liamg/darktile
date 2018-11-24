@@ -16,7 +16,7 @@ test:
 
 .PHONY: install
 install: build
-	sudo install -m 0755 aminal "/usr/local/bin/${BINARY}"
+	install -m 0755 aminal "${GOBIN}/${BINARY}"
 
 .PHONY: install-tools
 install-tools:

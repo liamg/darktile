@@ -10,4 +10,4 @@ jobs:
     working_directory: /go/src/github.com/liamg/aminal
     steps:
       - checkout
-      - run: go test -v ./...
+      - run: make test
