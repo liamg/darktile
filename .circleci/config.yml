@@ -47,8 +47,8 @@ jobs:
           command: |
             go get github.com/tcnksm/ghr
             mkdir -p release
-            ls -la artifacts
-            ls -la artifacts/bin || (echo "linux" && ls -la artifacts/linux)
+            ls -la artifacts/linux
+            ls -la artifacts/darwin
             cp artifacts/linux/* release/
             cp artifacts/darwin/* release/
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} release/
