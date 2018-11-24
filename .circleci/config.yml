@@ -21,6 +21,13 @@ jobs:
     steps:
       - checkout
       - run: make build-linux
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is 
+          # taken to be the root directory of the workspace.
+          root: .
+          # Must be relative path from root
+          paths:
+            - bin
   build-darwin:
     docker:
       # specify the version
@@ -29,14 +36,25 @@ jobs:
     steps:
       - checkout
       - run: make build-darwin
+      - persist_to_workspace:
+          # Must be an absolute path, or relative path from working_directory. This is a directory on the container which is 
+          # taken to be the root directory of the workspace.
+          root: .
+          # Must be relative path from root
+          paths:
+            - bin
   release:
     docker:
-      # specify the version
-      - image: karalabe/xgo-latest:latest
-    working_directory: /go/src/github.com/liamg/aminal
+      - image: circleci/golang:latest
     steps:
-      - checkout
-      - run: echo nothing to do
+      - attach_workspace:
+        # Must be absolute path or relative path from working_directory
+        at: ./workspace
+      - run:
+        name: "Publish Release on GitHub"
+        command: |
+          go get github.com/tcnksm/ghr
+          ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} ./workspace/bin/
 workflows:
   version: 2
   build:
