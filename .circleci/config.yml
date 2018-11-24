@@ -58,25 +58,25 @@ workflows:
       - test:
           filters:
             tags:
-              only: /.*/
+              only: /^v.*/
       - build-darwin:
           requires:
             - test
           filters:
             tags:
-              only: /.*/
+              only: /^v.*/
       - build-linux:
           requires:
             - test
           filters:
             tags:
-              only: /.*/
+              only: /^v.*/
       - release:
           requires:
             - build-linux
             - build-darwin
           filters:
             tags:
-              only: /.*/
+              only: /^v.*/
             branches:
               ignore: /.*/
