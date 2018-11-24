@@ -27,7 +27,7 @@ jobs:
           root: .
           # Must be relative path from root
           paths:
-            - bin
+            - bin/linux
   build-darwin:
     docker:
       # specify the version
@@ -42,7 +42,7 @@ jobs:
           root: .
           # Must be relative path from root
           paths:
-            - bin
+            - bin/darwin
   release:
     docker:
       - image: circleci/golang:latest

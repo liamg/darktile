@@ -30,12 +30,12 @@ update-fonts: install-tools
 
 .PHONY:	build-linux
 build-linux:
-	mkdir -p bin
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/aminal-linux-amd64
+	mkdir -p bin/linux
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/${BINARY}-linux-amd64
 
 .PHONY:	build-darwin
 build-darwin:
-	mkdir -p bin
-	xgo --targets=darwin/amd64 --dest=bin -out ${BINARY}-darwin-amd64 .
+	mkdir -p bin/darwin
+	xgo --targets=darwin/amd64 --dest=bin/darwin -out ${BINARY}-darwin-amd64 .
 
 
