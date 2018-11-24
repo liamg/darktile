@@ -21,9 +21,9 @@ jobs:
       - checkout
       - run: make build-linux
       - persist_to_workspace:
-          root: release
+          root: bin
           paths:
-            - bin/linux
+            - linux
   build-darwin:
     docker:
       - image: karalabe/xgo-latest:latest
@@ -32,9 +32,9 @@ jobs:
       - checkout
       - run: make build-darwin
       - persist_to_workspace:
-          root: release
+          root: bin
           paths:
-            - bin/darwin
+            - darwin
   release:
     docker:
       - image: circleci/golang:latest
