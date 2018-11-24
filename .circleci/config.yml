@@ -18,6 +18,7 @@ jobs:
     requires:
       - build
     steps:
+      - checkout
       - run: make release
     filters:
       tags:
