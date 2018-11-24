@@ -30,7 +30,14 @@ update-fonts: install-tools
 	curl -L https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Hack/Bold/complete/Hack%20Bold%20Nerd%20Font%20Complete.ttf -o "${FONTPATH}/Hack Bold Nerd Font Complete.ttf"
 	packr -v
 
-.PHONY: release
-release: test install-tools
-	./scripts/release.sh
-	
+.PHONY:	build-linux
+build-linux: test install-tools
+	mkdir -p bin
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/aminal-linux-amd64
+
+.PHONY:	build-darwin
+build-darwin: test install-tools
+	mkdir -p bin
+	xgo --targets=darwin/amd64 --dest=bin -out ${BINARY}-darwin-amd64 .
+
+

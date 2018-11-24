@@ -3,7 +3,7 @@
 # Check https://circleci.com/docs/2.0/language-go/ for more details
 version: 2
 jobs:
-  build:
+  test:
     docker:
       # specify the version
       - image: liamg/golang-opengl
@@ -11,7 +11,7 @@ jobs:
     steps:
       - checkout
       - run: make test
-  release:
+  build-linux:
     docker:
       # specify the version
       - image: liamg/golang-opengl
@@ -20,17 +20,40 @@ jobs:
       - build
     steps:
       - checkout
-      - run: make release
-      - run: tree release
-    filters:
-      tags:
-        only: /.*/
+      - run: make build-linux
+      - run: tree bin
+  build-darwin:
+    docker:
+      # specify the version
+      - image: karalabe/xgo-latest:latest
+    working_directory: /go/src/github.com/liamg/aminal
+    steps:
+      - checkout
+      - run: make build-darwin
+      - run: tree bin
+  release:
+    docker:
+      # specify the version
+      - image: karalabe/xgo-latest:latest
+    working_directory: /go/src/github.com/liamg/aminal
+    steps:
+      - checkout
+      - run: echo nothing to do
 workflows:
   version: 2
   build:
     jobs:
-      - build
+      - test
+      - build-darwin
+          requires:
+            - test
+      - build-linux
+          requires:
+            - test
       - release:
+          requires:
+            - build-linux
+            - build-darwin
           filters:
             tags:
               only: /.*/
