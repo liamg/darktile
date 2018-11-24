@@ -21,8 +21,6 @@ install: build
 install-tools:
 	which dep || curl -L https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 	which packr || go get -u github.com/gobuffalo/packr/packr
-	which github-release || go get -u github.com/aktau/github-release
-	which xgo || go get github.com/karalabe/xgo
 
 .PHONY: update-fonts
 update-fonts: install-tools
@@ -31,12 +29,12 @@ update-fonts: install-tools
 	packr -v
 
 .PHONY:	build-linux
-build-linux: test install-tools
+build-linux:
 	mkdir -p bin
 	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/aminal-linux-amd64
 
 .PHONY:	build-darwin
-build-darwin: test install-tools
+build-darwin:
 	mkdir -p bin
 	xgo --targets=darwin/amd64 --dest=bin -out ${BINARY}-darwin-amd64 .
 

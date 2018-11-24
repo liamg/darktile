@@ -21,7 +21,6 @@ jobs:
     steps:
       - checkout
       - run: make build-linux
-      - run: tree bin
   build-darwin:
     docker:
       # specify the version
@@ -30,7 +29,6 @@ jobs:
     steps:
       - checkout
       - run: make build-darwin
-      - run: tree bin
   release:
     docker:
       # specify the version
