@@ -4,7 +4,6 @@ FONTPATH := ./gui/packed-fonts
 
 .PHONY: build
 build: test install-tools
-	mkdir -p release
 	packr -v
 	go build
 

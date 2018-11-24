@@ -3,7 +3,7 @@
 [![CircleCI](https://circleci.com/gh/liamg/aminal/tree/master.svg?style=svg)](https://circleci.com/gh/liamg/aminal/tree/master)
 [![GoReportCard](https://goreportcard.com/badge/github.com/liamg/aminal)](https://goreportcard.com/report/github.com/liamg/aminal)
 
-Aminal is a modern terminal emulator for Mac/Linux implemented in Golang and utilising OpenGL. Feel free to build and play with it though!
+Aminal is a modern terminal emulator for Mac/Linux implemented in Golang and utilising OpenGL. 
 
 ![Example screenshot](demo.gif)
 
@@ -23,16 +23,16 @@ Ensure you have your latest graphics card drivers installed before use.
 
 - Unicode support
 - OpenGL rendering
-- Full customisation options
+- Customisation options
 - True colour support
 - Support for common ANSI escape sequences a la xterm
 - Scrollback buffer
 - Clipboard access
 - Clickable URLs
-- Resize logic that wraps/unwraps lines _correctly_
-- Bullshit graphical effects
-- Multi platform support
+- Multi platform support (Windows coming soon...)
 - Sixel support
+- Hints/overlays
+- Built-in patched fonts for powerline
 
 ## Quick Start
 
@@ -50,11 +50,25 @@ Download the binary and `sudo cp aminal-* /usr/local/bin/aminal`.
 go get -u https://github.com/liamg/aminal
 ```
 
-### Build Dependencies
+### Build 
+
+#### Dependencies
 
 - On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
 - On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
 - On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
+
+#### Building Locally
+
+There are various make targets available, the most obvious being:
+
+```
+make test
+make build
+make install
+```
+
+As long as you have your `GOBIN` environment variable set up properly (and in `PATH`), you should be able to run `aminal`.
 
 ## Keyboard Shortcuts
 
