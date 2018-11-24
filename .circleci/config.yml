@@ -35,4 +35,6 @@ workflows:
       - release:
           filters:
             tags:
-              only: /.+/
+              only: /.*/
+            branches:
+              ignore: /.*/
