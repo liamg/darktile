@@ -31,7 +31,6 @@ jobs:
     steps:
       - checkout
       - run: make build-darwin
-      - run: ls -la && ls -la bin && ls -la bin/darwin/
       - persist_to_workspace:
           root: bin
           paths:
