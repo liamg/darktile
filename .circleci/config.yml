@@ -11,3 +11,4 @@ jobs:
     steps:
       - checkout
       - run: make test
+      - run: make release
