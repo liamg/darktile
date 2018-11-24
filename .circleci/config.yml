@@ -11,8 +11,7 @@ jobs:
     steps:
       - checkout
       - run: make test
-      - run: make release
-  tag_test:
+  release:
     docker:
       # specify the version
       - image: liamg/golang-opengl
