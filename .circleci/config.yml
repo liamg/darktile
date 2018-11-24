@@ -50,7 +50,7 @@ jobs:
             cp artifacts/linux/* release/
             cp artifacts/darwin/* release/
             go get github.com/tcnksm/ghr
-            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -delete ${CIRCLE_TAG} release/
+            ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n "Aminal ${CIRCLE_TAG}" -b "Aminal ${CIRCLE_TAG}" -delete ${CIRCLE_TAG} release/
 workflows:
   version: 2
   build:
