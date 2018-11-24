@@ -47,7 +47,7 @@ Download the binary and `sudo cp aminal-* /usr/local/bin/aminal`.
 #### Install with Go
 
 ```
-go get -u https://github.com/liamg/aminal
+go get -u github.com/liamg/aminal
 ```
 
 ### Build 
@@ -94,6 +94,7 @@ You can ignore the config and use defaults by specifying `--ignore-config` as a 
 
 | CLI Flag        | Config Section | Config Name | Type    | Default      | Description                                                                                                                   |
 | --------------- | -------------- | ----------- | ------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| --debug         | _root_         | debug       | boolean | false        | Enable debug mode, with debug logging and debug info terminal overlay.                                                        |
-| --slomo         | _root_         | slomo       | boolean | false        | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging. |
-| --shell [shell] | _root_         | shell       | string  | User's shell | Use the specified shell program instead of the user's usual one.                                                              |
+| --debug         | _root_         | debug       | boolean | false        | Enable debug mode, with debug logging and debug info terminal overlay.
+| --slomo         | _root_         | slomo       | boolean | false        | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging.
+| --shell [shell] | _root_         | shell       | string  | User's shell | Use the specified shell program instead of the user's usual one. 
+| --version       | n/a            | n/a         | boolean | n/a          | Show the version of aminal.
