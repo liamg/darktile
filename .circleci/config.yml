@@ -24,6 +24,19 @@ jobs:
           root: bin
           paths:
             - linux
+  package-debian:
+    docker:
+      - image: liamg/golang-opengl
+    working_directory: /go/src/github.com/liamg/aminal
+    requires:
+      - build
+    steps:
+      - checkout
+      - run: make package-debian
+      - persist_to_workspace:
+          root: bin
+          paths:
+            - debian
   build-darwin:
     docker:
       - image: karalabe/xgo-latest:latest
@@ -49,6 +62,7 @@ jobs:
             mkdir -p release
             cp artifacts/linux/* release/
             cp artifacts/darwin/* release/
+            cp artifacts/debian/* release/
             go get github.com/tcnksm/ghr
             ghr -t ${GITHUB_TOKEN} -u ${CIRCLE_PROJECT_USERNAME} -r ${CIRCLE_PROJECT_REPONAME} -c ${CIRCLE_SHA1} -n "Aminal ${CIRCLE_TAG}" -b "Aminal ${CIRCLE_TAG}" -delete ${CIRCLE_TAG} release/
 workflows:
@@ -71,10 +85,17 @@ workflows:
           filters:
             tags:
               only: /^v.*/
+      - package-debian:
+          requires:
+            - test
+          filters:
+            tags:
+              only: /^v.*/
       - release:
           requires:
             - build-linux
             - build-darwin
+            - package-debian
           filters:
             tags:
               only: /^v.*/

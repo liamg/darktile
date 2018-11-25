@@ -36,3 +36,7 @@ build-linux:
 build-darwin:
 	mkdir -p bin/darwin
 	xgo -x -v -ldflags "-X main.Version='${CIRCLE_TAG}'" --targets=darwin/amd64 -out bin/darwin/${BINARY} .
+
+.PHONY:	package-debian
+package-debian: build-linux
+	./scripts/package-debian.sh "${CIRCLE_TAG}" bin/linux/${BINARY}-linux-amd64
