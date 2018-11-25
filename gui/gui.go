@@ -265,7 +265,10 @@ Buffer Size: %d lines
 					gui.terminal.ActiveBuffer().ViewWidth(),
 					gui.terminal.ActiveBuffer().ViewHeight(),
 					gui.terminal.ActiveBuffer().Height(),
-				))
+				),
+					[3]float32{0, 1, 0},
+					[3]float32{0, 0, 0},
+				)
 			}
 
 			gui.window.SwapBuffers()

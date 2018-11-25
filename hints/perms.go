@@ -112,12 +112,7 @@ func init() {
 
 func hintPerms(word string, context string, wordX uint16, wordY uint16) *Hint {
 
-	item := &Hint{
-		Line:   context,
-		Word:   word,
-		StartX: wordX,
-		StartY: wordY,
-	}
+	item := NewHint(word, context, wordX, wordY)
 
 	if wordX == 0 {
 

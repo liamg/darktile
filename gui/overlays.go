@@ -10,7 +10,7 @@ func (gui *GUI) setOverlay(m overlay) {
 }
 
 func (gui *GUI) renderOverlay() {
-	if gui.overlay == nil || !gui.terminal.UsingMainBuffer() {
+	if gui.overlay == nil {
 		return
 	}
 

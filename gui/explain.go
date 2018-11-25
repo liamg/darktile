@@ -41,6 +41,6 @@ func (a *annotation) render(gui *GUI) {
 		}
 	}
 
-	gui.textbox(a.hint.StartX+1, a.hint.StartY+3, a.hint.Description)
+	gui.textbox(a.hint.StartX+1, a.hint.StartY+3, a.hint.Description, a.hint.ForegroundColour, a.hint.BackgroundColour)
 
 }
