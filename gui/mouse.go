@@ -27,13 +27,11 @@ func (gui *GUI) mouseMoveCallback(w *glfw.Window, xpos float64, ypos float64) {
 		gui.terminal.ActiveBuffer().EndSelection(x, y, false)
 	} else {
 
-		if gui.terminal.UsingMainBuffer() {
-			hint := gui.terminal.ActiveBuffer().GetHintAtPosition(x, y)
-			if hint != nil {
-				gui.setOverlay(newAnnotation(hint))
-			} else {
-				gui.setOverlay(nil)
-			}
+		hint := gui.terminal.ActiveBuffer().GetHintAtPosition(x, y)
+		if hint != nil {
+			gui.setOverlay(newAnnotation(hint))
+		} else {
+			gui.setOverlay(nil)
 		}
 
 	}

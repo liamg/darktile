@@ -14,7 +14,8 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ## Contextual Hints
 
-![Example hint](hint.png)
+![Permissions hint](hint.png)
+![Colour hex hint](hint.colour.png)
 
 ## Built-in Powerline Fonts
 
