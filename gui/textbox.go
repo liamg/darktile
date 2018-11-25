@@ -93,7 +93,7 @@ DONE:
 	f.SetColor(fg[0], fg[1], fg[2], 1)
 
 	for i, line := range lines {
-		y := float32(row+1+uint16(i)) * gui.renderer.cellHeight
+		y := float32(row+1+uint16(i))*gui.renderer.cellHeight + f.MinY()
 		f.Print(x, y, fmt.Sprintf(" %s", line))
 	}
 

@@ -30,12 +30,12 @@ update-fonts: install-tools
 .PHONY:	build-linux
 build-linux:
 	mkdir -p bin/linux
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/linux/${BINARY}-linux-amd64 -ldflags "-X main.Version='${CIRCLE_TAG}'"
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/linux/${BINARY}-linux-amd64 -ldflags "-X version.Version='${CIRCLE_TAG}'"
 
 .PHONY:	build-darwin
 build-darwin:
 	mkdir -p bin/darwin
-	xgo -x -v -ldflags "-X main.Version='${CIRCLE_TAG}'" --targets=darwin/amd64 -out bin/darwin/${BINARY} .
+	xgo -x -v -ldflags "-X version.Version='${CIRCLE_TAG}'" --targets=darwin/amd64 -out bin/darwin/${BINARY} .
 
 .PHONY:	package-debian
 package-debian: build-linux

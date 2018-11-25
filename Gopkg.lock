@@ -74,6 +74,12 @@
   revision = "05fccaae8fc423476d98fd4c3e4699ba0fbbde48"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/mcuadros/go-version"
+  packages = ["."]
+  revision = "6d5863ca60fa6fe914b5fd43ed8533d7567c5b0b"
+
+[[projects]]
   name = "github.com/pkg/errors"
   packages = ["."]
   revision = "645ef00459ed84a119197bfb8d8205042c6df63d"
@@ -124,6 +130,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "d8686fe64e6699ef2d4e566a5e2a9226ab49a277e1027d9191bd31b93413c302"
+  inputs-digest = "8db8975813116b361486306a6cc003f93f2811face80fee3d2728c179d8796df"
   solver-name = "gps-cdcl"
   solver-version = 1
