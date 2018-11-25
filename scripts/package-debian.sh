@@ -32,4 +32,5 @@ dpkg-deb --build package
 rm -rf package
 
 mkdir -p bin/debian
-mv package.deb bin/debian/${BINARYFILE}.deb
+FN=$(basename "${BINARYFILE}")
+mv package.deb bin/debian/${FN}.deb

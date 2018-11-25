@@ -30,10 +30,11 @@ func getConfig() *config.Config {
 	flag.Parse()
 
 	if showVersion {
-		if version.Version == "" {
-			version.Version = "development"
+		v := version.Version
+		if v == "" {
+			v = "development"
 		}
-		fmt.Printf("Aminal %s\n", version.Version)
+		fmt.Println(v)
 		os.Exit(0)
 	}
 

@@ -197,6 +197,7 @@ func (gui *GUI) Render() error {
 		r, err := version.GetNewerRelease()
 		if err == nil && r != nil {
 			latestVersion = r.TagName
+			gui.terminal.SetDirty()
 		}
 	}()
 
@@ -289,9 +290,19 @@ Buffer Size: %d lines
 				)
 			}
 
-			if latestVersion != "" && time.Since(startTime) < time.Second*10 {
+			if latestVersion != "" && time.Since(startTime) < time.Second*10 && gui.terminal.ActiveBuffer().RawLine() == 0 {
+				time.AfterFunc(time.Second, gui.terminal.SetDirty)
 				_, h := gui.terminal.GetSize()
-				gui.textbox(2, uint16(h-3), fmt.Sprintf("Version %s of Aminal is now available.", strings.Replace(latestVersion, "v", "", -1)),
+				var msg string
+				if version.Version == "" {
+					msg = "You are using a development build of Aminal."
+				} else {
+					msg = fmt.Sprintf("Version %s of Aminal is now available.", strings.Replace(latestVersion, "v", "", -1))
+				}
+				gui.textbox(
+					2,
+					uint16(h-3),
+					fmt.Sprintf("%s (%d)", msg, 10-int(time.Since(startTime).Seconds())),
 					[3]float32{1, 1, 1},
 					[3]float32{0, 0.5, 0},
 				)
