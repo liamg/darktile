@@ -15,33 +15,40 @@ import (
 )
 
 type GUI struct {
-	window        *glfw.Window
-	logger        *zap.SugaredLogger
-	config        *config.Config
-	terminal      *terminal.Terminal
-	width         int //window width in pixels
-	height        int //window height in pixels
-	fontMap       *FontMap
-	fontScale     float32
-	renderer      *OpenGLRenderer
-	colourAttr    uint32
-	mouseDown     bool
-	overlay       overlay
-	terminalAlpha float32
-	showDebugInfo bool
+	window            *glfw.Window
+	logger            *zap.SugaredLogger
+	config            *config.Config
+	terminal          *terminal.Terminal
+	width             int //window width in pixels
+	height            int //window height in pixels
+	fontMap           *FontMap
+	fontScale         float32
+	renderer          *OpenGLRenderer
+	colourAttr        uint32
+	mouseDown         bool
+	overlay           overlay
+	terminalAlpha     float32
+	showDebugInfo     bool
+	keyboardShortcuts map[config.UserAction]*config.KeyCombination
 }
 
-func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) *GUI {
+func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) (*GUI, error) {
+
+	shortcuts, err := config.KeyMapping.GenerateActionMap()
+	if err != nil {
+		return nil, err
+	}
 
 	return &GUI{
-		config:        config,
-		logger:        logger,
-		width:         800,
-		height:        600,
-		terminal:      terminal,
-		fontScale:     14.0,
-		terminalAlpha: 1,
-	}
+		config:            config,
+		logger:            logger,
+		width:             800,
+		height:            600,
+		terminal:          terminal,
+		fontScale:         14.0,
+		terminalAlpha:     1,
+		keyboardShortcuts: shortcuts,
+	}, nil
 }
 
 // inspired by https://kylewbanks.com/blog/tutorial-opengl-with-golang-part-1-hello-opengl
@@ -254,9 +261,7 @@ func (gui *GUI) Render() error {
 			gui.renderOverlay()
 
 			if gui.showDebugInfo {
-				gui.textbox(2, 2, fmt.Sprintf(`Debug Panel
-===========
-Cursor:      %d,%d
+				gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d
 View Size:   %d,%d
 Buffer Size: %d lines
 `,
@@ -266,8 +271,8 @@ Buffer Size: %d lines
 					gui.terminal.ActiveBuffer().ViewHeight(),
 					gui.terminal.ActiveBuffer().Height(),
 				),
-					[3]float32{0, 1, 0},
-					[3]float32{0, 0, 0},
+					[3]float32{1, 1, 1},
+					[3]float32{0.8, 0, 0},
 				)
 			}
 
