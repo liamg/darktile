@@ -7,9 +7,8 @@ import (
 	"os"
 
 	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/version"
 )
-
-var Version string
 
 func getConfig() *config.Config {
 
@@ -31,10 +30,10 @@ func getConfig() *config.Config {
 	flag.Parse()
 
 	if showVersion {
-		if Version == "" {
-			Version = "development"
+		if version.Version == "" {
+			version.Version = "development"
 		}
-		fmt.Printf("Aminal %s\n", Version)
+		fmt.Printf("Aminal %s\n", version.Version)
 		os.Exit(0)
 	}
 

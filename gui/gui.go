@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	"strings"
 	"time"
 
 	"github.com/go-gl/gl/all-core/gl"
@@ -11,6 +12,7 @@ import (
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/terminal"
+	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
 )
 
@@ -189,6 +191,17 @@ func (gui *GUI) Render() error {
 
 	gui.terminal.SetProgram(program)
 
+	latestVersion := ""
+
+	go func() {
+		r, err := version.GetNewerRelease()
+		if err == nil && r != nil {
+			latestVersion = r.TagName
+		}
+	}()
+
+	startTime := time.Now()
+
 	for !gui.window.ShouldClose() {
 
 		select {
@@ -273,6 +286,14 @@ Buffer Size: %d lines
 				),
 					[3]float32{1, 1, 1},
 					[3]float32{0.8, 0, 0},
+				)
+			}
+
+			if latestVersion != "" && time.Since(startTime) < time.Second*10 {
+				_, h := gui.terminal.GetSize()
+				gui.textbox(2, uint16(h-3), fmt.Sprintf("Version %s of Aminal is now available.", strings.Replace(latestVersion, "v", "", -1)),
+					[3]float32{1, 1, 1},
+					[3]float32{0, 0.5, 0},
 				)
 			}
 
