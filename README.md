@@ -16,6 +16,10 @@ Ensure you have your latest graphics card drivers installed before use.
 
 ![Example hint](hint.png)
 
+## Built-in Powerline Fonts
+
+![Powerline](powerline.png)
+
 ## Sixel Support
 
 ![Example sixel](sixel.png)
