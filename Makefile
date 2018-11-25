@@ -5,7 +5,7 @@ FONTPATH := ./gui/packed-fonts
 .PHONY: build
 build: test install-tools
 	packr -v
-	go build
+	go build -ldflags "-X github.com/liamg/aminal/version.Version=`git describe --tags`"
 
 .PHONY: test
 test:
@@ -13,8 +13,9 @@ test:
 	go vet -v
 
 .PHONY: install
-install: build
-	install -m 0755 aminal "${GOBIN}/${BINARY}"
+install: build install-tools
+	packr -v
+	go install -ldflags "-X github.com/liamg/aminal/version.Version=`git describe --tags`"
 
 .PHONY: install-tools
 install-tools:
@@ -30,12 +31,12 @@ update-fonts: install-tools
 .PHONY:	build-linux
 build-linux:
 	mkdir -p bin/linux
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/linux/${BINARY}-linux-amd64 -ldflags "-X version.Version='${CIRCLE_TAG}'"
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/linux/${BINARY}-linux-amd64 -ldflags "-X github.com/liamg/aminal/version.Version=${CIRCLE_TAG}"
 
 .PHONY:	build-darwin
 build-darwin:
 	mkdir -p bin/darwin
-	xgo -x -v -ldflags "-X version.Version='${CIRCLE_TAG}'" --targets=darwin/amd64 -out bin/darwin/${BINARY} .
+	xgo -x -v -ldflags "-X github.com/liamg/aminal/version.Version=${CIRCLE_TAG}" --targets=darwin/amd64 -out bin/darwin/${BINARY} .
 
 .PHONY:	package-debian
 package-debian: build-linux
