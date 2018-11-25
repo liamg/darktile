@@ -2,7 +2,6 @@ package gui
 
 import (
 	"fmt"
-	"net/url"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -32,10 +31,31 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			}
 		}
 
-		gui.logger.Debugf("KEY PRESS: key=0x%X scan=0x%X", key, scancode)
+		for userAction, shortcut := range gui.keyboardShortcuts {
+
+			if shortcut.Match(mods, key) {
+
+				f, ok := actionMap[userAction]
+				if ok {
+					f(gui)
+					break
+				}
+
+				switch key {
+				case glfw.KeyD:
+
+				case glfw.KeyG:
+
+				case glfw.KeyR:
+					gui.launchTarget("https://github.com/liamg/aminal/issues/new/choose")
+				case glfw.KeySemicolon:
+					gui.config.Slomo = !gui.config.Slomo
+					return
+				}
+			}
+		}
 
 		modStr := ""
-
 		switch true {
 		case modsPressed(mods, glfw.ModControl, glfw.ModShift, glfw.ModAlt):
 			modStr = "8"
@@ -43,29 +63,6 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			modStr = "7"
 		case modsPressed(mods, glfw.ModControl, glfw.ModShift):
 			modStr = "6"
-			switch key {
-			case glfw.KeyC:
-				gui.window.SetClipboardString(gui.terminal.ActiveBuffer().GetSelectedText())
-				return
-			case glfw.KeyD:
-				gui.showDebugInfo = !gui.showDebugInfo
-				gui.terminal.SetDirty()
-			case glfw.KeyG:
-				keywords := gui.terminal.ActiveBuffer().GetSelectedText()
-				if keywords != "" {
-					gui.launchTarget(fmt.Sprintf("https://www.google.com/search?q=%s", url.QueryEscape(keywords)))
-				}
-			case glfw.KeyR:
-				gui.launchTarget("https://github.com/liamg/aminal/issues/new/choose")
-			case glfw.KeyV:
-				if s, err := gui.window.GetClipboardString(); err == nil {
-					_ = gui.terminal.Paste([]byte(s))
-				}
-				return
-			case glfw.KeySemicolon:
-				gui.config.Slomo = !gui.config.Slomo
-				return
-			}
 		case modsPressed(mods, glfw.ModControl):
 			modStr = "5"
 			switch key {

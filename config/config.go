@@ -7,20 +7,21 @@ import (
 )
 
 type Config struct {
-	DebugMode    bool            `toml:"debug"`
-	Rendering    RenderingConfig `toml:"rendering"`
-	Slomo        bool            `toml:"slomo"`
-	ColourScheme ColourScheme    `toml:"colours"`
-	Shell        string          `toml:"shell"`
+	DebugMode    bool             `toml:"debug"`
+	Slomo        bool             `toml:"slomo"`
+	ColourScheme ColourScheme     `toml:"colours"`
+	Shell        string           `toml:"shell"`
+	KeyMapping   KeyMappingConfig `toml:"keys"`
 }
 
-type RenderingConfig struct {
-	AlwaysRepaint bool `toml:"always_repaint"`
-}
+type KeyMappingConfig map[string]string
 
 func Parse(data []byte) (*Config, error) {
 	c := DefaultConfig
 	err := toml.Unmarshal(data, &c)
+	if c.KeyMapping == nil {
+		c.KeyMapping = KeyMappingConfig(map[string]string{})
+	}
 	return &c, err
 }
 

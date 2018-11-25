@@ -76,19 +76,19 @@ make install
 
 As long as you have your `GOBIN` environment variable set up properly (and in `PATH`), you should be able to run `aminal`.
 
-## Keyboard Shortcuts
+## Keyboard/Mouse Shortcuts
 
 | Operation            | Key(s)               |
 | -------------------- | -------------------- |
 | Select text          | click + drag         |
 | Select word          | double click         |
 | Select line          | triple click         |
-| Copy                 | ctrl + shift + c     |
-| Toggle debug display | ctrl + shift + d     |
-| Paste                | ctrl + shift + v     |
-| Google selected text | ctrl + shift + g     |
-| Report bug in aminal | ctrl + shift + r     |
-| Toggle slomo         | ctrl + shift + ;     |
+| Copy                 | `ctrl + shift + c` (Mac: `super + c`) |
+| Paste                | `ctrl + shift + v` (Mac: `super + v`) |
+| Google selected text | `ctrl + shift + g` (Mac: `super + g`) |
+| Toggle debug display | `ctrl + shift + d` (Mac: `super + d`) |
+| Toggle slomo         | `ctrl + shift + ;` (Mac: `super + ;`) |
+| Report bug in aminal | `ctrl + shift + r` (Mac: `super + r`) |
 
 ## Configuration
 
@@ -96,11 +96,49 @@ Aminal looks for a config file in `~/.aminal.toml`, and will write one there the
 
 You can ignore the config and use defaults by specifying `--ignore-config` as a CLI flag.
 
-### Config Options/CLI Flags
+### Config File
 
-| CLI Flag        | Config Section | Config Name | Type    | Default      | Description                                                                                                                   |
-| --------------- | -------------- | ----------- | ------- | ------------ | ----------------------------------------------------------------------------------------------------------------------------- |
-| --debug         | _root_         | debug       | boolean | false        | Enable debug mode, with debug logging and debug info terminal overlay.
-| --slomo         | _root_         | slomo       | boolean | false        | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging.
-| --shell [shell] | _root_         | shell       | string  | User's shell | Use the specified shell program instead of the user's usual one. 
-| --version       | n/a            | n/a         | boolean | n/a          | Show the version of aminal.
+```toml
+debug = false               # Enable debug logging to stdout. Defaults to false.
+slomo = false               # Enable slow motion output mode, useful for debugging shells/terminal GUI apps etc. Defaults to false.
+shell = "/bin/bash"         # The shell to run for the terminal session. Defaults to the users shell.
+
+[colours]
+  cursor        = "#e8dfd6" 
+  foreground    = "#e8dfd6" 
+  background    = "#021b21" 
+  black         = "#032c36" 
+  red           = "#c2454e" 
+  green         = "#7cbf9e"
+  yellow        = "#8a7a63"
+  blue          = "#065f73"
+  magenta       = "#ff5879"
+  cyan          = "#44b5b1"
+  light_grey    = "#f2f1b9"
+  dark_grey     = "#3e4360"
+  light_red     = "#ef5847"
+  light_green   = "#a2db91"
+  light_yellow  = "#beb090"
+  light_blue    = "#61778d"
+  light_magenta = "#ff99a1"
+  light_cyan    = "#9ed9d8"
+  white         = "#f6f6c9"
+  selection     = "#333366" # Mouse selection background colour
+
+[keys]
+  copy      = "ctrl + shift + c"    # Copy highlighted text to system clipboard
+  paste     = "ctrl + shift + v"    # Paste text from system clipboard
+  debug     = "ctrl + shift + d"    # Toggle debug panel overlay
+  google    = "ctrl + shift + g"    # Google selected text
+  report    = "ctrl + shift + r"    # Send bug report
+  slomo     = "ctrl + shift + ;"    # Toggle slow motion output mode (useful for debugging)
+```
+
+### CLI Flags
+
+| Flag              | Description                                                                                                                   |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------- |
+| `--debug`         | Enable debug mode, with debug logging and debug info terminal overlay.
+| `--slomo`         | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging.
+| `--shell [shell]` | Use the specified shell program instead of the user's usual one. 
+| `--version`       | Show the version of aminal and exit.

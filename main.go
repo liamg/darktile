@@ -53,7 +53,10 @@ func main() {
 	logger.Infof("Creating terminal...")
 	terminal := terminal.New(pty, logger, conf)
 
-	g := gui.New(conf, terminal, logger)
+	g, err := gui.New(conf, terminal, logger)
+	if err != nil {
+		logger.Fatalf("Cannot start: %s", err)
+	}
 	if err := g.Render(); err != nil {
 		logger.Fatalf("Render error: %s", err)
 	}

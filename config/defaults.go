@@ -1,5 +1,7 @@
 package config
 
+import "runtime"
+
 var DefaultConfig = Config{
 	DebugMode: false,
 	ColourScheme: ColourScheme{
@@ -24,4 +26,24 @@ var DefaultConfig = Config{
 		White:        strToColourNoErr("#f6f6c9"),
 		Selection:    strToColourNoErr("#333366"),
 	},
+	KeyMapping: KeyMappingConfig(map[string]string{}),
+}
+
+func init() {
+	DefaultConfig.KeyMapping[string(ActionCopy)] = addMod("c")
+	DefaultConfig.KeyMapping[string(ActionPaste)] = addMod("v")
+	DefaultConfig.KeyMapping[string(ActionGoogle)] = addMod("g")
+	DefaultConfig.KeyMapping[string(ActionToggleDebug)] = addMod("d")
+	DefaultConfig.KeyMapping[string(ActionToggleSlomo)] = addMod(";")
+	DefaultConfig.KeyMapping[string(ActionReportBug)] = addMod("r")
+}
+
+func addMod(keys string) string {
+	standardMod := "ctrl + shift + "
+
+	if runtime.GOOS == "darwin" {
+		standardMod = "super + "
+	}
+
+	return standardMod + keys
 }
