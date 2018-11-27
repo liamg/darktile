@@ -17,9 +17,12 @@ func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
 	}
 }
 
-func (gui *GUI) mouseMoveCallback(w *glfw.Window, xpos float64, ypos float64) {
+func (gui *GUI) mouseMoveCallback(w *glfw.Window, px float64, py float64) {
 
-	px, py := w.GetCursorPos()
+	scale := gui.scale()
+	px = px / float64(scale)
+	py = py / float64(scale)
+
 	x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
 	y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
 
