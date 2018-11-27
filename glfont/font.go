@@ -2,16 +2,14 @@ package glfont
 
 import (
 	"fmt"
-	"image"
-	"image/draw"
-	"io"
-	"math"
-
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
+	"image"
+	"image/draw"
+	"io"
 )
 
 const DPI = 72
@@ -82,9 +80,6 @@ func (f *Font) LinePadding() float32 {
 
 //Printf draws a string to the screen, takes a list of arguments like printf
 func (f *Font) Print(x, y float32, text string) error {
-
-	x = float32(math.Round(float64(x)))
-	y = float32(math.Round(float64(y)))
 
 	indices := []rune(text)
 

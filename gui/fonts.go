@@ -10,12 +10,12 @@ import (
 
 func (gui *GUI) getPackedFont(name string) (*glfont.Font, error) {
 	box := packr.NewBox("./packed-fonts")
-	fontBytes, err := box.MustBytes(name)
+	fontBytes, err := box.Find(name)
 	if err != nil {
 		return nil, fmt.Errorf("packaged font '%s' could not be read: %s", name, err)
 	}
 
-	font, err := glfont.LoadFont(bytes.NewReader(fontBytes), gui.fontScale, gui.width, gui.height)
+	font, err := glfont.LoadFont(bytes.NewReader(fontBytes), gui.fontScale/gui.scale(), gui.width, gui.height)
 	if err != nil {
 		return nil, fmt.Errorf("font '%s' failed to load: %v", name, err)
 	}
@@ -37,7 +37,13 @@ func (gui *GUI) loadFonts() error {
 		return err
 	}
 
-	gui.fontMap = NewFontMap(defaultFont, boldFont)
+	if gui.fontMap == nil {
+		gui.fontMap = NewFontMap(defaultFont, boldFont)
+	}else{
+		gui.fontMap.defaultFont = defaultFont
+		gui.fontMap.defaultBoldFont = boldFont
+	}
+
 
 	// add special non-ascii fonts here
 
