@@ -57,6 +57,9 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 
 	// before we forward clicks on (below), we need to handle them locally for url clicking, text highlighting etc.
 	px, py := w.GetCursorPos()
+	scale := gui.scale()
+	px = px / float64(scale)
+	py = py / float64(scale)
 	x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
 	y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
 	tx := int(x) + 1 // vt100 is 1 indexed
