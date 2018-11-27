@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"syscall"
 
 	"github.com/kr/pty"
@@ -13,6 +14,8 @@ import (
 )
 
 func main() {
+
+	runtime.LockOSThread()
 
 	conf := getConfig()
 	logger, err := getLogger(conf)

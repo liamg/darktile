@@ -48,9 +48,11 @@ func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 	return b
 }
 
-func (buffer *Buffer) GetURLAtPosition(col uint16, row uint16) string {
+func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
 
-	cell := buffer.GetCell(col, row)
+	row := buffer.convertViewLineToRawLine((viewRow)) - uint64(buffer.scrollLinesFromBottom)
+
+	cell := buffer.GetRawCell(col, row)
 	if cell == nil || cell.Rune() == 0x00 {
 		return ""
 	}
@@ -58,7 +60,7 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, row uint16) string {
 	candidate := ""
 
 	for i := col; i >= 0; i-- {
-		cell := buffer.GetCell(i, row)
+		cell := buffer.GetRawCell(i, row)
 		if cell == nil {
 			break
 		}
@@ -69,7 +71,7 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, row uint16) string {
 	}
 
 	for i := col + 1; i < buffer.viewWidth; i++ {
-		cell := buffer.GetCell(i, row)
+		cell := buffer.GetRawCell(i, row)
 		if cell == nil {
 			break
 		}
@@ -91,9 +93,11 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, row uint16) string {
 	return candidate
 }
 
-func (buffer *Buffer) SelectWordAtPosition(col uint16, row uint16) {
+func (buffer *Buffer) SelectWordAtPosition(col uint16, viewRow uint16) {
 
-	cell := buffer.GetCell(col, row)
+	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.scrollLinesFromBottom)
+
+	cell := buffer.GetRawCell(col, row)
 	if cell == nil || cell.Rune() == 0x00 {
 		return
 	}
@@ -102,7 +106,7 @@ func (buffer *Buffer) SelectWordAtPosition(col uint16, row uint16) {
 	end := col
 
 	for i := col; i >= 0; i-- {
-		cell := buffer.GetCell(i, row)
+		cell := buffer.GetRawCell(i, row)
 		if cell == nil {
 			break
 		}
@@ -113,7 +117,7 @@ func (buffer *Buffer) SelectWordAtPosition(col uint16, row uint16) {
 	}
 
 	for i := col; i < buffer.viewWidth; i++ {
-		cell := buffer.GetCell(i, row)
+		cell := buffer.GetRawCell(i, row)
 		if cell == nil {
 			break
 		}
@@ -125,11 +129,11 @@ func (buffer *Buffer) SelectWordAtPosition(col uint16, row uint16) {
 
 	buffer.selectionStart = &Position{
 		Col:  int(start),
-		Line: int(buffer.convertViewLineToRawLine(row)),
+		Line: int(row),
 	}
 	buffer.selectionEnd = &Position{
 		Col:  int(end),
-		Line: int(buffer.convertViewLineToRawLine(row)),
+		Line: int(row),
 	}
 	buffer.emitDisplayChange()
 
@@ -161,7 +165,21 @@ func (buffer *Buffer) GetSelectedText() string {
 
 	text := ""
 
-	for row := buffer.selectionStart.Line; row <= buffer.selectionEnd.Line; row++ {
+	var x1, x2, y1, y2 int
+
+	if buffer.selectionStart.Line > buffer.selectionEnd.Line || (buffer.selectionStart.Line == buffer.selectionEnd.Line && buffer.selectionStart.Col > buffer.selectionEnd.Col) {
+		y2 = buffer.selectionStart.Line
+		y1 = buffer.selectionEnd.Line
+		x2 = buffer.selectionStart.Col
+		x1 = buffer.selectionEnd.Col
+	} else {
+		y1 = buffer.selectionStart.Line
+		y2 = buffer.selectionEnd.Line
+		x1 = buffer.selectionStart.Col
+		x2 = buffer.selectionEnd.Col
+	}
+
+	for row := y1; row <= y2; row++ {
 
 		if row >= len(buffer.lines) {
 			break
@@ -171,13 +189,13 @@ func (buffer *Buffer) GetSelectedText() string {
 
 		minX := 0
 		maxX := int(buffer.viewWidth) - 1
-		if row == buffer.selectionStart.Line {
-			minX = buffer.selectionStart.Col
+		if row == y1 {
+			minX = x1
 		} else if !line.wrapped {
 			text += "\n"
 		}
-		if row == buffer.selectionEnd.Line {
-			maxX = buffer.selectionEnd.Col
+		if row == y2 {
+			maxX = x2
 		}
 
 		for col := minX; col <= maxX; col++ {
@@ -193,24 +211,26 @@ func (buffer *Buffer) GetSelectedText() string {
 	return text
 }
 
-func (buffer *Buffer) StartSelection(col uint16, row uint16) {
+func (buffer *Buffer) StartSelection(col uint16, viewRow uint16) {
+	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.scrollLinesFromBottom)
 	if buffer.selectionComplete {
 		buffer.selectionEnd = nil
+
 
 		if buffer.selectionStart != nil && time.Since(buffer.selectionClickTime) < time.Millisecond*500 {
 			if buffer.selectionExpanded {
 				//select whole line!
 				buffer.selectionStart = &Position{
 					Col:  0,
-					Line: int(buffer.convertViewLineToRawLine(row)),
+					Line: int(row),
 				}
 				buffer.selectionEnd = &Position{
 					Col:  int(buffer.ViewWidth() - 1),
-					Line: int(buffer.convertViewLineToRawLine(row)),
+					Line: int(row),
 				}
 				buffer.emitDisplayChange()
 			} else {
-				buffer.SelectWordAtPosition(col, row)
+				buffer.SelectWordAtPosition(col, viewRow)
 				buffer.selectionExpanded = true
 			}
 			return
@@ -222,12 +242,12 @@ func (buffer *Buffer) StartSelection(col uint16, row uint16) {
 	buffer.selectionComplete = false
 	buffer.selectionStart = &Position{
 		Col:  int(col),
-		Line: int(buffer.convertViewLineToRawLine(row)),
+		Line: int(row),
 	}
 	buffer.selectionClickTime = time.Now()
 }
 
-func (buffer *Buffer) EndSelection(col uint16, row uint16, complete bool) {
+func (buffer *Buffer) EndSelection(col uint16, viewRow uint16, complete bool) {
 
 	if buffer.selectionComplete {
 		return
@@ -242,13 +262,15 @@ func (buffer *Buffer) EndSelection(col uint16, row uint16, complete bool) {
 		return
 	}
 
-	if int(col) == buffer.selectionStart.Col && int(buffer.convertViewLineToRawLine(row)) == int(buffer.selectionStart.Line) && complete {
+	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.scrollLinesFromBottom)
+
+	if int(col) == buffer.selectionStart.Col && int(row) == int(buffer.selectionStart.Line) && complete {
 		return
 	}
 
 	buffer.selectionEnd = &Position{
 		Col:  int(col),
-		Line: int(buffer.convertViewLineToRawLine(row)),
+		Line: int(row),
 	}
 }
 
@@ -273,7 +295,7 @@ func (buffer *Buffer) InSelection(col uint16, row uint16) bool {
 		x2 = buffer.selectionEnd.Col
 	}
 
-	rawY := int(buffer.convertViewLineToRawLine(row))
+	rawY := int(buffer.convertViewLineToRawLine(row) - uint64(buffer.scrollLinesFromBottom))
 	return (rawY > y1 || (rawY == y1 && int(col) >= x1)) && (rawY < y2 || (rawY == y2 && int(col) <= x2))
 }
 
@@ -369,8 +391,11 @@ func (buffer *Buffer) CursorAttr() *CellAttributes {
 }
 
 func (buffer *Buffer) GetCell(viewCol uint16, viewRow uint16) *Cell {
-
 	rawLine := buffer.convertViewLineToRawLine(viewRow)
+	return buffer.GetRawCell(viewCol, rawLine)
+}
+
+func (buffer *Buffer) GetRawCell(viewCol uint16, rawLine uint64) *Cell {
 
 	if viewCol < 0 || rawLine < 0 || int(rawLine) >= len(buffer.lines) {
 		return nil

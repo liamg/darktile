@@ -7,17 +7,19 @@ import (
 	"github.com/liamg/aminal/hints"
 )
 
-func (buffer *Buffer) GetHintAtPosition(col uint16, row uint16) *hints.Hint {
+func (buffer *Buffer) GetHintAtPosition(col uint16, viewRow uint16) *hints.Hint {
 
-	cell := buffer.GetCell(col, row)
+	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.scrollLinesFromBottom)
+
+	cell := buffer.GetRawCell(col, row)
 	if cell == nil || cell.Rune() == 0x00 {
 		return nil
 	}
 
 	candidate := ""
 
-	for i := col; i >= 0; i-- {
-		cell := buffer.GetCell(i, row)
+	for i := int(col); i >= 0; i-- {
+		cell := buffer.GetRawCell(uint16(i), row)
 		if cell == nil {
 			break
 		}
@@ -31,7 +33,7 @@ func (buffer *Buffer) GetHintAtPosition(col uint16, row uint16) *hints.Hint {
 	sx := col - uint16(len(trimmed)-1)
 
 	for i := col + 1; i < buffer.viewWidth; i++ {
-		cell := buffer.GetCell(i, row)
+		cell := buffer.GetRawCell(i, row)
 		if cell == nil {
 			break
 		}
@@ -42,8 +44,8 @@ func (buffer *Buffer) GetHintAtPosition(col uint16, row uint16) *hints.Hint {
 		candidate = fmt.Sprintf("%s%c", candidate, cell.Rune())
 	}
 
-	line := buffer.lines[buffer.convertViewLineToRawLine(row)]
+	line := buffer.lines[row]
 
-	return hints.Get(strings.Trim(candidate, " "), line.String(), sx, row)
+	return hints.Get(strings.Trim(candidate, " "), line.String(), sx, viewRow)
 
 }
