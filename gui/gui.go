@@ -246,9 +246,11 @@ func (gui *GUI) Render() error {
 					if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
 						colour = &gui.config.ColourScheme.Selection
 					}
-
-					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
-					gui.renderer.DrawCellImage(cell, uint(x), uint(y))
+					if cell.Image() != nil {
+						gui.renderer.DrawCellImage(cell, uint(x), uint(y))
+					}else{
+						gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
+					}
 				}
 			}
 			for y := 0; y < lineCount; y++ {
