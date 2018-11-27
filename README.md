@@ -39,6 +39,7 @@ Ensure you have your latest graphics card drivers installed before use.
 - Sixel support
 - Hints/overlays
 - Built-in patched fonts for powerline
+- Retina display support
 
 ## Quick Start
 

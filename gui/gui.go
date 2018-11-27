@@ -55,6 +55,12 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 
 // inspired by https://kylewbanks.com/blog/tutorial-opengl-with-golang-part-1-hello-opengl
 
+func (gui *GUI) scale() float32{
+	pw, _ := gui.window.GetFramebufferSize()
+	ww, _ := gui.window.GetSize()
+	return float32(ww) / float32(pw)
+}
+
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
@@ -63,16 +69,11 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	gui.width = width
 	gui.height = height
 
-	ww, wh := w.GetSize()
-
-	hScale := float32(ww) / float32(width)
-	vScale := float32(wh) / float32(height)
-
 	gui.logger.Debugf("Updating font resolutions...")
-	gui.fontMap.UpdateResolution(int(float32(width)*hScale), int(float32(height)*vScale))
+	gui.loadFonts()
 
 	gui.logger.Debugf("Setting renderer area...")
-	gui.renderer.SetArea(0, 0, int(float32(width)*hScale), int(float32(height)*vScale))
+	gui.renderer.SetArea(0, 0, width, height)
 
 	gui.logger.Debugf("Calculating size in cols/rows...")
 	cols, rows := gui.renderer.GetTermSize()
@@ -245,9 +246,11 @@ func (gui *GUI) Render() error {
 					if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
 						colour = &gui.config.ColourScheme.Selection
 					}
-
-					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
-					gui.renderer.DrawCellImage(cell, uint(x), uint(y))
+					if cell.Image() != nil {
+						gui.renderer.DrawCellImage(cell, uint(x), uint(y))
+					}else{
+						gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
+					}
 				}
 			}
 			for y := 0; y < lineCount; y++ {
