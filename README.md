@@ -6,24 +6,11 @@
 
 Aminal is a modern terminal emulator for Mac/Linux implemented in Golang and utilising OpenGL. 
 
-![Example screenshot](demo.gif)
+![Demo GIF](demo.gif)
 
 The project is experimental at the moment, so you probably won't want to rely on Aminal as your main terminal for a while.
 
 Ensure you have your latest graphics card drivers installed before use.
-
-## Contextual Hints
-
-![Permissions hint](hint.png)
-![Colour hex hint](hint.colour.png)
-
-## Built-in Powerline Fonts
-
-![Powerline](powerline.png)
-
-## Sixel Support
-
-![Example sixel](sixel.png)
 
 ## Features
 
