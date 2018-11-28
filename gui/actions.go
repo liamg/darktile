@@ -3,6 +3,7 @@ package gui
 import (
 	"fmt"
 	"net/url"
+	"strings"
 
 	"github.com/liamg/aminal/config"
 )
@@ -11,7 +12,7 @@ var actionMap = map[config.UserAction]func(gui *GUI){
 	config.ActionCopy:        actionCopy,
 	config.ActionPaste:       actionPaste,
 	config.ActionToggleDebug: actionToggleDebug,
-	config.ActionGoogle:      actionGoogleSelection,
+	config.ActionSearch:      actionSearchSelection,
 	config.ActionToggleSlomo: actionToggleSlomo,
 	config.ActionReportBug:   actionReportBug,
 }
@@ -31,10 +32,10 @@ func actionToggleDebug(gui *GUI) {
 	gui.terminal.SetDirty()
 }
 
-func actionGoogleSelection(gui *GUI) {
+func actionSearchSelection(gui *GUI) {
 	keywords := gui.terminal.ActiveBuffer().GetSelectedText()
-	if keywords != "" {
-		gui.launchTarget(fmt.Sprintf("https://www.google.com/search?q=%s", url.QueryEscape(keywords)))
+	if keywords != "" && gui.config.SearchURL != "" && strings.Contains(gui.config.SearchURL, "$QUERY") {
+		gui.launchTarget(fmt.Sprintf(strings.Replace(gui.config.SearchURL, "$QUERY", "%s", 1), url.QueryEscape(keywords)))
 	}
 }
 
