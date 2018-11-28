@@ -40,7 +40,7 @@ func main() {
 		shellStr = conf.Shell
 	}
 
-	os.Setenv("TERM", "xterm-256color") // contraversial! easier than installing terminfo everywhere, but obviously going to be slightly different to xterm functionality, so we'll see...
+	os.Setenv("TERM", "xterm-256color") // controversial! easier than installing terminfo everywhere, but obviously going to be slightly different to xterm functionality, so we'll see...
 	os.Setenv("COLORTERM", "truecolor")
 
 	shell := exec.Command(shellStr)
