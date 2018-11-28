@@ -33,7 +33,7 @@ var DefaultConfig = Config{
 func init() {
 	DefaultConfig.KeyMapping[string(ActionCopy)] = addMod("c")
 	DefaultConfig.KeyMapping[string(ActionPaste)] = addMod("v")
-	DefaultConfig.KeyMapping[string(ActionGoogle)] = addMod("g")
+	DefaultConfig.KeyMapping[string(ActionSearch)] = addMod("g")
 	DefaultConfig.KeyMapping[string(ActionToggleDebug)] = addMod("d")
 	DefaultConfig.KeyMapping[string(ActionToggleSlomo)] = addMod(";")
 	DefaultConfig.KeyMapping[string(ActionReportBug)] = addMod("r")
