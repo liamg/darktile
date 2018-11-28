@@ -27,6 +27,7 @@ var DefaultConfig = Config{
 		Selection:    strToColourNoErr("#333366"),
 	},
 	KeyMapping: KeyMappingConfig(map[string]string{}),
+	SearchURL:  "https://www.google.com/search?q=$QUERY",
 }
 
 func init() {

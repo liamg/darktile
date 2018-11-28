@@ -73,7 +73,7 @@ As long as you have your `GOBIN` environment variable set up properly (and in `P
 | Select line          | triple click         |
 | Copy                 | `ctrl + shift + c` (Mac: `super + c`) |
 | Paste                | `ctrl + shift + v` (Mac: `super + v`) |
-| Google selected text | `ctrl + shift + g` (Mac: `super + g`) |
+| Search online for selected text | `ctrl + shift + g` (Mac: `super + g`) |
 | Toggle debug display | `ctrl + shift + d` (Mac: `super + d`) |
 | Toggle slomo         | `ctrl + shift + ;` (Mac: `super + ;`) |
 | Report bug in aminal | `ctrl + shift + r` (Mac: `super + r`) |
@@ -90,6 +90,7 @@ You can ignore the config and use defaults by specifying `--ignore-config` as a 
 debug = false               # Enable debug logging to stdout. Defaults to false.
 slomo = false               # Enable slow motion output mode, useful for debugging shells/terminal GUI apps etc. Defaults to false.
 shell = "/bin/bash"         # The shell to run for the terminal session. Defaults to the users shell.
+search_url = "https://www.google.com/search?q=$QUERY" # The search engine to use for the "search selected text" action. Defaults to google. Set this to your own search url using $QUERY as the keywords to replcae when searching.
 
 [colours]
   cursor        = "#e8dfd6" 
