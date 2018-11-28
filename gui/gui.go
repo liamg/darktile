@@ -55,7 +55,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 
 // inspired by https://kylewbanks.com/blog/tutorial-opengl-with-golang-part-1-hello-opengl
 
-func (gui *GUI) scale() float32{
+func (gui *GUI) scale() float32 {
 	pw, _ := gui.window.GetFramebufferSize()
 	ww, _ := gui.window.GetSize()
 	return float32(ww) / float32(pw)
@@ -248,7 +248,7 @@ func (gui *GUI) Render() error {
 					}
 					if cell.Image() != nil {
 						gui.renderer.DrawCellImage(cell, uint(x), uint(y))
-					}else{
+					} else {
 						gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
 					}
 				}
@@ -337,6 +337,7 @@ func (gui *GUI) createWindow(width int, height int) (*glfw.Window, error) {
 	if err != nil {
 		return nil, fmt.Errorf("Failed to create window: %s", err)
 	}
+	window.SetSizeLimits(300, 150, 10000, 10000)
 	window.MakeContextCurrent()
 
 	return window, nil
