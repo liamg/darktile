@@ -16,7 +16,7 @@ func getConfig() *config.Config {
 	flag.BoolVar(&showVersion, "version", showVersion, "Output version information")
 
 	ignore := false
-	flag.BoolVar(&ignore, "ignore-config", ignore, "Ignore user config files and use defauls")
+	flag.BoolVar(&ignore, "ignore-config", ignore, "Ignore user config files and use defaults")
 	if ignore {
 		return &config.DefaultConfig
 	}
