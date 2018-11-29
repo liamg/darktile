@@ -12,6 +12,7 @@ type Config struct {
 	ColourScheme ColourScheme     `toml:"colours"`
 	Shell        string           `toml:"shell"`
 	KeyMapping   KeyMappingConfig `toml:"keys"`
+	SearchURL    string           `toml:"search_url"`
 }
 
 type KeyMappingConfig map[string]string
