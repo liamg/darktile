@@ -380,10 +380,10 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 		if i := strings.Index(e, ", got version "); i > -1 {
 			v := strings.Split(strings.TrimSpace(e[i+14:]), ".")
 			if len(v) == 2 {
-				major, err := strconv.Atoi(v[0])
-				if err == nil {
-					if minor, err := strconv.Atoi(v[1]); err == nil {
-						return gui.createWindowWithOpenGLVersion(major, minor)
+				maj, mjErr := strconv.Atoi(v[0])
+				if mjErr == nil {
+					if min, miErr := strconv.Atoi(v[1]); miErr == nil {
+						return gui.createWindowWithOpenGLVersion(maj, min)
 					}
 
 				}

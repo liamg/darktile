@@ -21,6 +21,35 @@ func modsPressed(pressed glfw.ModifierKey, mods ...glfw.ModifierKey) bool {
 	return pressed == 0
 }
 
+var ctrlBytes = map[glfw.Key]byte{
+	glfw.KeyA: 0x1,
+	glfw.KeyB: 0x2,
+	glfw.KeyC: 0x3,
+	glfw.KeyD: 0x4,
+	glfw.KeyE: 0x5,
+	glfw.KeyF: 0x6,
+	glfw.KeyG: 0x7,
+	glfw.KeyH: 0x08,
+	glfw.KeyI: 0x9,
+	glfw.KeyJ: 0x0a,
+	glfw.KeyK: 0x0b,
+	glfw.KeyL: 0x0c,
+	glfw.KeyM: 0x0d,
+	glfw.KeyN: 0x0e,
+	glfw.KeyO: 0x0f,
+	glfw.KeyP: 0x10,
+	glfw.KeyQ: 0x11,
+	glfw.KeyR: 0x12,
+	glfw.KeyS: 0x13,
+	glfw.KeyT: 0x14,
+	glfw.KeyU: 0x15,
+	glfw.KeyV: 0x16,
+	glfw.KeyW: 0x17,
+	glfw.KeyX: 0x18,
+	glfw.KeyY: 0x19,
+	glfw.KeyZ: 0x1a,
+}
+
 func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 
 	if action == glfw.Repeat || action == glfw.Press {
@@ -32,25 +61,11 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 		}
 
 		for userAction, shortcut := range gui.keyboardShortcuts {
-
 			if shortcut.Match(mods, key) {
-
 				f, ok := actionMap[userAction]
 				if ok {
 					f(gui)
 					break
-				}
-
-				switch key {
-				case glfw.KeyD:
-
-				case glfw.KeyG:
-
-				case glfw.KeyR:
-					gui.launchTarget("https://github.com/liamg/aminal/issues/new/choose")
-				case glfw.KeySemicolon:
-					gui.config.Slomo = !gui.config.Slomo
-					return
 				}
 			}
 		}
@@ -65,84 +80,8 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			modStr = "6"
 		case modsPressed(mods, glfw.ModControl):
 			modStr = "5"
-			switch key {
-			case glfw.KeyA:
-				gui.terminal.Write([]byte{0x1})
-				return
-			case glfw.KeyB:
-				gui.terminal.Write([]byte{0x2})
-				return
-			case glfw.KeyC: // ctrl^c
-				gui.terminal.Write([]byte{0x3}) // send EOT
-				return
-			case glfw.KeyD:
-				gui.terminal.Write([]byte{0x4}) // send EOT
-				return
-			case glfw.KeyE:
-				gui.terminal.Write([]byte{0x5})
-				return
-			case glfw.KeyF:
-				gui.terminal.Write([]byte{0x6})
-				return
-			case glfw.KeyG:
-				gui.terminal.Write([]byte{0x7})
-				return
-			case glfw.KeyH:
-				gui.terminal.Write([]byte{0x08})
-				return
-			case glfw.KeyI:
-				gui.terminal.Write([]byte{0x9})
-				return
-			case glfw.KeyJ:
-				gui.terminal.Write([]byte{0x0a})
-				return
-			case glfw.KeyK:
-				gui.terminal.Write([]byte{0x0b})
-				return
-			case glfw.KeyL:
-				gui.terminal.Write([]byte{0x0c})
-				return
-			case glfw.KeyM:
-				gui.terminal.Write([]byte{0x0d})
-				return
-			case glfw.KeyN:
-				gui.terminal.Write([]byte{0x0e})
-				return
-			case glfw.KeyO:
-				gui.terminal.Write([]byte{0x0f})
-				return
-			case glfw.KeyP:
-				gui.terminal.Write([]byte{0x10})
-				return
-			case glfw.KeyQ:
-				gui.terminal.Write([]byte{0x11})
-				return
-			case glfw.KeyR:
-				gui.terminal.Write([]byte{0x12})
-				return
-			case glfw.KeyS:
-				gui.terminal.Write([]byte{0x13})
-				return
-			case glfw.KeyT:
-				gui.terminal.Write([]byte{0x14})
-				return
-			case glfw.KeyU:
-				gui.terminal.Write([]byte{0x15})
-				return
-			case glfw.KeyV:
-				gui.terminal.Write([]byte{0x16})
-				return
-			case glfw.KeyW:
-				gui.terminal.Write([]byte{0x17})
-				return
-			case glfw.KeyX:
-				gui.terminal.Write([]byte{0x18})
-				return
-			case glfw.KeyY:
-				gui.terminal.Write([]byte{0x19})
-				return
-			case glfw.KeyZ:
-				gui.terminal.Write([]byte{0x1a})
+			if b, ok := ctrlBytes[key]; ok {
+				gui.terminal.Write([]byte{b})
 				return
 			}
 		case modsPressed(mods, glfw.ModAlt, glfw.ModShift):
@@ -151,7 +90,6 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			modStr = "3"
 		case modsPressed(mods, glfw.ModShift):
 			modStr = "2"
-
 		}
 
 		switch key {
@@ -379,9 +317,6 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				})
 			}
 		}
-
-		//gui.logger.Debugf("Key pressed: 0x%X %q", key, string([]byte{byte(key)}))
-		//gui.terminal.Write([]byte{byte(scancode)})
 	}
 
 }
