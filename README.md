@@ -3,6 +3,8 @@
 [![CircleCI](https://circleci.com/gh/liamg/aminal/tree/master.svg?style=svg)](https://circleci.com/gh/liamg/aminal/tree/master)
 [![GoReportCard](https://goreportcard.com/badge/github.com/liamg/aminal)](https://goreportcard.com/report/github.com/liamg/aminal)
 [![Github Release](https://img.shields.io/github/release/liamg/aminal.svg)](https://github.com/liamg/aminal/releases)
+[![Slack](https://img.shields.io/badge/slack-%23aminal-%23ffcc00.svg)](http://gophers.slack.com/messages/aminal)
+![License](https://img.shields.io/github/license/liamg/aminal.svg)
 
 Aminal is a modern terminal emulator for Mac/Linux implemented in Golang and utilising OpenGL. 
 
