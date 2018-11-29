@@ -216,7 +216,6 @@ func (buffer *Buffer) StartSelection(col uint16, viewRow uint16) {
 	if buffer.selectionComplete {
 		buffer.selectionEnd = nil
 
-
 		if buffer.selectionStart != nil && time.Since(buffer.selectionClickTime) < time.Millisecond*500 {
 			if buffer.selectionExpanded {
 				//select whole line!
@@ -927,6 +926,9 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 	line := buffer.getCurrentLine()
 
 	for i := 0; i < int(buffer.cursorX); i++ {
+		if i >= len(line.cells) {
+			break
+		}
 		line.cells[i].erase()
 	}
 	for i := uint16(0); i < buffer.cursorY; i++ {
