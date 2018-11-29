@@ -352,7 +352,7 @@ func (gui *GUI) createWindow() (*glfw.Window, error) {
 		window, err = gui.createWindowWithOpenGLVersion(v[0], v[1])
 		if err != nil {
 			gui.logger.Warnf("Failed to create window: %s. Will attempt older version...", err)
-		}else{
+		} else {
 			break
 		}
 	}
@@ -369,7 +369,7 @@ func (gui *GUI) createWindow() (*glfw.Window, error) {
 	return window, nil
 }
 
-func(gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window, error) {
+func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window, error) {
 
 	glfw.WindowHint(glfw.ContextVersionMajor, major)
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
@@ -377,7 +377,7 @@ func(gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window
 	window, err := glfw.CreateWindow(gui.width, gui.height, "Terminal", nil, nil)
 	if err != nil {
 		e := err.Error()
-		if i := strings.Index(e, ", got version "); i > - 1 {
+		if i := strings.Index(e, ", got version "); i > -1 {
 			v := strings.Split(strings.TrimSpace(e[i+14:]), ".")
 			if len(v) == 2 {
 				major, err := strconv.Atoi(v[0])
@@ -395,6 +395,7 @@ func(gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window
 
 	return window, nil
 }
+
 // initOpenGL initializes OpenGL and returns an intiialized program.
 func (gui *GUI) createProgram() (uint32, error) {
 	if err := gl.Init(); err != nil {

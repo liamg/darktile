@@ -57,11 +57,10 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 	halfAreaWidth := float32(r.areaWidth / 2)
 	halfAreaHeight := float32(r.areaHeight / 2)
 
-
 	x = (x - halfAreaWidth) / halfAreaWidth
-	y = -(y - ( halfAreaHeight)) / halfAreaHeight
+	y = -(y - (halfAreaHeight)) / halfAreaHeight
 	w := r.cellWidth / halfAreaWidth
-	h := (r.cellHeight ) / halfAreaHeight
+	h := (r.cellHeight) / halfAreaHeight
 
 	rect := &rectangle{
 		points: []float32{
@@ -165,7 +164,7 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	f := r.fontMap.GetFont('X')
 	_, r.cellHeight = f.MaxSize()
 	r.cellWidth, _ = f.Size("X")
-	 //= f.LineHeight()   // includes vertical padding
+	//= f.LineHeight()   // includes vertical padding
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
 	r.rectangles = map[[2]uint]*rectangle{}
@@ -179,7 +178,7 @@ func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
 	}
 
 	x := float32(float32(col) * r.cellWidth)
-	y := float32(float32(row) * r.cellHeight) + r.cellHeight
+	y := float32(float32(row)*r.cellHeight) + r.cellHeight
 
 	r.rectangles[[2]uint{col, row}] = r.newRectangle(x, y, r.colourAttr)
 	return r.rectangles[[2]uint{col, row}]
