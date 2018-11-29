@@ -9,7 +9,7 @@ import (
 
 const (
 	vertexShaderSource = `
-		#version 410
+		#version 150
 		in vec3 vp;
 		in vec3 inColour;
 		smooth out vec3 theColour;
@@ -20,7 +20,7 @@ const (
 	` + "\x00"
 
 	fragmentShaderSource = `
-		#version 410
+		#version 150
 		smooth in vec3 theColour;
 		out vec4 outColour;
 		void main() {
