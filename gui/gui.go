@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os/exec"
 	"runtime"
+	"strconv"
 	"strings"
 	"time"
 
@@ -110,7 +111,7 @@ func (gui *GUI) Render() error {
 
 	gui.logger.Debugf("Creating window...")
 	var err error
-	gui.window, err = gui.createWindow(gui.width, gui.height)
+	gui.window, err = gui.createWindow()
 	if err != nil {
 		return fmt.Errorf("Failed to create window: %s", err)
 	}
@@ -148,6 +149,7 @@ func (gui *GUI) Render() error {
 			gui.terminal.SetDirty()
 		}
 	})
+
 	w, h := gui.window.GetFramebufferSize()
 	gui.resize(gui.window, w, h)
 
@@ -322,27 +324,77 @@ Buffer Size: %d lines
 
 }
 
-func (gui *GUI) createWindow(width int, height int) (*glfw.Window, error) {
+func (gui *GUI) createWindow() (*glfw.Window, error) {
 	if err := glfw.Init(); err != nil {
 		return nil, fmt.Errorf("Failed to initialise GLFW: %s", err)
 	}
 
 	glfw.WindowHint(glfw.Resizable, glfw.True)
-	glfw.WindowHint(glfw.ContextVersionMajor, 4)
-	glfw.WindowHint(glfw.ContextVersionMinor, 1)
 	glfw.WindowHint(glfw.OpenGLProfile, glfw.OpenGLCoreProfile)
 	glfw.WindowHint(glfw.OpenGLForwardCompatible, glfw.True)
 
-	window, err := glfw.CreateWindow(width, height, "Terminal", nil, nil)
-	if err != nil {
-		return nil, fmt.Errorf("Failed to create window: %s", err)
+	versions := [][2]int{
+		{4, 6},
+		{4, 5},
+		{4, 4},
+		{4, 3},
+		{4, 2},
+		{4, 1},
+		{4, 0},
+		{3, 3},
+		{3, 2},
 	}
+
+	var window *glfw.Window
+
+	for _, v := range versions {
+		var err error
+		window, err = gui.createWindowWithOpenGLVersion(v[0], v[1])
+		if err != nil {
+			gui.logger.Warnf("Failed to create window: %s. Will attempt older version...", err)
+		}else{
+			break
+		}
+	}
+
+	if window == nil {
+		return nil, fmt.Errorf("failed to create window, please update your graphics drivers and try again")
+	}
+
 	window.SetSizeLimits(300, 150, 10000, 10000)
 	window.MakeContextCurrent()
+	window.Show()
+	window.Focus()
 
 	return window, nil
 }
 
+func(gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window, error) {
+
+	glfw.WindowHint(glfw.ContextVersionMajor, major)
+	glfw.WindowHint(glfw.ContextVersionMinor, minor)
+
+	window, err := glfw.CreateWindow(gui.width, gui.height, "Terminal", nil, nil)
+	if err != nil {
+		e := err.Error()
+		if i := strings.Index(e, ", got version "); i > - 1 {
+			v := strings.Split(strings.TrimSpace(e[i+14:]), ".")
+			if len(v) == 2 {
+				major, err := strconv.Atoi(v[0])
+				if err == nil {
+					if minor, err := strconv.Atoi(v[1]); err == nil {
+						return gui.createWindowWithOpenGLVersion(major, minor)
+					}
+
+				}
+			}
+		}
+
+		return nil, fmt.Errorf("Failed to create window using OpenGL v%d.%d: %s.", major, minor, err)
+	}
+
+	return window, nil
+}
 // initOpenGL initializes OpenGL and returns an intiialized program.
 func (gui *GUI) createProgram() (uint32, error) {
 	if err := gl.Init(); err != nil {
