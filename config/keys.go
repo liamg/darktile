@@ -9,7 +9,7 @@ import (
 
 type KeyCombination struct {
 	mods glfw.ModifierKey
-	key  glfw.Key
+	char rune
 }
 
 type KeyMod string
@@ -28,41 +28,11 @@ var modMap = map[KeyMod]glfw.ModifierKey{
 	super: glfw.ModSuper,
 }
 
-var keyMap = map[string]glfw.Key{
-	"a": glfw.KeyA,
-	"b": glfw.KeyB,
-	"c": glfw.KeyC,
-	"d": glfw.KeyD,
-	"e": glfw.KeyE,
-	"f": glfw.KeyF,
-	"g": glfw.KeyG,
-	"h": glfw.KeyH,
-	"i": glfw.KeyI,
-	"j": glfw.KeyJ,
-	"k": glfw.KeyK,
-	"l": glfw.KeyL,
-	"m": glfw.KeyM,
-	"n": glfw.KeyN,
-	"o": glfw.KeyO,
-	"p": glfw.KeyP,
-	"q": glfw.KeyQ,
-	"r": glfw.KeyR,
-	"s": glfw.KeyS,
-	"t": glfw.KeyT,
-	"u": glfw.KeyU,
-	"v": glfw.KeyV,
-	"w": glfw.KeyW,
-	"x": glfw.KeyX,
-	"y": glfw.KeyY,
-	"z": glfw.KeyZ,
-	";": glfw.KeySemicolon,
-}
-
 // keyStr e.g. "ctrl + alt + a"
 func parseKeyCombination(keyStr string) (*KeyCombination, error) {
 
 	var mods glfw.ModifierKey
-	var key *glfw.Key
+	var key rune
 
 	keys := strings.Split(keyStr, "+")
 	for _, k := range keys {
@@ -72,19 +42,15 @@ func parseKeyCombination(keyStr string) (*KeyCombination, error) {
 			mods = mods + mod
 			continue
 		}
-		mappedKey, ok := keyMap[k]
-		if ok {
-			if key != nil {
-				return nil, fmt.Errorf("Multiple non-modifier keys specified in keyboard shortcut")
-			}
-			key = &mappedKey
-			continue
+
+		if key > 0 {
+			return nil, fmt.Errorf("Multiple non-modifier keys specified in keyboard shortcut")
 		}
 
-		return nil, fmt.Errorf("Unknown key '%s' in configured keyboard shortcut", k)
+		key = rune(k[0])
 	}
 
-	if key == nil {
+	if key == 0 {
 		return nil, fmt.Errorf("No non-modifier key specified in keyboard shortcut")
 	}
 
@@ -94,12 +60,12 @@ func parseKeyCombination(keyStr string) (*KeyCombination, error) {
 
 	return &KeyCombination{
 		mods: mods,
-		key:  *key,
+		char: key,
 	}, nil
 }
 
-func (combi KeyCombination) Match(pressedMods glfw.ModifierKey, pressedKey glfw.Key) bool {
-	return pressedKey == combi.key && pressedMods == combi.mods
+func (combi KeyCombination) Match(pressedMods glfw.ModifierKey, pressedChar rune) bool {
+	return pressedChar == combi.char && pressedMods == combi.mods
 }
 
 func (keyMapConfig KeyMappingConfig) GenerateActionMap() (map[UserAction]*KeyCombination, error) {
