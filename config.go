@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"io/ioutil"
 	"os"
+	"strings"
 
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/version"
@@ -48,9 +49,15 @@ func loadConfigFile() *config.Config {
 		return &config.DefaultConfig
 	}
 
-	places := []string{
-		fmt.Sprintf("%s/.aminal.toml", home),
+	places := []string{}
+
+	xdgHome := os.Getenv("XDG_CONFIG_HOME")
+	if xdgHome != "" {
+		places = append(places, fmt.Sprintf("%s/aminal/config.toml", xdgHome))
 	}
+
+	places = append(places, fmt.Sprintf("%s/.config/aminal/config.toml", home))
+	places = append(places, fmt.Sprintf("%s/.aminal.toml", home))
 
 	for _, place := range places {
 		if b, err := ioutil.ReadFile(place); err == nil {
@@ -62,10 +69,18 @@ func loadConfigFile() *config.Config {
 		}
 	}
 
+	parts := strings.Split(places[0], string(os.PathSeparator))
+	path := strings.Join(parts[0:len(parts)-1], string(os.PathSeparator))
+
+	err := os.MkdirAll(path, 0744)
+	if err != nil {
+		panic(err)
+	}
+
 	if b, err := config.DefaultConfig.Encode(); err != nil {
 		fmt.Printf("Failed to encode config file: %s\n", err)
 	} else {
-		if err := ioutil.WriteFile(fmt.Sprintf("%s/.aminal.toml", home), b, 0644); err != nil {
+		if err := ioutil.WriteFile(fmt.Sprintf("%s/config.toml", path), b, 0644); err != nil {
 			fmt.Printf("Failed to encode config file: %s\n", err)
 		}
 	}
