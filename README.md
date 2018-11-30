@@ -133,3 +133,7 @@ search_url = "https://www.google.com/search?q=$QUERY" # The search engine to use
 | `--slomo`         | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging.
 | `--shell [shell]` | Use the specified shell program instead of the user's usual one. 
 | `--version`       | Show the version of aminal and exit.
+
+# Contributors
+
+[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/0)](https://sourcerer.io/fame/liamg/liamg/aminal/links/0)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/1)](https://sourcerer.io/fame/liamg/liamg/aminal/links/1)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/2)](https://sourcerer.io/fame/liamg/liamg/aminal/links/2)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/3)](https://sourcerer.io/fame/liamg/liamg/aminal/links/3)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/4)](https://sourcerer.io/fame/liamg/liamg/aminal/links/4)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/5)](https://sourcerer.io/fame/liamg/liamg/aminal/links/5)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/6)](https://sourcerer.io/fame/liamg/liamg/aminal/links/6)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/7)](https://sourcerer.io/fame/liamg/liamg/aminal/links/7)
