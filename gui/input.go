@@ -21,33 +21,26 @@ func modsPressed(pressed glfw.ModifierKey, mods ...glfw.ModifierKey) bool {
 	return pressed == 0
 }
 
-var ctrlBytes = map[glfw.Key]byte{
-	glfw.KeyA: 0x1,
-	glfw.KeyB: 0x2,
-	glfw.KeyC: 0x3,
-	glfw.KeyD: 0x4,
-	glfw.KeyE: 0x5,
-	glfw.KeyF: 0x6,
-	glfw.KeyG: 0x7,
-	glfw.KeyH: 0x08,
-	glfw.KeyI: 0x9,
-	glfw.KeyJ: 0x0a,
-	glfw.KeyK: 0x0b,
-	glfw.KeyL: 0x0c,
-	glfw.KeyM: 0x0d,
-	glfw.KeyN: 0x0e,
-	glfw.KeyO: 0x0f,
-	glfw.KeyP: 0x10,
-	glfw.KeyQ: 0x11,
-	glfw.KeyR: 0x12,
-	glfw.KeyS: 0x13,
-	glfw.KeyT: 0x14,
-	glfw.KeyU: 0x15,
-	glfw.KeyV: 0x16,
-	glfw.KeyW: 0x17,
-	glfw.KeyX: 0x18,
-	glfw.KeyY: 0x19,
-	glfw.KeyZ: 0x1a,
+func getModStr(mods glfw.ModifierKey) string {
+
+	switch true {
+	case modsPressed(mods, glfw.ModControl, glfw.ModShift, glfw.ModAlt):
+		return "8"
+	case modsPressed(mods, glfw.ModControl, glfw.ModAlt):
+		return "7"
+	case modsPressed(mods, glfw.ModControl, glfw.ModShift):
+		return "6"
+	case modsPressed(mods, glfw.ModControl):
+		return "5"
+	case modsPressed(mods, glfw.ModAlt, glfw.ModShift):
+		return "4"
+	case modsPressed(mods, glfw.ModAlt):
+		return "3"
+	case modsPressed(mods, glfw.ModShift):
+		return "2"
+	}
+
+	return ""
 }
 
 func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
@@ -60,37 +53,33 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			}
 		}
 
-		for userAction, shortcut := range gui.keyboardShortcuts {
-			if shortcut.Match(mods, key) {
-				f, ok := actionMap[userAction]
-				if ok {
-					f(gui)
-					break
+		// get key name to handle alternative keyboard layouts
+		name := glfw.GetKeyName(key, scancode)
+		if len(name) == 1 {
+			r := rune(name[0])
+			for userAction, shortcut := range gui.keyboardShortcuts {
+				if shortcut.Match(mods, r) {
+					f, ok := actionMap[userAction]
+					if ok {
+						f(gui)
+						break
+					}
+				}
+			}
+
+			// standard ctrl codes e.g. ^C
+			if modsPressed(mods, glfw.ModControl) {
+				if r >= 97 && r < 123 {
+					gui.terminal.Write([]byte{byte(r) - 96})
+					return
+				} else if r >= 65 && r < 91 {
+					gui.terminal.Write([]byte{byte(r) - 64})
+					return
 				}
 			}
 		}
 
-		modStr := ""
-		switch true {
-		case modsPressed(mods, glfw.ModControl, glfw.ModShift, glfw.ModAlt):
-			modStr = "8"
-		case modsPressed(mods, glfw.ModControl, glfw.ModAlt):
-			modStr = "7"
-		case modsPressed(mods, glfw.ModControl, glfw.ModShift):
-			modStr = "6"
-		case modsPressed(mods, glfw.ModControl):
-			modStr = "5"
-			if b, ok := ctrlBytes[key]; ok {
-				gui.terminal.Write([]byte{b})
-				return
-			}
-		case modsPressed(mods, glfw.ModAlt, glfw.ModShift):
-			modStr = "4"
-		case modsPressed(mods, glfw.ModAlt):
-			modStr = "3"
-		case modsPressed(mods, glfw.ModShift):
-			modStr = "2"
-		}
+		modStr := getModStr(mods)
 
 		switch key {
 		case glfw.KeyF1:
