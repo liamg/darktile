@@ -203,17 +203,9 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				})
 			}
 		case glfw.KeyTab:
-			if gui.terminal.IsApplicationCursorKeysModeEnabled() {
-				gui.terminal.Write([]byte{
-					0x1b,
-					'O',
-					'I',
-				})
-			} else {
-				gui.terminal.Write([]byte{
-					0x09,
-				})
-			}
+			gui.terminal.Write([]byte{
+				0x09,
+			})
 		case glfw.KeyEnter:
 			gui.terminal.Write([]byte{
 				0x0d,
