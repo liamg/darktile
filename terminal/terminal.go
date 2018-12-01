@@ -2,7 +2,6 @@ package terminal
 
 import (
 	"bufio"
-	"context"
 	"fmt"
 	"io"
 	"os"
@@ -35,7 +34,7 @@ const (
 type Terminal struct {
 	program            uint32
 	buffers            []*buffer.Buffer
-	activeBufferIndex  uint8
+	activeBuffer       *buffer.Buffer
 	lock               sync.Mutex
 	pty                *os.File
 	logger             *zap.SugaredLogger
@@ -43,8 +42,6 @@ type Terminal struct {
 	size               Winsize
 	config             *config.Config
 	titleHandlers      []chan bool
-	pauseChan          chan bool
-	resumeChan         chan bool
 	modes              Modes
 	mouseMode          MouseMode
 	bracketedPasteMode bool
@@ -87,13 +84,11 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 		logger:        logger,
 		config:        config,
 		titleHandlers: []chan bool{},
-		pauseChan:     make(chan bool, 1),
-		resumeChan:    make(chan bool, 1),
 		modes: Modes{
 			ShowCursor: true,
 		},
 	}
-
+	t.activeBuffer = t.buffers[0]
 	return t
 
 }
@@ -129,32 +124,30 @@ func (terminal *Terminal) GetMouseMode() MouseMode {
 }
 
 func (terminal *Terminal) UseMainBuffer() {
-	terminal.activeBufferIndex = MainBuffer
+	terminal.activeBuffer = terminal.buffers[MainBuffer]
 	terminal.SetSize(uint(terminal.size.Width), uint(terminal.size.Height))
 }
 
 func (terminal *Terminal) UseAltBuffer() {
-	terminal.activeBufferIndex = AltBuffer
+	terminal.activeBuffer = terminal.buffers[AltBuffer]
 	terminal.SetSize(uint(terminal.size.Width), uint(terminal.size.Height))
 }
 
 func (terminal *Terminal) UseInternalBuffer() {
-	terminal.pauseChan <- true
-	terminal.activeBufferIndex = InternalBuffer
+	terminal.activeBuffer = terminal.buffers[InternalBuffer]
 	terminal.SetSize(uint(terminal.size.Width), uint(terminal.size.Height))
 }
 
 func (terminal *Terminal) ExitInternalBuffer() {
-	terminal.activeBufferIndex = terminal.lastBuffer
-	terminal.resumeChan <- true
+	terminal.activeBuffer = terminal.buffers[terminal.lastBuffer]
 }
 
 func (terminal *Terminal) ActiveBuffer() *buffer.Buffer {
-	return terminal.buffers[terminal.activeBufferIndex]
+	return terminal.activeBuffer
 }
 
 func (terminal *Terminal) UsingMainBuffer() bool {
-	return terminal.activeBufferIndex == MainBuffer
+	return terminal.activeBuffer == terminal.buffers[MainBuffer]
 }
 
 func (terminal *Terminal) GetScrollOffset() uint {
@@ -255,20 +248,17 @@ func (terminal *Terminal) Read() error {
 	buffer := make(chan rune, 0xffff)
 
 	reader := bufio.NewReader(terminal.pty)
-	ctx, cancel := context.WithCancel(context.Background())
-	defer cancel()
 
-	go terminal.processInput(ctx, buffer)
+	go terminal.processInput(buffer)
 	for {
-		r, size, err := reader.ReadRune()
+		r, _, err := reader.ReadRune()
 		if err != nil {
 			if err == io.EOF {
 				break
 			}
 			return err
-		} else if size > 0 {
-			buffer <- r
 		}
+		buffer <- r
 	}
 
 	//clean exit

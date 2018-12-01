@@ -2,14 +2,15 @@ package glfont
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
+	"io"
+
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
-	"image"
-	"image/draw"
-	"io"
 )
 
 const DPI = 72

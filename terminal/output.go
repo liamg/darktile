@@ -1,7 +1,6 @@
 package terminal
 
 import (
-	"context"
 	"time"
 )
 
@@ -27,21 +26,25 @@ var escapeSequenceMap = map[rune]escapeSequenceHandler{
 
 func newLineSequenceHandler(pty chan rune, terminal *Terminal) error {
 	terminal.ActiveBuffer().NewLine()
+	terminal.isDirty = true
 	return nil
 }
 
 func tabSequenceHandler(pty chan rune, terminal *Terminal) error {
 	terminal.ActiveBuffer().Tab()
+	terminal.isDirty = true
 	return nil
 }
 
 func carriageReturnSequenceHandler(pty chan rune, terminal *Terminal) error {
 	terminal.ActiveBuffer().CarriageReturn()
+	terminal.isDirty = true
 	return nil
 }
 
 func backspaceSequenceHandler(pty chan rune, terminal *Terminal) error {
 	terminal.ActiveBuffer().Backspace()
+	terminal.isDirty = true
 	return nil
 }
 
@@ -65,47 +68,33 @@ func shiftInSequenceHandler(pty chan rune, terminal *Terminal) error {
 	return nil
 }
 
-func (terminal *Terminal) processInput(ctx context.Context, pty chan rune) {
+func (terminal *Terminal) processInput(pty chan rune) {
 
 	// https://en.wikipedia.org/wiki/ANSI_escape_code
 
-	for {
+	var b rune
 
-		select {
-		case <-terminal.pauseChan:
-			// @todo alert user when terminal is suspended
-			terminal.logger.Debugf("Terminal suspended")
-			<-terminal.resumeChan
-		case <-ctx.Done():
-			break
-		default:
-		}
+	for {
 
 		if terminal.config.Slomo {
 			time.Sleep(time.Millisecond * 100)
 		}
 
-		b := <-pty
+		b = <-pty
 
-		terminal.logger.Debugf("0x%q", string(b))
-
-		handler, ok := escapeSequenceMap[b]
-
-		if ok {
-			//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
-			if err := handler(pty, terminal); err != nil {
-				terminal.logger.Errorf("Error handling escape sequence: %s", err)
-			}
-		} else {
-			//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
-			if b >= 0x20 {
-				//terminal.logger.Debugf("%c", b)
-				terminal.ActiveBuffer().Write(b)
-			} else {
-				terminal.logger.Error("Non-readable rune received: 0x%X", b)
+		if b < 0x20 {
+			if handler, ok := escapeSequenceMap[b]; ok {
+				//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
+				if err := handler(pty, terminal); err != nil {
+					terminal.logger.Errorf("Error handling escape sequence: %s", err)
+				}
+				terminal.isDirty = true
+				continue
 			}
 		}
 
+		//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
+		terminal.ActiveBuffer().Write(b)
 		terminal.isDirty = true
 	}
 }
