@@ -91,6 +91,8 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	gui.logger.Debugf("Resize complete!")
 
+	gui.redraw(buffer.NewBackgroundCell(gui.config.ColourScheme.Background))
+	gui.window.SwapBuffers()
 }
 
 func (gui *GUI) getTermSize() (uint, uint) {
@@ -219,94 +221,7 @@ func (gui *GUI) Render() error {
 
 		if gui.terminal.CheckDirty() {
 
-			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
-
-			lines := gui.terminal.GetVisibleLines()
-			lineCount := int(gui.terminal.ActiveBuffer().ViewHeight())
-			colCount := int(gui.terminal.ActiveBuffer().ViewWidth())
-			cx := uint(gui.terminal.GetLogicalCursorX())
-			cy := uint(gui.terminal.GetLogicalCursorY()) + uint(gui.terminal.GetScrollOffset())
-
-			var colour *config.Colour
-			for y := 0; y < lineCount; y++ {
-				if y < len(lines) {
-					cells := lines[y].Cells()
-					for x := 0; x < colCount; x++ {
-
-						cursor := false
-						if gui.terminal.Modes().ShowCursor {
-							cursor = cx == uint(x) && cy == uint(y)
-						}
-
-						if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
-							colour = &gui.config.ColourScheme.Selection
-						} else {
-							colour = nil
-						}
-
-						cell := defaultCell
-						if colour != nil || cursor || x < len(cells) {
-
-							if x < len(cells) {
-								cell = cells[x]
-								if cell.Image() != nil {
-									gui.renderer.DrawCellImage(cell, uint(x), uint(y))
-									continue
-								}
-							}
-
-							gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
-						}
-
-					}
-				}
-			}
-
-			for y := 0; y < lineCount; y++ {
-
-				if y < len(lines) {
-
-					bufStr := ""
-					bold := false
-					dim := false
-					col := 0
-					colour := [3]float32{0, 0, 0}
-					cells := lines[y].Cells()
-
-					for x := 0; x < colCount; x++ {
-						if x < len(cells) {
-							cell := cells[x]
-							if bufStr != "" && (cell.Attr().Dim != dim || cell.Attr().Bold != bold || colour != cell.Fg()) {
-								var alpha float32 = 1.0
-								if dim {
-									alpha = 0.5
-								}
-								gui.renderer.DrawCellText(bufStr, uint(col), uint(y), alpha, colour, bold)
-								col = x
-								bufStr = ""
-							}
-							dim = cell.Attr().Dim
-							colour = cell.Fg()
-							bold = cell.Attr().Bold
-							r := cell.Rune()
-							if r == 0 {
-								r = ' '
-							}
-							bufStr += string(r)
-						}
-					}
-					if bufStr != "" {
-						var alpha float32 = 1.0
-						if dim {
-							alpha = 0.5
-						}
-						gui.renderer.DrawCellText(bufStr, uint(col), uint(y), alpha, colour, bold)
-					}
-				}
-
-			}
-
-			gui.renderOverlay()
+			gui.redraw(defaultCell)
 
 			if gui.showDebugInfo {
 				gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d
@@ -355,6 +270,93 @@ Buffer Size: %d lines
 	gui.logger.Debugf("Stopping render...")
 	return nil
 
+}
+
+func (gui *GUI) redraw(defaultCell buffer.Cell) {
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
+	lines := gui.terminal.GetVisibleLines()
+	lineCount := int(gui.terminal.ActiveBuffer().ViewHeight())
+	colCount := int(gui.terminal.ActiveBuffer().ViewWidth())
+	cx := uint(gui.terminal.GetLogicalCursorX())
+	cy := uint(gui.terminal.GetLogicalCursorY()) + uint(gui.terminal.GetScrollOffset())
+	var colour *config.Colour
+	for y := 0; y < lineCount; y++ {
+		if y < len(lines) {
+			cells := lines[y].Cells()
+			for x := 0; x < colCount; x++ {
+
+				cursor := false
+				if gui.terminal.Modes().ShowCursor {
+					cursor = cx == uint(x) && cy == uint(y)
+				}
+
+				if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
+					colour = &gui.config.ColourScheme.Selection
+				} else {
+					colour = nil
+				}
+
+				cell := defaultCell
+				if colour != nil || cursor || x < len(cells) {
+
+					if x < len(cells) {
+						cell = cells[x]
+						if cell.Image() != nil {
+							gui.renderer.DrawCellImage(cell, uint(x), uint(y))
+							continue
+						}
+					}
+
+					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
+				}
+
+			}
+		}
+	}
+	for y := 0; y < lineCount; y++ {
+
+		if y < len(lines) {
+
+			bufStr := ""
+			bold := false
+			dim := false
+			col := 0
+			colour := [3]float32{0, 0, 0}
+			cells := lines[y].Cells()
+
+			for x := 0; x < colCount; x++ {
+				if x < len(cells) {
+					cell := cells[x]
+					if bufStr != "" && (cell.Attr().Dim != dim || cell.Attr().Bold != bold || colour != cell.Fg()) {
+						var alpha float32 = 1.0
+						if dim {
+							alpha = 0.5
+						}
+						gui.renderer.DrawCellText(bufStr, uint(col), uint(y), alpha, colour, bold)
+						col = x
+						bufStr = ""
+					}
+					dim = cell.Attr().Dim
+					colour = cell.Fg()
+					bold = cell.Attr().Bold
+					r := cell.Rune()
+					if r == 0 {
+						r = ' '
+					}
+					bufStr += string(r)
+				}
+			}
+			if bufStr != "" {
+				var alpha float32 = 1.0
+				if dim {
+					alpha = 0.5
+				}
+				gui.renderer.DrawCellText(bufStr, uint(col), uint(y), alpha, colour, bold)
+			}
+		}
+
+	}
+	gui.renderOverlay()
 }
 
 func (gui *GUI) createWindow() (*glfw.Window, error) {
