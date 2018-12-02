@@ -31,13 +31,13 @@ func main() {
 		logger.Fatalf("Failed to allocate pty: %s", err)
 	}
 
-	shellStr, err := loginshell.Shell()
-	if err != nil {
-		logger.Fatalf("Failed to ascertain your shell: %s", err)
-	}
-
-	if conf.Shell != "" {
-		shellStr = conf.Shell
+	shellStr := conf.Shell
+	if shellStr == "" {
+		loginShell, err := loginshell.Shell()
+		if err != nil {
+			logger.Fatalf("Failed to ascertain your shell: %s", err)
+		}
+		shellStr = loginShell
 	}
 
 	os.Setenv("TERM", "xterm-256color") // controversial! easier than installing terminfo everywhere, but obviously going to be slightly different to xterm functionality, so we'll see...
