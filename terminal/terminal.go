@@ -4,13 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"sync"
-	"syscall"
-	"unsafe"
 
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/platform"
 	"go.uber.org/zap"
 )
 
@@ -36,7 +34,7 @@ type Terminal struct {
 	buffers            []*buffer.Buffer
 	activeBuffer       *buffer.Buffer
 	lock               sync.Mutex
-	pty                *os.File
+	pty                platform.Pty
 	logger             *zap.SugaredLogger
 	title              string
 	size               Winsize
@@ -64,7 +62,7 @@ type Winsize struct {
 	y      uint16 //ignored, but necessary for ioctl calls
 }
 
-func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Terminal {
+func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Terminal {
 	t := &Terminal{
 		buffers: []*buffer.Buffer{
 			buffer.NewBuffer(1, 1, buffer.CellAttributes{
@@ -280,9 +278,8 @@ func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
 	terminal.size.Width = uint16(newCols)
 	terminal.size.Height = uint16(newLines)
 
-	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, uintptr(terminal.pty.Fd()),
-		uintptr(syscall.TIOCSWINSZ), uintptr(unsafe.Pointer(&terminal.size)))
-	if err != 0 {
+	err := terminal.pty.Resize(int(newCols), int(newLines))
+	if err != nil {
 		return fmt.Errorf("Failed to set terminal size vai ioctl: Error no %d", err)
 	}
 

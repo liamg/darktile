@@ -1,0 +1,25 @@
+language: go
+
+go:
+  - "1.10.5"
+  - "1.11.2"
+  - "master"  # find out if an upcoming change in Go is going to break us
+
+matrix:
+  # We only want to fail the build based on stable versions of Go
+  allow_failures:
+    - go: master
+  fast_finish: true
+
+go_import_path: github.com/liamg/aminal
+
+before_install:
+  - sudo apt-get install -y xorg-dev libgl1-mesa-dev
+
+script:
+  - make test
+  - make build-linux
+
+env:
+  global:
+    secure: MpOY0NYnuf8hgDVP4MjSSrrzWDdPlJ5JnB/TiiJxptjN2qn0OKPVBeZl2OsJ3MlZfjNM3wZ3mNN6p/3TwJmfp1g+3SU9MfRul4XMFfJKiN9u5/y5lamophs+vkgrawG00xwMd4KvKOqXVP2vX2s+koVfUzUXEot5IJDMerQltQPqbonvk/tWJHmtu5NoMQgGO+2pvmy+74u5HMfjoWSmTBiJgTUZ8c/a1nK3MsG2mafsEB8sLa8uMWAp9ISnfxLzTTUFQeVR64i1z7duz5fJ0B96JqYIlwnR9vzeB1gr+3+cSdDUPfcTgWEDhDn9Kglqe71K+9vUaP3cOkEMThFPoj1wb2vyIV2LYVqsAVAmxBFiyMS8HVkp7z0M7f34wRhd3blN2KaxYuiFlSg3MwnUp615NHnnS8kA0So/E7xYcXnsfFx9f1ZZqaAuHz1DrD2UHeRKtcekdcxTMG4LMJbGv+HsqL6mUFIND/tN9h/QV+w+GbmKUUBt/xMmyoaLqBwKz+m1aLvBSZ9IaUIHRKCNnCfm9QPXoMfeXvh2JCX7leM/0FDHUp8v1J1Rw5E0eiWpBS0OlQS2OeR8zAlJh8mZ4SpApUEHDEHBbcVSP0ZM+fSMpq1OVESlmEO308WZY0IlmQ9UkDIpixLuizDB4IlwOPVXlRSyHd9spAmqx4ZGfR4=
