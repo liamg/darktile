@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-gl/gl/all-core/gl"
@@ -33,6 +34,7 @@ type GUI struct {
 	terminalAlpha     float32
 	showDebugInfo     bool
 	keyboardShortcuts map[config.UserAction]*config.KeyCombination
+	resizeLock        *sync.Mutex
 }
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) (*GUI, error) {
@@ -51,6 +53,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		fontScale:         14.0,
 		terminalAlpha:     1,
 		keyboardShortcuts: shortcuts,
+		resizeLock:        &sync.Mutex{},
 	}, nil
 }
 
@@ -64,6 +67,9 @@ func (gui *GUI) scale() float32 {
 
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
+
+	gui.resizeLock.Lock()
+	defer gui.resizeLock.Unlock()
 
 	gui.logger.Debugf("Initiating GUI resize to %dx%d", width, height)
 
