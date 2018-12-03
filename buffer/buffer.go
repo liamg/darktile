@@ -709,10 +709,7 @@ func (buffer *Buffer) CarriageReturn() {
 
 func (buffer *Buffer) Tab() {
 	tabSize := 4
-	shift := int(buffer.cursorX-1) % tabSize
-	if shift == 0 {
-		shift = tabSize
-	}
+	shift := tabSize - (int(buffer.cursorX+1) % tabSize)
 	for i := 0; i < shift; i++ {
 		buffer.Write(' ')
 	}

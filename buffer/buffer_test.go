@@ -9,6 +9,35 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func TestTabbing(t *testing.T) {
+	b := NewBuffer(30, 3, CellAttributes{})
+	b.Write([]rune("hello")...)
+	b.Tab()
+	b.Write([]rune("x")...)
+	b.Tab()
+	b.Write([]rune("goodbye")...)
+	b.CarriageReturn()
+	b.NewLine()
+	b.Write([]rune("hell")...)
+	b.Tab()
+	b.Write([]rune("xxx")...)
+	b.Tab()
+	b.Write([]rune("good")...)
+	b.CarriageReturn()
+	b.NewLine()
+	expected := `
+hello  x   goodbye
+hell   xxx good
+`
+
+	lines := b.GetVisibleLines()
+	strs := []string{}
+	for _, l := range lines {
+		strs = append(strs, l.String())
+	}
+	require.Equal(t, strings.TrimSpace(expected), strings.Join(strs, "\n"))
+}
+
 func TestOffsets(t *testing.T) {
 	b := NewBuffer(10, 3, CellAttributes{})
 	b.Write([]rune("hello")...)
