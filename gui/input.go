@@ -227,7 +227,11 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				})
 			}
 		case glfw.KeyBackspace:
-			gui.terminal.Write([]byte{0x08})
+			if modsPressed(mods, glfw.ModAlt) {
+				gui.terminal.Write([]byte{0x17}) // ctrl-w/delete word
+			} else {
+				gui.terminal.Write([]byte{0x8})
+			}
 		case glfw.KeyUp:
 			if modStr != "" {
 				gui.terminal.Write([]byte(fmt.Sprintf("\x1b[1;%sA", modStr)))
