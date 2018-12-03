@@ -167,10 +167,14 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				'3', '~',
 			})
 		case glfw.KeyHome:
-			if modStr == "" {
-				gui.terminal.Write([]byte("\x1b[1~"))
+			if gui.terminal.IsApplicationCursorKeysModeEnabled() {
+				if modStr == "" {
+					gui.terminal.Write([]byte("\x1b[1~"))
+				} else {
+					gui.terminal.Write([]byte(fmt.Sprintf("\x1b[1;%s~", modStr)))
+				}
 			} else {
-				gui.terminal.Write([]byte(fmt.Sprintf("\x1b[1;%s~", modStr)))
+				gui.terminal.Write([]byte("\x1b[H"))
 			}
 		case glfw.KeyEnd:
 			if modStr == "" {
