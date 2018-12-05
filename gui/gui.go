@@ -215,8 +215,6 @@ func (gui *GUI) Render() error {
 	startTime := time.Now()
 	showMessage := true
 
-	darwinRenderFixRequired := runtime.GOOS == "darwin"
-
 	for !gui.window.ShouldClose() {
 
 		select {
@@ -269,14 +267,7 @@ Buffer Size: %d lines
 				}
 			}
 
-			gui.window.SwapBuffers()
-
-			// Workaround for https://github.com/glfw/glfw/issues/1334
-			if darwinRenderFixRequired {
-				darwinRenderFixRequired = false
-				x, y := gui.window.GetPos()
-				gui.window.SetPos(x+1, y)
-			}
+			gui.SwapBuffers()
 		}
 
 	}
@@ -486,4 +477,9 @@ func (gui *GUI) launchTarget(target string) {
 	if err := exec.Command(cmd, target).Run(); err != nil {
 		gui.logger.Errorf("Failed to launch external command %s: %s", cmd, err)
 	}
+}
+
+func (gui *GUI) SwapBuffers() {
+	UpdateNSGLContext(gui.window)
+	gui.window.SwapBuffers()
 }
