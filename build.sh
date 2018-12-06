@@ -23,6 +23,6 @@ cp -r . ${SRCDIR}
 (
     echo ${GOPATH}
     cd ${SRCDIR}
-    go install -ldflags "-X github.com/liamg/aminal/version.Version=$version"
+    go build -ldflags "-X github.com/liamg/aminal/version.Version=$version"
 )
 
