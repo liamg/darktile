@@ -30,31 +30,40 @@ Ensure you have your latest graphics card drivers installed before use.
 - Built-in patched fonts for powerline
 - Retina display support
 
-## Quick Start
+## Installation
 
-### Installation
+### MacOS
 
-#### Prebuilt Binaries
+```
+brew tap liamg/aminal
+brew install aminal
+```
+
+### Windows
+
+A Windows version of Aminal is expected in the next 1-2 months.
+
+### Prebuilt Binaries
 
 Prebuilt binaries are available for Linux and OSX on the [releases](https://github.com/liamg/aminal/releases) page. 
 
-Download the binary and `sudo cp aminal-* /usr/local/bin/aminal`.
+Download the binary and `sudo cp aminal-* /usr/local/bin/aminal && chmod +x /usr/local/bin/aminal`.
 
-#### Install with Go
+### Install with Go
 
 ```
 go get -u github.com/liamg/aminal
 ```
 
-### Build 
+## Build 
 
-#### Dependencies
+### Dependencies
 
 - On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
 - On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
 - On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
 
-#### Building Locally
+### Building Locally
 
 There are various make targets available, the most obvious being:
 
