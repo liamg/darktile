@@ -3,7 +3,7 @@ BINARY := aminal
 FONTPATH := ./gui/packed-fonts
 
 .PHONY: build
-build: test install-tools
+build: 
 	./build.sh `git describe --tags`
 
 .PHONY: test

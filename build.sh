@@ -25,4 +25,6 @@ cp -r . ${SRCDIR}
     cd ${SRCDIR}
     go build -ldflags "-X github.com/liamg/aminal/version.Version=$version"
 )
+cp ${SRCDIR}/aminal ./aminal
+rm -rf /tmp/.gobuild
 
