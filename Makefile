@@ -12,8 +12,7 @@ test:
 	go vet -v
 
 .PHONY: install
-install: build install-tools
-	packr -v
+install: build
 	go install -ldflags "-X github.com/liamg/aminal/version.Version=`git describe --tags`"
 
 .PHONY: install-tools
