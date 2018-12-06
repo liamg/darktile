@@ -4,8 +4,7 @@ FONTPATH := ./gui/packed-fonts
 
 .PHONY: build
 build: test install-tools
-	packr -v
-	go build -ldflags "-X github.com/liamg/aminal/version.Version=`git describe --tags`"
+	./build.sh `git describe --tags`
 
 .PHONY: test
 test:
