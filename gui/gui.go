@@ -433,7 +433,7 @@ func (gui *GUI) createWindow() (*glfw.Window, error) {
 		return nil, fmt.Errorf("failed to create window, please update your graphics drivers and try again")
 	}
 
-	window.SetSizeLimits(300, 150, 10000, 10000)
+	window.SetSizeLimits(int(300 * gui.dpiScale), int(150 * gui.dpiScale), 10000, 10000)
 	window.MakeContextCurrent()
 	window.Show()
 	window.Focus()
