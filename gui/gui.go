@@ -25,6 +25,7 @@ type GUI struct {
 	terminal          *terminal.Terminal
 	width             int //window width in pixels
 	height            int //window height in pixels
+	dpiScale          float32
 	fontMap           *FontMap
 	fontScale         float32
 	renderer          *OpenGLRenderer
@@ -35,6 +36,34 @@ type GUI struct {
 	showDebugInfo     bool
 	keyboardShortcuts map[config.UserAction]*config.KeyCombination
 	resizeLock        *sync.Mutex
+}
+
+// RecalculateDpiScale calculates dpi scale in comparison with "standard" monitor's dpi values
+func (g *GUI) RecalculateDpiScale() {
+	const standardDpi = 96
+	const mmPerInch = 25.4
+	m := glfw.GetPrimaryMonitor()
+	widthMM, _ := m.GetPhysicalSize()
+	v := m.GetVideoMode()
+
+	monitorDpi := float32(v.Width) / (float32(widthMM) / mmPerInch)
+	g.dpiScale = monitorDpi / standardDpi
+}
+
+func (g *GUI) Width() int {
+	return int(float32(g.width) * g.dpiScale)
+}
+
+func (g *GUI) SetWidth(width int) {
+	g.width = int(float32(width) / g.dpiScale)
+}
+
+func (g *GUI) Height() int {
+	return int(float32(g.height) * g.dpiScale)
+}
+
+func (g *GUI) SetHeight(height int) {
+	g.height = int(float32(height) / g.dpiScale)
 }
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) (*GUI, error) {
@@ -49,6 +78,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		logger:            logger,
 		width:             800,
 		height:            600,
+		dpiScale:          1,
 		terminal:          terminal,
 		fontScale:         14.0,
 		terminalAlpha:     1,
@@ -73,14 +103,14 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	gui.logger.Debugf("Initiating GUI resize to %dx%d", width, height)
 
-	gui.width = width
-	gui.height = height
+	gui.SetWidth(width)
+	gui.SetHeight(height)
 
 	gui.logger.Debugf("Updating font resolutions...")
 	gui.loadFonts()
 
 	gui.logger.Debugf("Setting renderer area...")
-	gui.renderer.SetArea(0, 0, width, height)
+	gui.renderer.SetArea(0, 0, gui.Width(), gui.Height())
 
 	gui.logger.Debugf("Calculating size in cols/rows...")
 	cols, rows := gui.renderer.GetTermSize()
@@ -91,7 +121,7 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	}
 
 	gui.logger.Debugf("Setting viewport size...")
-	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
+	gl.Viewport(0, 0, int32(gui.Width()), int32(gui.Height()))
 
 	gui.terminal.SetCharSize(gui.renderer.cellWidth, gui.renderer.cellHeight)
 
@@ -141,7 +171,7 @@ func (gui *GUI) Render() error {
 
 	titleChan := make(chan bool, 1)
 
-	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width, gui.height, gui.colourAttr, program)
+	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.Width(), gui.Height(), gui.colourAttr, program)
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
@@ -158,8 +188,10 @@ func (gui *GUI) Render() error {
 		}
 	})
 
-	w, h := gui.window.GetFramebufferSize()
-	gui.resize(gui.window, w, h)
+	{
+		w, h := gui.window.GetFramebufferSize()
+		gui.resize(gui.window, w, h)
+	}
 
 	gui.logger.Debugf("Starting pty read handling...")
 
@@ -414,7 +446,9 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 	glfw.WindowHint(glfw.ContextVersionMajor, major)
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
 
-	window, err := glfw.CreateWindow(gui.width, gui.height, "Terminal", nil, nil)
+	gui.RecalculateDpiScale()
+
+	window, err := glfw.CreateWindow(gui.Width(), gui.Height(), "Terminal", nil, nil)
 	if err != nil {
 		e := err.Error()
 		if i := strings.Index(e, ", got version "); i > -1 {
@@ -425,7 +459,6 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 					if min, miErr := strconv.Atoi(v[1]); miErr == nil {
 						return gui.createWindowWithOpenGLVersion(maj, min)
 					}
-
 				}
 			}
 		}
