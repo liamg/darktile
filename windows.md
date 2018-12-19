@@ -21,6 +21,7 @@ set PATH=%GOBIN%;%PATH%
 
 cd aminal
 go get
+windres -o aminal.syso aminal.rc
 go build
 go install
 ```
