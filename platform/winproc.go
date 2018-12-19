@@ -68,7 +68,7 @@ package platform
 //      return 0;
 //  }
 //
-//  DWORD createGuestProcHelper( uintptr_t hpc, LPCWSTR imagePath, uintptr_t * hProcess )
+//  DWORD createGuestProcHelper( uintptr_t hpc, LPCWSTR imagePath, uintptr_t * hProcess, DWORD * dwProcessID )
 //  {
 //      STARTUPINFOEXW_copy si;
 //      ZeroMemory( &si, sizeof(si) );
@@ -132,6 +132,7 @@ package platform
 //      }
 //
 //      *hProcess = (uintptr_t) pi.hProcess;
+//      *dwProcessID = pi.dwProcessId;
 //
 //      HeapFree(GetProcessHeap(), 0, si.lpAttributeList);
 //      HeapFree(GetProcessHeap(), 0, cmdLineMutable);
@@ -154,10 +155,11 @@ func init() {
 }
 
 type winProcess struct {
-	hproc uintptr
+	hproc     uintptr
+	processID uint32
 }
 
-func createPtyChildProcess(imagePath string, hcon uintptr) (Process, error) {
+func createPtyChildProcess(imagePath string, hcon uintptr) (*winProcess, error) {
 	path16 := utf16.Encode([]rune(imagePath))
 
 	cpath16 := C.calloc(C.size_t(len(path16)+1), 2)
@@ -165,8 +167,9 @@ func createPtyChildProcess(imagePath string, hcon uintptr) (Process, error) {
 	copy(pp[:], path16)
 
 	hproc := C.uintptr_t(0)
+	dwProcessID := C.DWORD(0)
 
-	hr := C.createGuestProcHelper(C.uintptr_t(hcon), (C.LPCWSTR)(cpath16), &hproc)
+	hr := C.createGuestProcHelper(C.uintptr_t(hcon), (C.LPCWSTR)(cpath16), &hproc, &dwProcessID)
 
 	C.free(cpath16)
 
@@ -175,7 +178,8 @@ func createPtyChildProcess(imagePath string, hcon uintptr) (Process, error) {
 	}
 
 	return &winProcess{
-		hproc: uintptr(hproc),
+		hproc:     uintptr(hproc),
+		processID: uint32(dwProcessID),
 	}, nil
 }
 
