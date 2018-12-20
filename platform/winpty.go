@@ -5,6 +5,7 @@ package platform
 import (
 	"errors"
 	"syscall"
+	"time"
 
 	"github.com/MaxRis/w32"
 )
@@ -132,7 +133,42 @@ func (pty *winConPty) Close() error {
 }
 
 func (pty *winConPty) CreateGuestProcess(imagePath string) (Process, error) {
-	return createPtyChildProcess(imagePath, pty.hcon)
+	process, err := createPtyChildProcess(imagePath, pty.hcon)
+
+	if err == nil {
+		setupChildConsole(C.DWORD(process.processID), C.STD_OUTPUT_HANDLE, C.ENABLE_PROCESSED_OUTPUT|C.ENABLE_WRAP_AT_EOL_OUTPUT)
+	}
+
+	return process, err
+}
+
+func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) bool {
+	C.FreeConsole()
+	defer C.AttachConsole(^C.DWORD(0)) // attach to parent process console
+
+	// process may not be ready so we'll do retries
+	const maxWaitMilliSeconds = 5000
+	const waitStepMilliSeconds = 200
+	count := maxWaitMilliSeconds / waitStepMilliSeconds
+
+	for {
+		if r := C.AttachConsole(processID); r != 0 {
+			break // success
+		}
+		lastError := C.GetLastError()
+		if lastError != C.ERROR_GEN_FAILURE || count <= 0 {
+			return false
+		}
+
+		time.Sleep(time.Millisecond * time.Duration(waitStepMilliSeconds))
+		count--
+	}
+
+	h := C.GetStdHandle(nStdHandle)
+	C.SetConsoleMode(h, C.DWORD(mode))
+	C.FreeConsole()
+
+	return true
 }
 
 func (pty *winConPty) Resize(x, y int) error {
