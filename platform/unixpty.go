@@ -13,8 +13,9 @@ import (
 )
 
 type unixPty struct {
-	pty *os.File
-	tty *os.File
+	pty                       *os.File
+	tty                       *os.File
+	platformDependentSettings PlatformDependentSettings
 }
 
 type winsize struct {
@@ -81,6 +82,10 @@ func (p *unixPty) CreateGuestProcess(imagePath string) (Process, error) {
 	return shell, nil
 }
 
+func (pty *unixPty) GetPlatformDependentSettings() PlatformDependentSettings {
+	return pty.platformDependentSettings
+}
+
 func NewPty(x, y int) (Pty, error) {
 	innerPty, innerTty, err := pty.Open()
 	if err != nil {
@@ -89,5 +94,8 @@ func NewPty(x, y int) (Pty, error) {
 	return &unixPty{
 		pty: innerPty,
 		tty: innerTty,
+		platformDependentSettings: PlatformDependentSettings{
+			OSCTerminators: map[rune]struct{}{0x07: {}, 0x5c: {}},
+		},
 	}, nil
 }
