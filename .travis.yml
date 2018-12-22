@@ -13,7 +13,7 @@ matrix:
 go_import_path: github.com/liamg/aminal
 before_install:
 - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then sudo apt-get install -y xorg-dev libgl1-mesa-dev
-  gcc-multilib gcc-mingw-w64 && go get github.com/mitchellh/gox; fi
+  gcc-multilib gcc-mingw-w64-x86-64 && go get github.com/mitchellh/gox; fi
 script:
 - make test
 - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then make build-darwin-native; fi
@@ -30,7 +30,7 @@ deploy:
   file:
     - bin/darwin/aminal-darwin-amd64
     - bin/linux/aminal-linux-amd64
-    - bin/windows/aminal-windows-386.exe
+    - bin/windows/aminal-windows-amd64.exe
   on:
     repo: jumptrading/aminal
     tags: true

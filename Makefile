@@ -28,7 +28,7 @@ build-linux:
 .PHONY: windows-cross-compile
 windows-cross-compile:
 	mkdir -p bin/windows
-	GOOS=windows GOARCH=386 CGO_ENABLED=1 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc go build -o bin/windows/${BINARY}-windows-386.exe -ldflags "-X github.com/liamg/aminal/version.Version=${TRAVIS_TAG}"
+	GOOS=windows GOARCH=amd64 CGO_ENABLED=1 CXX=x86_64-w64-mingw32-g++ CC=x86_64-w64-mingw32-gcc go build -o bin/windows/${BINARY}-windows-amd64.exe -ldflags "-X github.com/liamg/aminal/version.Version=${TRAVIS_TAG}"
 
 .PHONY:	build-windows
 build-windows:
