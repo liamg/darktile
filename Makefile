@@ -23,13 +23,28 @@ install-tools:
 .PHONY:	build-linux
 build-linux:
 	mkdir -p bin/linux
-	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/linux/${BINARY}-linux-amd64 -ldflags "-X github.com/liamg/aminal/version.Version=${CIRCLE_TAG}"
+	GOOS=linux GOARCH=amd64 CGO_ENABLED=1 go build -o bin/linux/${BINARY}-linux-amd64 -ldflags "-X github.com/liamg/aminal/version.Version=${TRAVIS_TAG}"
+
+.PHONY: windows-cross-compile
+windows-cross-compile:
+	mkdir -p bin/windows
+	GOOS=windows GOARCH=386 CGO_ENABLED=1 CXX=i686-w64-mingw32-g++ CC=i686-w64-mingw32-gcc go build -o bin/windows/${BINARY}-windows-386.exe -ldflags "-X github.com/liamg/aminal/version.Version=${TRAVIS_TAG}"
+
+.PHONY:	build-windows
+build-windows:
+	go build -o ${BINARY}-windows-amd64.exe -ldflags "-X github.com/liamg/aminal/version.Version=${TRAVIS_TAG}"
+
+
+.PHONY:	build-darwin-native
+build-darwin-native:
+	mkdir -p bin/darwin
+	GOOS=darwin GOARCH=amd64 CGO_ENABLED=1 go build -o bin/darwin/${BINARY}-darwin-amd64 -ldflags "-X github.com/liamg/aminal/version.Version=${TRAVIS_TAG}"
 
 .PHONY:	build-darwin
 build-darwin:
 	mkdir -p bin/darwin
-	xgo -x -v -ldflags "-X github.com/liamg/aminal/version.Version=${CIRCLE_TAG}" --targets=darwin/amd64 -out bin/darwin/${BINARY} .
+	xgo -x -v -ldflags "-X github.com/liamg/aminal/version.Version=${TRAVIS_TAG}" --targets=darwin/amd64 -out bin/darwin/${BINARY} .
 
 .PHONY:	package-debian
 package-debian: build-linux
-	./scripts/package-debian.sh "${CIRCLE_TAG}" bin/linux/${BINARY}-linux-amd64
+	./scripts/package-debian.sh "${TRAVIS_TAG}" bin/linux/${BINARY}-linux-amd64

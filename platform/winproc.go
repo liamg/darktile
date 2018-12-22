@@ -2,7 +2,7 @@
 
 package platform
 
-// #include "Windows.h"
+// #include "windows.h"
 //
 //  /*    Until we can specify the platform SDK and target version for Windows.h      *
 //   * without breaking our ability to gracefully display an error message, these     *
@@ -74,7 +74,7 @@ package platform
 //      ZeroMemory( &si, sizeof(si) );
 //      si.StartupInfo.cb = sizeof(si);
 //
-//      size_t bytesRequired;
+//      SIZE_T bytesRequired;
 //      (*pfnInitializeProcThreadAttributeList)( NULL, 1, 0, &bytesRequired );
 //
 //      si.lpAttributeList = (PPROC_THREAD_ATTRIBUTE_LIST)HeapAlloc(GetProcessHeap(), 0, bytesRequired);
@@ -163,7 +163,7 @@ func createPtyChildProcess(imagePath string, hcon uintptr) (*winProcess, error) 
 	path16 := utf16.Encode([]rune(imagePath))
 
 	cpath16 := C.calloc(C.size_t(len(path16)+1), 2)
-	pp := (*[1 << 30]uint16)(cpath16)
+	pp := (*[0xffff]uint16)(cpath16)
 	copy(pp[:], path16)
 
 	hproc := C.uintptr_t(0)

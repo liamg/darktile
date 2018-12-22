@@ -1,25 +1,37 @@
 language: go
-
+os:
+- linux
+- osx
 go:
-  - "1.10.5"
-  - "1.11.2"
-  - "master"  # find out if an upcoming change in Go is going to break us
-
+- 1.10.x
+- 1.11.x
+- master
 matrix:
-  # We only want to fail the build based on stable versions of Go
   allow_failures:
-    - go: master
+  - go: master
   fast_finish: true
-
 go_import_path: github.com/liamg/aminal
-
 before_install:
-  - sudo apt-get install -y xorg-dev libgl1-mesa-dev
-
+- if [[ $TRAVIS_OS_NAME == 'linux' ]]; then sudo apt-get install -y xorg-dev libgl1-mesa-dev
+  gcc-multilib gcc-mingw-w64 && go get github.com/mitchellh/gox; fi
 script:
-  - make test
-  - make build-linux
-
+- make test
+- if [[ $TRAVIS_OS_NAME == 'osx' ]]; then make build-darwin-native; fi
+- if [[ $TRAVIS_OS_NAME == 'linux' ]]; then make build-linux; fi
+- if [[ $TRAVIS_OS_NAME == 'linux' ]]; then make windows-cross-compile; fi
 env:
   global:
-    secure: MpOY0NYnuf8hgDVP4MjSSrrzWDdPlJ5JnB/TiiJxptjN2qn0OKPVBeZl2OsJ3MlZfjNM3wZ3mNN6p/3TwJmfp1g+3SU9MfRul4XMFfJKiN9u5/y5lamophs+vkgrawG00xwMd4KvKOqXVP2vX2s+koVfUzUXEot5IJDMerQltQPqbonvk/tWJHmtu5NoMQgGO+2pvmy+74u5HMfjoWSmTBiJgTUZ8c/a1nK3MsG2mafsEB8sLa8uMWAp9ISnfxLzTTUFQeVR64i1z7duz5fJ0B96JqYIlwnR9vzeB1gr+3+cSdDUPfcTgWEDhDn9Kglqe71K+9vUaP3cOkEMThFPoj1wb2vyIV2LYVqsAVAmxBFiyMS8HVkp7z0M7f34wRhd3blN2KaxYuiFlSg3MwnUp615NHnnS8kA0So/E7xYcXnsfFx9f1ZZqaAuHz1DrD2UHeRKtcekdcxTMG4LMJbGv+HsqL6mUFIND/tN9h/QV+w+GbmKUUBt/xMmyoaLqBwKz+m1aLvBSZ9IaUIHRKCNnCfm9QPXoMfeXvh2JCX7leM/0FDHUp8v1J1Rw5E0eiWpBS0OlQS2OeR8zAlJh8mZ4SpApUEHDEHBbcVSP0ZM+fSMpq1OVESlmEO308WZY0IlmQ9UkDIpixLuizDB4IlwOPVXlRSyHd9spAmqx4ZGfR4=
+  - secure: m5q2Ac42MTd7h/watEeyxTTWS40DXzAbz/8tFFYYUbbiSD0fSZA9pP5KZU8/cXx7Q0DkUGs+yLuClDXQrQSbgHc89+O15Yw9RZfNMSXF0L7w5VdxGt4Cr+AdTb2ypnc6Mm05X/MCWtTdWl0fZMWDWhYWO8iylBLMd1fQfoZqBbG2g6p8ZEiz8cFAb2neJXZCvgfQqGuI0dpL2q2FTsQnidAkAs3ZGDDLMUMFyGD+lX+3bVymNaKvYaFmtqbSjy9K5kNB5K0yX7j2HZUxdqVJvKlVc9d62spaISRA+E5eglN04xSmVGxBQpkAsl0OxrygKr+BZApV23sZzmgvKCc63KCYFgN35pyXRS16hK+ZBlYWKmlAGpR0zxRhDsnnQqKkwnGMXErWhrsBC6172Pwrc/Vsl154DjmobHuy2yeEAZYQm4fbOjaeX83m2dmdXm3xjUek01E74jseREpviRK5y2pYznPLGNO0zLkC/JuQhSVjE/TIkSSZkY7HIBH4HAtaQyBX6NJdbWp28HxoEj7vv5l59j5QT58io1+VC6uNg/EFWl15kQJcdRc2nXTSVccPtRRtzUT+mIsQTujf2xvHnLgt5Oe04yY3EUxYifvDhaeyCMCJeZ2vtXX3D1Ic5GZav8ZbCy+5+ey63IukIQgfZJoIb5svl+n9s/KYMmif1EY=
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: UZFpKKd7Qu0V+hpSrMv2yxeEeynHowRQTiojL0hJIbe6G4eNHqCuZdfULL5bgcHtLfo1OSAtQTVfI4rr/CxNM31zAu+NTowuDgb9ISggfULTOOsI5WVzK6YNXwYHa3a0wOrhnXcb09Rb+/YGjoT+16uqDk9oiyNvwlOUpJkSMaMfN7fg1s/XVev8JnpMu6+sJ7k+EidI94YT2jn/VykUE8XzaqjKJro3jku++hBBJh5tePXcsOEdXCQwbtH9ypsZpjULILmb47rE0ntqvBHvyr8ekCH2Mosxa+WG36YmZizUYdRdTB/tIXiRW6dGoWpYGFijzXsEdam5N+1dikcK1qpdmZzmYm/vKHuPJbkl7Cb9wElzXvWxhU5x395DFOvT28yeDTrVJ+eEwysy7W0ayhjt6N2C3zbHoAjihqzVf+idkoFULrdOYnyGNiubqwJoLM/togB4GlTVvo012N0Fdsm+zor4gM6k3hALaRuhjAIJ2+WSR8F/hJpFKpcmVw/o598zPiJAqqMyNk8OxN6om192bqCKqIloHF0r6tbQBZqEE7X814RSg8k/M2brVn9pyVWNuwPZWUyaVb36IGppo5zYtqBDVAwOE3zGWys996O71HQqByi1jBLK232bu7pdA+W+0rpPqmcdcnZP2DPvZOVMNquLEC1kdpRFwmSrDmg=
+  file:
+    - bin/darwin/aminal-darwin-amd64
+    - bin/linux/aminal-linux-amd64
+    - bin/windows/aminal-windows-386.exe
+  on:
+    repo: jumptrading/aminal
+    tags: true
+    condition: "$TRAVIS_GO_VERSION =~ ^1\\.11"

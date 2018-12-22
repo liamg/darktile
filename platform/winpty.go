@@ -10,7 +10,7 @@ import (
 	"github.com/MaxRis/w32"
 )
 
-// #include "Windows.h"
+// #include "windows.h"
 //
 //  /*    Until we can specify the platform SDK and target version for Windows.h      *
 //   * without breaking our ability to gracefully display an error message, these     *
