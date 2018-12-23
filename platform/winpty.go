@@ -92,11 +92,12 @@ func init() {
 }
 
 type winConPty struct {
-	inPipe       syscall.Handle
-	outPipe      syscall.Handle
-	innerInPipe  syscall.Handle
-	innerOutPipe syscall.Handle
-	hcon         uintptr
+	inPipe                    syscall.Handle
+	outPipe                   syscall.Handle
+	innerInPipe               syscall.Handle
+	innerOutPipe              syscall.Handle
+	hcon                      uintptr
+	platformDependentSettings PlatformDependentSettings
 }
 
 func (pty *winConPty) Read(p []byte) (n int, err error) {
@@ -181,6 +182,10 @@ func (pty *winConPty) Resize(x, y int) error {
 	return nil
 }
 
+func (pty *winConPty) GetPlatformDependentSettings() PlatformDependentSettings {
+	return pty.platformDependentSettings
+}
+
 // NewPty creates a new instance of a Pty implementation for Windows on a newly allocated ConPTY
 func NewPty(x, y int) (pty Pty, err error) {
 	if !ptyInitSucceeded {
@@ -217,6 +222,9 @@ func NewPty(x, y int) (pty Pty, err error) {
 		innerInPipe:  inputReadSide,
 		innerOutPipe: outputWriteSide,
 		hcon:         uintptr(hc),
+		platformDependentSettings: PlatformDependentSettings{
+			OSCTerminators: map[rune]struct{}{0x00: {}},
+		},
 	}
 
 	return pty, nil

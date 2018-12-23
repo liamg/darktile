@@ -30,23 +30,24 @@ const (
 )
 
 type Terminal struct {
-	program            uint32
-	buffers            []*buffer.Buffer
-	activeBuffer       *buffer.Buffer
-	lock               sync.Mutex
-	pty                platform.Pty
-	logger             *zap.SugaredLogger
-	title              string
-	size               Winsize
-	config             *config.Config
-	titleHandlers      []chan bool
-	modes              Modes
-	mouseMode          MouseMode
-	bracketedPasteMode bool
-	isDirty            bool
-	charWidth          float32
-	charHeight         float32
-	lastBuffer         uint8
+	program                   uint32
+	buffers                   []*buffer.Buffer
+	activeBuffer              *buffer.Buffer
+	lock                      sync.Mutex
+	pty                       platform.Pty
+	logger                    *zap.SugaredLogger
+	title                     string
+	size                      Winsize
+	config                    *config.Config
+	titleHandlers             []chan bool
+	modes                     Modes
+	mouseMode                 MouseMode
+	bracketedPasteMode        bool
+	isDirty                   bool
+	charWidth                 float32
+	charHeight                float32
+	lastBuffer                uint8
+	platformDependentSettings platform.PlatformDependentSettings
 }
 
 type Modes struct {
@@ -85,6 +86,7 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 		modes: Modes{
 			ShowCursor: true,
 		},
+		platformDependentSettings: pty.GetPlatformDependentSettings(),
 	}
 	t.activeBuffer = t.buffers[0]
 	return t
@@ -119,6 +121,11 @@ func (terminal *Terminal) SetMouseMode(mode MouseMode) {
 
 func (terminal *Terminal) GetMouseMode() MouseMode {
 	return terminal.mouseMode
+}
+
+func (terminal *Terminal) IsOSCTerminator(char rune) bool {
+	_, ok := terminal.platformDependentSettings.OSCTerminators[char]
+	return ok
 }
 
 func (terminal *Terminal) UseMainBuffer() {
