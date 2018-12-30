@@ -10,7 +10,19 @@ import (
 	"github.com/liamg/aminal/sixel"
 )
 
+type boolFormRuneFunc func(rune) bool
+
+func swallowByFunction(pty chan rune, isTerminator boolFormRuneFunc) {
+	for {
+		b := <-pty
+		if isTerminator(b) {
+			break
+		}
+	}
+}
+
 func sixelHandler(pty chan rune, terminal *Terminal) error {
+	debug := ""
 
 	data := []rune{}
 
@@ -18,14 +30,36 @@ func sixelHandler(pty chan rune, terminal *Terminal) error {
 		b := <-pty
 		if b == 0x1b { // terminated by ESC bell or ESC \
 			t := <-pty
+			if t == '[' { // Windows injected a CSI sequence, let's ignore it
+				final, param, _ := loadCSI(pty)
+				debug += "[CSI " + param + string(final) + "]"
+				continue
+			}
+			if t == ']' { // Windows injected an OCS sequence, let's ignore it
+				swallowByFunction(pty, terminal.IsOSCTerminator)
+				debug += "[OSC]"
+				continue
+			}
 			if t != 0x07 && t != 0x5c {
 				return fmt.Errorf("Incorrect terminator in sixel sequence: 0x%02X [%c]", t, t)
 			}
 			break
 		}
+
+		if b == 0x0A {
+			terminal.logger.Debugf("Sixel line: %s", debug)
+			debug = ""
+		} else {
+			debug += string(b)
+		}
+
 		if b >= 33 {
 			data = append(data, b)
 		}
+	}
+
+	if debug != "" {
+		terminal.logger.Debugf("Sixel last line: %s", debug)
 	}
 
 	six, err := sixel.ParseString(string(data))

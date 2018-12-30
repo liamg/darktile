@@ -49,11 +49,17 @@ var csiSequences = []csiMapping{
 	{id: '@', handler: csiInsertBlankCharactersHandler, description: "Insert Ps (Blank) Character(s) (default = 1) (ICH)"},
 }
 
-func csiHandler(pty chan rune, terminal *Terminal) error {
-	var final rune
+type runeRange struct {
+	min rune
+	max rune
+}
+
+var csiTerminators = runeRange{0x40, 0x7e}
+
+func loadCSI(pty chan rune) (final rune, param string, intermediate string) {
 	var b rune
-	param := ""
-	intermediate := ""
+	param = ""
+	intermediate = ""
 CSI:
 	for {
 		b = <-pty
@@ -63,11 +69,17 @@ CSI:
 		case b >= 0x20 && b <= 0x2F:
 			//intermediate? useful?
 			intermediate += string(b)
-		case b >= 0x40 && b <= 0x7e:
+		case b >= csiTerminators.min && b <= csiTerminators.max:
 			final = b
 			break CSI
 		}
 	}
+
+	return final, param, intermediate
+}
+
+func csiHandler(pty chan rune, terminal *Terminal) error {
+	final, param, intermediate := loadCSI(pty)
 
 	params := strings.Split(param, ";")
 	if param == "" {
