@@ -12,7 +12,7 @@ func oscHandler(pty chan rune, terminal *Terminal) error {
 
 	for {
 		b := <-pty
-		if b == 0x07 || b == 0x5c {
+		if terminal.IsOSCTerminator(b) {
 			params = append(params, param)
 			break
 		}

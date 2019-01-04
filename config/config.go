@@ -13,6 +13,7 @@ type Config struct {
 	Shell        string           `toml:"shell"`
 	KeyMapping   KeyMappingConfig `toml:"keys"`
 	SearchURL    string           `toml:"search_url"`
+	MaxLines     uint64           `toml:"max_lines"`
 }
 
 type KeyMappingConfig map[string]string

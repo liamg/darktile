@@ -1,0 +1,37 @@
+language: go
+os:
+- linux
+- osx
+go:
+- 1.10.x
+- 1.11.x
+- master
+matrix:
+  allow_failures:
+  - go: master
+  fast_finish: true
+go_import_path: github.com/liamg/aminal
+before_install:
+- if [[ $TRAVIS_OS_NAME == 'linux' ]]; then sudo apt-get install -y xorg-dev libgl1-mesa-dev
+  gcc-multilib gcc-mingw-w64-x86-64 && go get github.com/mitchellh/gox; fi
+script:
+- make test
+- if [[ $TRAVIS_OS_NAME == 'osx' ]]; then make build-darwin-native-travis; fi
+- if [[ $TRAVIS_OS_NAME == 'linux' ]]; then make build-linux-travis; fi
+- if [[ $TRAVIS_OS_NAME == 'linux' ]]; then make windows-cross-compile-travis; fi
+env:
+  global:
+  - secure: YOUR_SECURE_TOKEN
+deploy:
+  provider: releases
+  skip_cleanup: true
+  api_key:
+    secure: YOUR_SECURE_TOKEN
+  file:
+    - bin/darwin/aminal-darwin-amd64
+    - bin/linux/aminal-linux-amd64
+    - bin/windows/aminal-windows-amd64.exe
+  on:
+    repo: liamg/aminal
+    tags: true
+    condition: "$TRAVIS_GO_VERSION =~ ^1\\.11"
