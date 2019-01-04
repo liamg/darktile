@@ -35,7 +35,7 @@ hell   xxx good
 	for _, l := range lines {
 		strs = append(strs, l.String())
 	}
-	require.Equal(t, strings.TrimSpace(expected), strings.Join(strs, "\n"))
+	require.Equal(t, strings.TrimSpace(expected), strings.TrimSpace(strings.Join(strs, "\n")))
 }
 
 func TestOffsets(t *testing.T) {
@@ -133,7 +133,7 @@ func TestWritingNewLineAsFirstRuneOnWrappedLine(t *testing.T) {
 	assert.Equal(t, uint16(0), b.cursorX)
 	assert.Equal(t, uint16(2), b.cursorY)
 
-	require.Equal(t, 2, len(b.lines))
+	require.Equal(t, 3, len(b.lines))
 	assert.Equal(t, "abc", b.lines[0].String())
 	assert.Equal(t, "def", b.lines[1].String())
 

@@ -719,6 +719,14 @@ func (buffer *Buffer) NewLine() {
 
 	buffer.cursorX = 0
 	buffer.Index()
+
+	for {
+		line := buffer.getCurrentLine()
+		if !line.wrapped {
+			break
+		}
+		buffer.Index()
+	}
 }
 
 func (buffer *Buffer) MovePosition(x int16, y int16) {
