@@ -911,6 +911,9 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 	line := buffer.getCurrentLine()
 
 	for i := 0; i < int(buffer.cursorX); i++ {
+		if i >= len(line.cells) {
+			break
+		}
 		line.cells[i].erase()
 	}
 	for i := uint16(0); i < buffer.cursorY; i++ {
