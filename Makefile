@@ -3,9 +3,8 @@ BINARY := aminal
 FONTPATH := ./gui/packed-fonts
 
 .PHONY: build
-build: test install-tools
-	packr -v
-	go build -ldflags "-X github.com/liamg/aminal/version.Version=`git describe --tags`"
+build: 
+	./build.sh `git describe --tags`
 
 .PHONY: test
 test:
@@ -13,20 +12,13 @@ test:
 	go vet -v
 
 .PHONY: install
-install: build install-tools
-	packr -v
+install: build
 	go install -ldflags "-X github.com/liamg/aminal/version.Version=`git describe --tags`"
 
 .PHONY: install-tools
 install-tools:
 	which dep || curl -L https://raw.githubusercontent.com/golang/dep/master/install.sh | sh
 	which packr || go get -u github.com/gobuffalo/packr/packr
-
-.PHONY: update-fonts
-update-fonts: install-tools
-	curl -L https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Hack/Regular/complete/Hack%20Regular%20Nerd%20Font%20Complete.ttf -o "${FONTPATH}/Hack Regular Nerd Font Complete.ttf"
-	curl -L https://github.com/ryanoasis/nerd-fonts/raw/master/patched-fonts/Hack/Bold/complete/Hack%20Bold%20Nerd%20Font%20Complete.ttf -o "${FONTPATH}/Hack Bold Nerd Font Complete.ttf"
-	packr -v
 
 .PHONY:	build-linux
 build-linux:

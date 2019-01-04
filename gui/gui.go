@@ -6,6 +6,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/go-gl/gl/all-core/gl"
@@ -33,6 +34,7 @@ type GUI struct {
 	terminalAlpha     float32
 	showDebugInfo     bool
 	keyboardShortcuts map[config.UserAction]*config.KeyCombination
+	resizeLock        *sync.Mutex
 }
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) (*GUI, error) {
@@ -51,6 +53,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		fontScale:         14.0,
 		terminalAlpha:     1,
 		keyboardShortcuts: shortcuts,
+		resizeLock:        &sync.Mutex{},
 	}, nil
 }
 
@@ -64,6 +67,9 @@ func (gui *GUI) scale() float32 {
 
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
+
+	gui.resizeLock.Lock()
+	defer gui.resizeLock.Unlock()
 
 	gui.logger.Debugf("Initiating GUI resize to %dx%d", width, height)
 
@@ -91,6 +97,8 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	gui.logger.Debugf("Resize complete!")
 
+	gui.redraw(buffer.NewBackgroundCell(gui.config.ColourScheme.Background))
+	gui.window.SwapBuffers()
 }
 
 func (gui *GUI) getTermSize() (uint, uint) {
@@ -205,6 +213,7 @@ func (gui *GUI) Render() error {
 	}()
 
 	startTime := time.Now()
+	showMessage := true
 
 	for !gui.window.ShouldClose() {
 
@@ -218,66 +227,7 @@ func (gui *GUI) Render() error {
 
 		if gui.terminal.CheckDirty() {
 
-			gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
-
-			lines := gui.terminal.GetVisibleLines()
-			lineCount := int(gui.terminal.ActiveBuffer().ViewHeight())
-			colCount := int(gui.terminal.ActiveBuffer().ViewWidth())
-			for y := 0; y < lineCount; y++ {
-				for x := 0; x < colCount; x++ {
-
-					cell := defaultCell
-
-					if y < len(lines) {
-						cells := lines[y].Cells()
-						if x < len(cells) {
-							cell = cells[x]
-						}
-					}
-
-					cursor := false
-					if gui.terminal.Modes().ShowCursor {
-						cx := uint(gui.terminal.GetLogicalCursorX())
-						cy := uint(gui.terminal.GetLogicalCursorY())
-						cy = cy + uint(gui.terminal.GetScrollOffset())
-						cursor = cx == uint(x) && cy == uint(y)
-					}
-
-					var colour *config.Colour
-
-					if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
-						colour = &gui.config.ColourScheme.Selection
-					}
-					if cell.Image() != nil {
-						gui.renderer.DrawCellImage(cell, uint(x), uint(y))
-					} else {
-						gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
-					}
-				}
-			}
-			for y := 0; y < lineCount; y++ {
-				for x := 0; x < colCount; x++ {
-
-					cell := defaultCell
-					hasText := false
-
-					if y < len(lines) {
-						cells := lines[y].Cells()
-						if x < len(cells) {
-							cell = cells[x]
-							if cell.Rune() != 0 && cell.Rune() != 32 {
-								hasText = true
-							}
-						}
-					}
-
-					if hasText {
-						gui.renderer.DrawCellText(cell, uint(x), uint(y), 1.0, nil)
-					}
-				}
-			}
-
-			gui.renderOverlay()
+			gui.redraw(defaultCell)
 
 			if gui.showDebugInfo {
 				gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d
@@ -295,26 +245,29 @@ Buffer Size: %d lines
 				)
 			}
 
-			if latestVersion != "" && time.Since(startTime) < time.Second*10 && gui.terminal.ActiveBuffer().RawLine() == 0 {
-				time.AfterFunc(time.Second, gui.terminal.SetDirty)
-				_, h := gui.terminal.GetSize()
-				var msg string
-				if version.Version == "" {
-					msg = "You are using a development build of Aminal."
+			if showMessage {
+				if latestVersion != "" && time.Since(startTime) < time.Second*10 && gui.terminal.ActiveBuffer().RawLine() == 0 {
+					time.AfterFunc(time.Second, gui.terminal.SetDirty)
+					_, h := gui.terminal.GetSize()
+					var msg string
+					if version.Version == "" {
+						msg = "You are using a development build of Aminal."
+					} else {
+						msg = fmt.Sprintf("Version %s of Aminal is now available.", strings.Replace(latestVersion, "v", "", -1))
+					}
+					gui.textbox(
+						2,
+						uint16(h-3),
+						fmt.Sprintf("%s (%d)", msg, 10-int(time.Since(startTime).Seconds())),
+						[3]float32{1, 1, 1},
+						[3]float32{0, 0.5, 0},
+					)
 				} else {
-					msg = fmt.Sprintf("Version %s of Aminal is now available.", strings.Replace(latestVersion, "v", "", -1))
+					showMessage = false
 				}
-				gui.textbox(
-					2,
-					uint16(h-3),
-					fmt.Sprintf("%s (%d)", msg, 10-int(time.Since(startTime).Seconds())),
-					[3]float32{1, 1, 1},
-					[3]float32{0, 0.5, 0},
-				)
 			}
 
-			gui.window.SwapBuffers()
-
+			gui.SwapBuffers()
 		}
 
 	}
@@ -322,6 +275,93 @@ Buffer Size: %d lines
 	gui.logger.Debugf("Stopping render...")
 	return nil
 
+}
+
+func (gui *GUI) redraw(defaultCell buffer.Cell) {
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
+	lines := gui.terminal.GetVisibleLines()
+	lineCount := int(gui.terminal.ActiveBuffer().ViewHeight())
+	colCount := int(gui.terminal.ActiveBuffer().ViewWidth())
+	cx := uint(gui.terminal.GetLogicalCursorX())
+	cy := uint(gui.terminal.GetLogicalCursorY()) + uint(gui.terminal.GetScrollOffset())
+	var colour *config.Colour
+	for y := 0; y < lineCount; y++ {
+		if y < len(lines) {
+			cells := lines[y].Cells()
+			for x := 0; x < colCount; x++ {
+
+				cursor := false
+				if gui.terminal.Modes().ShowCursor {
+					cursor = cx == uint(x) && cy == uint(y)
+				}
+
+				if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
+					colour = &gui.config.ColourScheme.Selection
+				} else {
+					colour = nil
+				}
+
+				cell := defaultCell
+				if colour != nil || cursor || x < len(cells) {
+
+					if x < len(cells) {
+						cell = cells[x]
+						if cell.Image() != nil {
+							gui.renderer.DrawCellImage(cell, uint(x), uint(y))
+							continue
+						}
+					}
+
+					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
+				}
+
+			}
+		}
+	}
+	for y := 0; y < lineCount; y++ {
+
+		if y < len(lines) {
+
+			bufStr := ""
+			bold := false
+			dim := false
+			col := 0
+			colour := [3]float32{0, 0, 0}
+			cells := lines[y].Cells()
+
+			for x := 0; x < colCount; x++ {
+				if x < len(cells) {
+					cell := cells[x]
+					if bufStr != "" && (cell.Attr().Dim != dim || cell.Attr().Bold != bold || colour != cell.Fg()) {
+						var alpha float32 = 1.0
+						if dim {
+							alpha = 0.5
+						}
+						gui.renderer.DrawCellText(bufStr, uint(col), uint(y), alpha, colour, bold)
+						col = x
+						bufStr = ""
+					}
+					dim = cell.Attr().Dim
+					colour = cell.Fg()
+					bold = cell.Attr().Bold
+					r := cell.Rune()
+					if r == 0 {
+						r = ' '
+					}
+					bufStr += string(r)
+				}
+			}
+			if bufStr != "" {
+				var alpha float32 = 1.0
+				if dim {
+					alpha = 0.5
+				}
+				gui.renderer.DrawCellText(bufStr, uint(col), uint(y), alpha, colour, bold)
+			}
+		}
+
+	}
+	gui.renderOverlay()
 }
 
 func (gui *GUI) createWindow() (*glfw.Window, error) {
@@ -352,7 +392,7 @@ func (gui *GUI) createWindow() (*glfw.Window, error) {
 		window, err = gui.createWindowWithOpenGLVersion(v[0], v[1])
 		if err != nil {
 			gui.logger.Warnf("Failed to create window: %s. Will attempt older version...", err)
-		}else{
+		} else {
 			break
 		}
 	}
@@ -369,7 +409,7 @@ func (gui *GUI) createWindow() (*glfw.Window, error) {
 	return window, nil
 }
 
-func(gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window, error) {
+func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window, error) {
 
 	glfw.WindowHint(glfw.ContextVersionMajor, major)
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
@@ -377,13 +417,13 @@ func(gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window
 	window, err := glfw.CreateWindow(gui.width, gui.height, "Terminal", nil, nil)
 	if err != nil {
 		e := err.Error()
-		if i := strings.Index(e, ", got version "); i > - 1 {
+		if i := strings.Index(e, ", got version "); i > -1 {
 			v := strings.Split(strings.TrimSpace(e[i+14:]), ".")
 			if len(v) == 2 {
-				major, err := strconv.Atoi(v[0])
-				if err == nil {
-					if minor, err := strconv.Atoi(v[1]); err == nil {
-						return gui.createWindowWithOpenGLVersion(major, minor)
+				maj, mjErr := strconv.Atoi(v[0])
+				if mjErr == nil {
+					if min, miErr := strconv.Atoi(v[1]); miErr == nil {
+						return gui.createWindowWithOpenGLVersion(maj, min)
 					}
 
 				}
@@ -395,6 +435,7 @@ func(gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window
 
 	return window, nil
 }
+
 // initOpenGL initializes OpenGL and returns an intiialized program.
 func (gui *GUI) createProgram() (uint32, error) {
 	if err := gl.Init(); err != nil {
@@ -436,4 +477,9 @@ func (gui *GUI) launchTarget(target string) {
 	if err := exec.Command(cmd, target).Run(); err != nil {
 		gui.logger.Errorf("Failed to launch external command %s: %s", cmd, err)
 	}
+}
+
+func (gui *GUI) SwapBuffers() {
+	UpdateNSGLContext(gui.window)
+	gui.window.SwapBuffers()
 }

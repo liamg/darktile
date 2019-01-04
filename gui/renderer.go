@@ -57,11 +57,10 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 	halfAreaWidth := float32(r.areaWidth / 2)
 	halfAreaHeight := float32(r.areaHeight / 2)
 
-
 	x = (x - halfAreaWidth) / halfAreaWidth
-	y = -(y - ( halfAreaHeight)) / halfAreaHeight
+	y = -(y - (halfAreaHeight)) / halfAreaHeight
 	w := r.cellWidth / halfAreaWidth
-	h := (r.cellHeight ) / halfAreaHeight
+	h := (r.cellHeight) / halfAreaHeight
 
 	rect := &rectangle{
 		points: []float32{
@@ -162,10 +161,10 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	r.areaHeight = areaHeight
 	r.areaX = areaX
 	r.areaY = areaY
-	f := r.fontMap.GetFont('X')
+	f := r.fontMap.DefaultFont()
 	_, r.cellHeight = f.MaxSize()
 	r.cellWidth, _ = f.Size("X")
-	 //= f.LineHeight()   // includes vertical padding
+	//= f.LineHeight()   // includes vertical padding
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
 	r.rectangles = map[[2]uint]*rectangle{}
@@ -179,7 +178,7 @@ func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
 	}
 
 	x := float32(float32(col) * r.cellWidth)
-	y := float32(float32(row) * r.cellHeight) + r.cellHeight
+	y := float32(float32(row)*r.cellHeight) + r.cellHeight
 
 	r.rectangles[[2]uint{col, row}] = r.newRectangle(x, y, r.colourAttr)
 	return r.rectangles[[2]uint{col, row}]
@@ -201,8 +200,6 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 
 		if cursor {
 			bg = r.config.ColourScheme.Cursor
-		} else if cell.Attr().Reverse {
-			bg = cell.Fg()
 		} else {
 			bg = cell.Bg()
 		}
@@ -216,32 +213,21 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 
 }
 
-func (r *OpenGLRenderer) DrawCellText(cell buffer.Cell, col uint, row uint, alpha float32, colour *[3]float32) {
+func (r *OpenGLRenderer) DrawCellText(text string, col uint, row uint, alpha float32, colour [3]float32, bold bool) {
 
-	var fg [3]float32
-
-	if colour != nil {
-		fg = *colour
-	} else if cell.Attr().Reverse {
-		fg = cell.Bg()
+	var f *glfont.Font
+	if bold {
+		f = r.fontMap.BoldFont()
 	} else {
-		fg = cell.Fg()
+		f = r.fontMap.DefaultFont()
 	}
 
-	f := r.fontMap.GetFont(cell.Rune())
-	if cell.Attr().Bold {
-		f = r.fontMap.GetBoldFont(cell.Rune())
-	}
-
-	if cell.Attr().Dim {
-		alpha = 0.5 * alpha
-	}
-	f.SetColor(fg[0], fg[1], fg[2], alpha)
+	f.SetColor(colour[0], colour[1], colour[2], alpha)
 
 	x := float32(r.areaX) + float32(col)*r.cellWidth
 	y := float32(r.areaY) + (float32(row+1) * r.cellHeight) + f.MinY()
 
-	f.Print(x, y, string(cell.Rune()))
+	f.Print(x, y, text)
 }
 
 func (r *OpenGLRenderer) DrawCellImage(cell buffer.Cell, col uint, row uint) {

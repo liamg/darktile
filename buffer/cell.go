@@ -40,10 +40,16 @@ func (cell *Cell) Rune() rune {
 }
 
 func (cell *Cell) Fg() [3]float32 {
+	if cell.Attr().Reverse {
+		return cell.attr.BgColour
+	}
 	return cell.attr.FgColour
 }
 
 func (cell *Cell) Bg() [3]float32 {
+	if cell.Attr().Reverse {
+		return cell.attr.FgColour
+	}
 	return cell.attr.BgColour
 }
 

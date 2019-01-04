@@ -24,7 +24,7 @@ const (
 		smooth in vec3 theColour;
 		out vec4 outColour;
 		void main() {
-			outColour = vec4(theColour, 1.0);
+			outColour = vec4(theColour, 1.0); 
 		}
 	` + "\x00"
 )

@@ -28,16 +28,16 @@ func (a *annotation) render(gui *GUI) {
 			}
 			cell := cells[x]
 
-			var colour *[3]float32
+			var colour [3]float32 = cell.Fg()
 			var alpha float32 = 0.6
 
 			if y == int(a.hint.StartY) {
 				if x >= int(a.hint.StartX) && x <= int(a.hint.StartX+uint16(len(a.hint.Word))) {
-					colour = &[3]float32{0.2, 1.0, 0.2}
+					colour = [3]float32{0.2, 1.0, 0.2}
 					alpha = 1.0
 				}
 			}
-			gui.renderer.DrawCellText(cell, uint(x), uint(y), alpha, colour)
+			gui.renderer.DrawCellText(string(cell.Rune()), uint(x), uint(y), alpha, colour, cell.Attr().Bold)
 		}
 	}
 

@@ -82,7 +82,7 @@ void main()
 
 var vertexFontShader = `#version 150 core
 
-//vertex position
+//vertex position 
 in vec2 vert;
 
 //pass through to fragTexCoord

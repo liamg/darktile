@@ -89,7 +89,7 @@ DONE:
 
 	x := float32(col) * gui.renderer.cellWidth
 
-	f := gui.fontMap.GetFont('X')
+	f := gui.fontMap.DefaultFont()
 	f.SetColor(fg[0], fg[1], fg[2], 1)
 
 	for i, line := range lines {

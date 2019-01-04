@@ -2,14 +2,15 @@ package glfont
 
 import (
 	"fmt"
+	"image"
+	"image/draw"
+	"io"
+
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/golang/freetype"
 	"github.com/golang/freetype/truetype"
 	"golang.org/x/image/font"
 	"golang.org/x/image/math/fixed"
-	"image"
-	"image/draw"
-	"io"
 )
 
 const DPI = 72
@@ -198,18 +199,18 @@ func (f *Font) Size(text string) (float32, float32) {
 	return width, height
 }
 
-func(f *Font) MaxSize() (float32, float32){
-	b:= f.ttf.Bounds(fixed.Int26_6(f.scale))
-	return float32(b.Max.X - b.Min.X),float32(b.Max.Y - b.Min.Y)
+func (f *Font) MaxSize() (float32, float32) {
+	b := f.ttf.Bounds(fixed.Int26_6(f.scale))
+	return float32(b.Max.X - b.Min.X), float32(b.Max.Y - b.Min.Y)
 }
 
-func(f *Font) MinY() float32 {
-	b:= f.ttf.Bounds(fixed.Int26_6(f.scale))
+func (f *Font) MinY() float32 {
+	b := f.ttf.Bounds(fixed.Int26_6(f.scale))
 	return float32(b.Min.Y)
 }
 
-func(f *Font) MaxY() float32 {
-	b:= f.ttf.Bounds(fixed.Int26_6(f.scale))
+func (f *Font) MaxY() float32 {
+	b := f.ttf.Bounds(fixed.Int26_6(f.scale))
 	return float32(b.Max.Y)
 }
 

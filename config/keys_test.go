@@ -14,14 +14,14 @@ func TestKeyCombinations(t *testing.T) {
 	require.Nil(t, err)
 	require.NotNil(t, combi)
 
-	assert.Equal(t, glfw.KeyA, combi.key)
+	assert.Equal(t, 'a', combi.char)
 	assert.Equal(t, glfw.ModControl+glfw.ModAlt, combi.mods)
 
-	assert.True(t, combi.Match(glfw.ModControl^glfw.ModAlt, glfw.KeyA))
-	assert.False(t, combi.Match(glfw.ModControl^glfw.ModAlt, glfw.KeyB))
-	assert.False(t, combi.Match(glfw.ModControl, glfw.KeyA))
-	assert.False(t, combi.Match(glfw.ModAlt, glfw.KeyA))
-	assert.False(t, combi.Match(0, glfw.KeyA))
-	assert.False(t, combi.Match(glfw.ModControl^glfw.ModAlt^glfw.ModShift, glfw.KeyA))
+	assert.True(t, combi.Match(glfw.ModControl^glfw.ModAlt, 'a'))
+	assert.False(t, combi.Match(glfw.ModControl^glfw.ModAlt, 'b'))
+	assert.False(t, combi.Match(glfw.ModControl, 'b'))
+	assert.False(t, combi.Match(glfw.ModAlt, 'd'))
+	assert.False(t, combi.Match(0, 'e'))
+	assert.False(t, combi.Match(glfw.ModControl^glfw.ModAlt^glfw.ModShift, 'f'))
 
 }

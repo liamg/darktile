@@ -29,4 +29,4 @@ If applicable, add screenshots to help explain your problem.
 Add any other context about the problem here.
 
 **Logs**
-Run aminal with the `--debug` flag, then paste the relevant deug logs here.
+Run aminal with the `--debug` flag, then paste the relevant debug logs here.

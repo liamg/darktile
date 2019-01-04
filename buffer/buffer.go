@@ -27,6 +27,7 @@ type Buffer struct {
 	selectionComplete     bool // whether the selected text can update or whether it is final
 	selectionExpanded     bool // whether the selection to word expansion has already run on this point
 	selectionClickTime    time.Time
+	defaultCell           Cell
 }
 
 type Position struct {
@@ -37,11 +38,12 @@ type Position struct {
 // NewBuffer creates a new terminal buffer
 func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 	b := &Buffer{
-		cursorX:    0,
-		cursorY:    0,
-		lines:      []Line{},
-		cursorAttr: attr,
-		autoWrap:   true,
+		cursorX:     0,
+		cursorY:     0,
+		lines:       []Line{},
+		cursorAttr:  attr,
+		autoWrap:    true,
+		defaultCell: Cell{attr: attr},
 	}
 	b.SetVerticalMargins(0, uint(viewLines-1))
 	b.ResizeView(viewCols, viewLines)
@@ -511,8 +513,7 @@ func (buffer *Buffer) InsertBlankCharacters(count int) {
 	index := int(buffer.RawLine())
 	for i := 0; i < count; i++ {
 		cells := buffer.lines[index].cells
-		c := Cell{}
-		buffer.lines[index].cells = append(cells[:buffer.cursorX], append([]Cell{c}, cells[buffer.cursorX:]...)...)
+		buffer.lines[index].cells = append(cells[:buffer.cursorX], append([]Cell{buffer.defaultCell}, cells[buffer.cursorX:]...)...)
 	}
 }
 
@@ -610,20 +611,10 @@ func (buffer *Buffer) ReverseIndex() {
 func (buffer *Buffer) Write(runes ...rune) {
 
 	// scroll to bottom on input
-	inc := true
 	buffer.scrollLinesFromBottom = 0
 
 	for _, r := range runes {
-		if r == 0x0a {
-			buffer.NewLine()
-			continue
-		} else if r == 0x0d {
-			buffer.CarriageReturn()
-			continue
-		} else if r == 0x9 {
-			buffer.Tab()
-			continue
-		}
+
 		line := buffer.getCurrentLine()
 
 		if buffer.replaceMode {
@@ -634,7 +625,7 @@ func (buffer *Buffer) Write(runes ...rune) {
 			}
 
 			for int(buffer.CursorColumn()) >= len(line.cells) {
-				line.cells = append(line.cells, NewBackgroundCell(buffer.cursorAttr.BgColour))
+				line.cells = append(line.cells, buffer.defaultCell)
 			}
 			line.cells[buffer.cursorX].attr = buffer.cursorAttr
 			line.cells[buffer.cursorX].setRune(r)
@@ -665,31 +656,23 @@ func (buffer *Buffer) Write(runes ...rune) {
 		} else {
 
 			for int(buffer.CursorColumn()) >= len(line.cells) {
-				line.cells = append(line.cells, NewBackgroundCell(buffer.cursorAttr.BgColour))
+				line.cells = append(line.cells, buffer.defaultCell)
 			}
 
 			cell := &line.cells[buffer.CursorColumn()]
 			cell.setRune(r)
 			cell.attr = buffer.cursorAttr
-
 		}
 
-		if inc {
-			buffer.incrementCursorPosition()
-		}
+		buffer.incrementCursorPosition()
 	}
 }
 
 func (buffer *Buffer) incrementCursorPosition() {
-
-	defer buffer.emitDisplayChange()
-
 	// we can increment one column past the end of the line.
 	// this is effectively the beginning of the next line, except when we \r etc.
-	if buffer.CursorColumn() < buffer.Width() { // if not at end of line
-
+	if buffer.CursorColumn() < buffer.Width() {
 		buffer.cursorX++
-
 	}
 }
 
@@ -708,7 +691,6 @@ func (buffer *Buffer) Backspace() {
 }
 
 func (buffer *Buffer) CarriageReturn() {
-	defer buffer.emitDisplayChange()
 
 	for {
 		line := buffer.getCurrentLine()
@@ -726,19 +708,14 @@ func (buffer *Buffer) CarriageReturn() {
 }
 
 func (buffer *Buffer) Tab() {
-	defer buffer.emitDisplayChange()
 	tabSize := 4
-	shift := int(buffer.cursorX-1) % tabSize
-	if shift == 0 {
-		shift = tabSize
-	}
+	shift := tabSize - (int(buffer.cursorX+1) % tabSize)
 	for i := 0; i < shift; i++ {
 		buffer.Write(' ')
 	}
 }
 
 func (buffer *Buffer) NewLine() {
-	defer buffer.emitDisplayChange()
 
 	buffer.cursorX = 0
 	buffer.Index()

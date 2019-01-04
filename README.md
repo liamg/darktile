@@ -30,31 +30,40 @@ Ensure you have your latest graphics card drivers installed before use.
 - Built-in patched fonts for powerline
 - Retina display support
 
-## Quick Start
+## Installation
 
-### Installation
+### MacOS
 
-#### Prebuilt Binaries
+```
+brew tap liamg/aminal
+brew install aminal
+```
+
+### Windows
+
+A Windows version of Aminal is expected in the next 1-2 months.
+
+### Prebuilt Binaries
 
 Prebuilt binaries are available for Linux and OSX on the [releases](https://github.com/liamg/aminal/releases) page. 
 
-Download the binary and `sudo cp aminal-* /usr/local/bin/aminal`.
+Download the binary and `sudo cp aminal-* /usr/local/bin/aminal && chmod +x /usr/local/bin/aminal`.
 
-#### Install with Go
+### Install with Go
 
 ```
 go get -u github.com/liamg/aminal
 ```
 
-### Build 
+## Build 
 
-#### Dependencies
+### Dependencies
 
 - On macOS, you need Xcode or Command Line Tools for Xcode (`xcode-select --install`) for required headers and libraries.
 - On Ubuntu/Debian-like Linux distributions, you need `libgl1-mesa-dev xorg-dev`.
 - On CentOS/Fedora-like Linux distributions, you need `libX11-devel libXcursor-devel libXrandr-devel libXinerama-devel mesa-libGL-devel libXi-devel`.
 
-#### Building Locally
+### Building Locally
 
 There are various make targets available, the most obvious being:
 
@@ -82,7 +91,13 @@ As long as you have your `GOBIN` environment variable set up properly (and in `P
 
 ## Configuration
 
-Aminal looks for a config file in `~/.aminal.toml`, and will write one there the first time it runs, if it doesn't already exist.
+Aminal looks for a config file in the following places, and stops when it finds one:
+
+* `$XDG_CONFIG_HOME/aminal/config.toml`
+* `$HOME/.config/aminal/config.toml`
+* `$HOME/.aminal.toml`
+
+It will write a config file to whichever of those directories exists (preferring the top of the list) the first time it runs, if one doesn't already exist.
 
 You can ignore the config and use defaults by specifying `--ignore-config` as a CLI flag.
 
@@ -92,7 +107,7 @@ You can ignore the config and use defaults by specifying `--ignore-config` as a 
 debug = false               # Enable debug logging to stdout. Defaults to false.
 slomo = false               # Enable slow motion output mode, useful for debugging shells/terminal GUI apps etc. Defaults to false.
 shell = "/bin/bash"         # The shell to run for the terminal session. Defaults to the users shell.
-search_url = "https://www.google.com/search?q=$QUERY" # The search engine to use for the "search selected text" action. Defaults to google. Set this to your own search url using $QUERY as the keywords to replcae when searching.
+search_url = "https://www.google.com/search?q=$QUERY" # The search engine to use for the "search selected text" action. Defaults to google. Set this to your own search url using $QUERY as the keywords to replace when searching.
 
 [colours]
   cursor        = "#e8dfd6" 
@@ -133,3 +148,7 @@ search_url = "https://www.google.com/search?q=$QUERY" # The search engine to use
 | `--slomo`         | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging.
 | `--shell [shell]` | Use the specified shell program instead of the user's usual one. 
 | `--version`       | Show the version of aminal and exit.
+
+# Contributors
+
+[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/0)](https://sourcerer.io/fame/liamg/liamg/aminal/links/0)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/1)](https://sourcerer.io/fame/liamg/liamg/aminal/links/1)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/2)](https://sourcerer.io/fame/liamg/liamg/aminal/links/2)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/3)](https://sourcerer.io/fame/liamg/liamg/aminal/links/3)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/4)](https://sourcerer.io/fame/liamg/liamg/aminal/links/4)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/5)](https://sourcerer.io/fame/liamg/liamg/aminal/links/5)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/6)](https://sourcerer.io/fame/liamg/liamg/aminal/links/6)[![](https://sourcerer.io/fame/liamg/liamg/aminal/images/7)](https://sourcerer.io/fame/liamg/liamg/aminal/links/7)
