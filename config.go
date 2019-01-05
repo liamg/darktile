@@ -9,14 +9,13 @@ import (
 	"path/filepath"
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/version"
-	"strings"
 )
 
-func isFlagProvided(flagName string) bool {
-	result := false
+func getActuallyProvidedFlags() map[string]bool {
+	result := make(map[string]bool)
 
 	flag.Visit(func(f *flag.Flag) {
-		result = strings.Compare(f.Name, flagName) == 0
+		result[f.Name] = true
 	})
 
 	return result
@@ -36,6 +35,7 @@ func getConfig() *config.Config {
 	flag.BoolVar(&slomo, "slomo", slomo, "Render in slow motion (useful for debugging)")
 
 	flag.Parse()  // actual parsing and fetching flags from the command line
+	actuallyProvidedFlags := getActuallyProvidedFlags()
 
 	if showVersion {
 		v := version.Version
@@ -54,15 +54,15 @@ func getConfig() *config.Config {
 	}
 
 	// Override values in the configuration file with the values specified in the command line, if any.
-	if isFlagProvided("shell") {
+	if actuallyProvidedFlags["shell"] {
 		conf.Shell = shell
 	}
 
-	if isFlagProvided("debug") {
+	if actuallyProvidedFlags["debug"] {
 		conf.DebugMode = debugMode
 	}
 
-	if isFlagProvided("slomo") {
+	if actuallyProvidedFlags["slomo"] {
 		conf.Slomo = slomo
 	}
 
