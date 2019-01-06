@@ -24,7 +24,7 @@ Ensure you have your latest graphics card drivers installed before use.
 - Scrollback buffer
 - Clipboard access
 - Clickable URLs
-- Multi platform support (Windows coming soon...)
+- Multi platform support (Windows, Linux, OSX)
 - Sixel support
 - Hints/overlays
 - Built-in patched fonts for powerline
@@ -41,11 +41,11 @@ brew install aminal
 
 ### Windows
 
-A Windows version of Aminal is expected in the next 1-2 months.
+Dev environment setup instructions are available [there](windows.md).
 
 ### Prebuilt Binaries
 
-Prebuilt binaries are available for Linux and OSX on the [releases](https://github.com/liamg/aminal/releases) page. 
+Prebuilt binaries are available for Linux, OSX and Windows on the [releases](https://github.com/liamg/aminal/releases) page. 
 
 Download the binary and `sudo cp aminal-* /usr/local/bin/aminal && chmod +x /usr/local/bin/aminal`.
 

@@ -58,6 +58,10 @@ func (r *OpenGLRenderer) Clean() {
 
 func (r *OpenGLRenderer) initRectangle(rect *rectangle, x float32, y float32, colourAttr uint32) {
 
+	if rect == nil {
+		panic("rect pointer is nil")
+	}
+
 	if rect.vao != 0 {
 		gl.DeleteVertexArrays(1, &rect.vao)
 		rect.vao = 0

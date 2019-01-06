@@ -38,11 +38,59 @@ type GUI struct {
 	resizeLock        *sync.Mutex
 }
 
+func Min(x, y int) int {
+	if x < y {
+		return x
+	}
+	return y
+}
+
+func Max(x, y int) int {
+	if x > y {
+		return x
+	}
+	return y
+}
+
+func (g *GUI) GetMonitor() *glfw.Monitor {
+
+	if g.window == nil {
+		panic("to determine current monitor the window must be set")
+	}
+	monitors := glfw.GetMonitors()
+
+	if len(monitors) == 1 {
+		return glfw.GetPrimaryMonitor()
+	}
+
+	x, y := g.window.GetPos()
+	w, h := g.window.GetSize()
+	var currentMonitor *glfw.Monitor
+	bestMatch := 0
+
+	for _, monitor := range monitors {
+		mode := monitor.GetVideoMode()
+		mx, my := monitor.GetPos()
+		overlap := Max(0, Min(x + w, mx + mode.Width) - Max(x, mx)) *
+			Max(0, Min(y + h, my + mode.Height) - Max(y, my))
+		if bestMatch < overlap {
+			bestMatch = overlap
+			currentMonitor = monitor
+		}
+	}
+
+	if currentMonitor == nil {
+		panic("was not able to resolve current monitor")
+	}
+
+	return currentMonitor
+}
+
 // RecalculateDpiScale calculates dpi scale in comparison with "standard" monitor's dpi values
 func (g *GUI) RecalculateDpiScale() {
 	const standardDpi = 96
 	const mmPerInch = 25.4
-	m := glfw.GetPrimaryMonitor()
+	m := g.GetMonitor()
 	widthMM, _ := m.GetPhysicalSize()
 
 	if widthMM == 0 {
@@ -153,6 +201,8 @@ func (gui *GUI) Render() error {
 	gui.logger.Debugf("Creating window...")
 	var err error
 	gui.window, err = gui.createWindow()
+	gui.RecalculateDpiScale()
+	gui.window.SetSize(gui.Width(), gui.Height())
 	if err != nil {
 		return fmt.Errorf("Failed to create window: %s", err)
 	}
@@ -448,8 +498,6 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 
 	glfw.WindowHint(glfw.ContextVersionMajor, major)
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
-
-	gui.RecalculateDpiScale()
 
 	window, err := glfw.CreateWindow(gui.Width(), gui.Height(), "Terminal", nil, nil)
 	if err != nil {
