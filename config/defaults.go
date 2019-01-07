@@ -28,6 +28,7 @@ var DefaultConfig = Config{
 	},
 	KeyMapping: KeyMappingConfig(map[string]string{}),
 	SearchURL:  "https://www.google.com/search?q=$QUERY",
+	MaxLines: 1000,
 }
 
 func init() {

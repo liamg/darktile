@@ -28,6 +28,7 @@ type Buffer struct {
 	selectionExpanded     bool // whether the selection to word expansion has already run on this point
 	selectionClickTime    time.Time
 	defaultCell           Cell
+	maxLines              uint64
 }
 
 type Position struct {
@@ -36,7 +37,7 @@ type Position struct {
 }
 
 // NewBuffer creates a new terminal buffer
-func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
+func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes, maxLines uint64) *Buffer {
 	b := &Buffer{
 		cursorX:     0,
 		cursorY:     0,
@@ -44,6 +45,7 @@ func NewBuffer(viewCols uint16, viewLines uint16, attr CellAttributes) *Buffer {
 		cursorAttr:  attr,
 		autoWrap:    true,
 		defaultCell: Cell{attr: attr},
+		maxLines:    maxLines,
 	}
 	b.SetVerticalMargins(0, uint(viewLines-1))
 	b.ResizeView(viewCols, viewLines)
@@ -479,8 +481,16 @@ func (buffer *Buffer) insertLine() {
 
 	if !buffer.InScrollableRegion() {
 		pos := buffer.RawLine()
-		out := make([]Line, len(buffer.lines)+1)
-		copy(out[:pos], buffer.lines[:pos])
+		maxLines := buffer.getMaxLines()
+		newLineCount := uint64(len(buffer.lines) + 1)
+		if newLineCount > maxLines {
+			newLineCount = maxLines
+		}
+
+		out := make([]Line, newLineCount)
+		copy(
+			out[ : pos - ( uint64(len(buffer.lines)) + 1 - newLineCount )],
+			buffer.lines[ uint64(len(buffer.lines)) + 1 - newLineCount : pos] )
 		out[pos] = newLine()
 		copy(out[pos+1:], buffer.lines[pos:])
 		buffer.lines = out
@@ -575,6 +585,10 @@ func (buffer *Buffer) Index() {
 
 	if buffer.cursorY >= buffer.ViewHeight()-1 {
 		buffer.lines = append(buffer.lines, newLine())
+		maxLines := buffer.getMaxLines()
+		if uint64(len(buffer.lines)) > maxLines {
+			buffer.lines = buffer.lines[ uint64(len(buffer.lines)) - maxLines : ]
+		}
 	} else {
 		buffer.cursorY++
 	}
@@ -1024,4 +1038,13 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 	buffer.cursorX = uint16((len(line.cells) - cXFromEndOfLine) - 1)
 
 	buffer.SetVerticalMargins(0, uint(buffer.viewHeight-1))
+}
+
+func (buffer *Buffer) getMaxLines() uint64 {
+	result := buffer.maxLines
+	if result < uint64(buffer.viewHeight) {
+		result = uint64(buffer.viewHeight)
+	}
+
+	return result
 }

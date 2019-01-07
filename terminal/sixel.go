@@ -17,7 +17,10 @@ func sixelHandler(pty chan rune, terminal *Terminal) error {
 	for {
 		b := <-pty
 		if b == 0x1b { // terminated by ESC bell or ESC \
-			_ = <-pty // swallow \ or bell
+			t := <-pty
+			if t != 0x07 && t != 0x5c {
+				return fmt.Errorf("Incorrect terminator in sixel sequence: 0x%02X [%c]", t, t)
+			}
 			break
 		}
 		if b >= 33 {

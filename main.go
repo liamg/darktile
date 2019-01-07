@@ -3,12 +3,10 @@ package main
 import (
 	"fmt"
 	"os"
-	"os/exec"
 	"runtime"
-	"syscall"
 
-	"github.com/kr/pty"
 	"github.com/liamg/aminal/gui"
+	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/riywo/loginshell"
 )
@@ -26,7 +24,8 @@ func main() {
 	defer logger.Sync()
 
 	logger.Infof("Allocating pty...")
-	pty, tty, err := pty.Open()
+
+	pty, err := platform.NewPty(80, 25)
 	if err != nil {
 		logger.Fatalf("Failed to allocate pty: %s", err)
 	}
@@ -43,12 +42,8 @@ func main() {
 	os.Setenv("TERM", "xterm-256color") // controversial! easier than installing terminfo everywhere, but obviously going to be slightly different to xterm functionality, so we'll see...
 	os.Setenv("COLORTERM", "truecolor")
 
-	shell := exec.Command(shellStr)
-	shell.Stdout = tty
-	shell.Stdin = tty
-	shell.Stderr = tty
-	shell.SysProcAttr = &syscall.SysProcAttr{Setctty: true, Setsid: true}
-	if err := shell.Start(); err != nil {
+	guestProcess, err := pty.CreateGuestProcess(shellStr)
+	if err != nil {
 		pty.Close()
 		logger.Fatalf("Failed to start your shell: %s", err)
 	}
@@ -60,8 +55,15 @@ func main() {
 	if err != nil {
 		logger.Fatalf("Cannot start: %s", err)
 	}
+
+	go func() {
+		if err := guestProcess.Wait(); err != nil {
+			logger.Fatalf("Failed to wait for guest process: %s", err)
+		}
+		g.Close()
+	}()
+
 	if err := g.Render(); err != nil {
 		logger.Fatalf("Render error: %s", err)
 	}
-
 }

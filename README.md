@@ -24,7 +24,7 @@ Ensure you have your latest graphics card drivers installed before use.
 - Scrollback buffer
 - Clipboard access
 - Clickable URLs
-- Multi platform support (Windows coming soon...)
+- Multi platform support (Windows, Linux, OSX)
 - Sixel support
 - Hints/overlays
 - Built-in patched fonts for powerline
@@ -41,11 +41,11 @@ brew install aminal
 
 ### Windows
 
-A Windows version of Aminal is expected in the next 1-2 months.
+Dev environment setup instructions are available [there](windows.md).
 
 ### Prebuilt Binaries
 
-Prebuilt binaries are available for Linux and OSX on the [releases](https://github.com/liamg/aminal/releases) page. 
+Prebuilt binaries are available for Linux, OSX and Windows on the [releases](https://github.com/liamg/aminal/releases) page. 
 
 Download the binary and `sudo cp aminal-* /usr/local/bin/aminal && chmod +x /usr/local/bin/aminal`.
 
@@ -97,6 +97,8 @@ Aminal looks for a config file in the following places, and stops when it finds 
 * `$HOME/.config/aminal/config.toml`
 * `$HOME/.aminal.toml`
 
+Note that on Windows Aminal uses `%USERPROFILE%` environment variable instead of `$HOME`
+
 It will write a config file to whichever of those directories exists (preferring the top of the list) the first time it runs, if one doesn't already exist.
 
 You can ignore the config and use defaults by specifying `--ignore-config` as a CLI flag.
@@ -108,6 +110,7 @@ debug = false               # Enable debug logging to stdout. Defaults to false.
 slomo = false               # Enable slow motion output mode, useful for debugging shells/terminal GUI apps etc. Defaults to false.
 shell = "/bin/bash"         # The shell to run for the terminal session. Defaults to the users shell.
 search_url = "https://www.google.com/search?q=$QUERY" # The search engine to use for the "search selected text" action. Defaults to google. Set this to your own search url using $QUERY as the keywords to replace when searching.
+max_lines = 1000            # Maximum number of lines in the terminal buffer.
 
 [colours]
   cursor        = "#e8dfd6" 

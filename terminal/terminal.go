@@ -4,13 +4,11 @@ import (
 	"bufio"
 	"fmt"
 	"io"
-	"os"
 	"sync"
-	"syscall"
-	"unsafe"
 
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/platform"
 	"go.uber.org/zap"
 )
 
@@ -32,23 +30,24 @@ const (
 )
 
 type Terminal struct {
-	program            uint32
-	buffers            []*buffer.Buffer
-	activeBuffer       *buffer.Buffer
-	lock               sync.Mutex
-	pty                *os.File
-	logger             *zap.SugaredLogger
-	title              string
-	size               Winsize
-	config             *config.Config
-	titleHandlers      []chan bool
-	modes              Modes
-	mouseMode          MouseMode
-	bracketedPasteMode bool
-	isDirty            bool
-	charWidth          float32
-	charHeight         float32
-	lastBuffer         uint8
+	program                   uint32
+	buffers                   []*buffer.Buffer
+	activeBuffer              *buffer.Buffer
+	lock                      sync.Mutex
+	pty                       platform.Pty
+	logger                    *zap.SugaredLogger
+	title                     string
+	size                      Winsize
+	config                    *config.Config
+	titleHandlers             []chan bool
+	modes                     Modes
+	mouseMode                 MouseMode
+	bracketedPasteMode        bool
+	isDirty                   bool
+	charWidth                 float32
+	charHeight                float32
+	lastBuffer                uint8
+	platformDependentSettings platform.PlatformDependentSettings
 }
 
 type Modes struct {
@@ -64,21 +63,21 @@ type Winsize struct {
 	y      uint16 //ignored, but necessary for ioctl calls
 }
 
-func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Terminal {
+func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Terminal {
 	t := &Terminal{
 		buffers: []*buffer.Buffer{
 			buffer.NewBuffer(1, 1, buffer.CellAttributes{
 				FgColour: config.ColourScheme.Foreground,
 				BgColour: config.ColourScheme.Background,
-			}),
+			}, config.MaxLines),
 			buffer.NewBuffer(1, 1, buffer.CellAttributes{
 				FgColour: config.ColourScheme.Foreground,
 				BgColour: config.ColourScheme.Background,
-			}),
+			}, config.MaxLines),
 			buffer.NewBuffer(1, 1, buffer.CellAttributes{
 				FgColour: config.ColourScheme.Foreground,
 				BgColour: config.ColourScheme.Background,
-			}),
+			}, config.MaxLines),
 		},
 		pty:           pty,
 		logger:        logger,
@@ -87,6 +86,7 @@ func New(pty *os.File, logger *zap.SugaredLogger, config *config.Config) *Termin
 		modes: Modes{
 			ShowCursor: true,
 		},
+		platformDependentSettings: pty.GetPlatformDependentSettings(),
 	}
 	t.activeBuffer = t.buffers[0]
 	return t
@@ -121,6 +121,11 @@ func (terminal *Terminal) SetMouseMode(mode MouseMode) {
 
 func (terminal *Terminal) GetMouseMode() MouseMode {
 	return terminal.mouseMode
+}
+
+func (terminal *Terminal) IsOSCTerminator(char rune) bool {
+	_, ok := terminal.platformDependentSettings.OSCTerminators[char]
+	return ok
 }
 
 func (terminal *Terminal) UseMainBuffer() {
@@ -280,9 +285,8 @@ func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
 	terminal.size.Width = uint16(newCols)
 	terminal.size.Height = uint16(newLines)
 
-	_, _, err := syscall.Syscall(syscall.SYS_IOCTL, uintptr(terminal.pty.Fd()),
-		uintptr(syscall.TIOCSWINSZ), uintptr(unsafe.Pointer(&terminal.size)))
-	if err != 0 {
+	err := terminal.pty.Resize(int(newCols), int(newLines))
+	if err != nil {
 		return fmt.Errorf("Failed to set terminal size vai ioctl: Error no %d", err)
 	}
 

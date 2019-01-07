@@ -36,7 +36,7 @@ type rectangle struct {
 	cv         uint32
 	colourAttr uint32
 	colour     [3]float32
-	points     []float32
+	points     [18]float32
 	prog       uint32
 }
 
@@ -49,10 +49,33 @@ func (r *OpenGLRenderer) CellHeight() float32 {
 }
 
 func (r *OpenGLRenderer) Clean() {
+	for _, rect := range r.rectangles {
+		rect.Free()
+	}
+
 	r.rectangles = map[[2]uint]*rectangle{}
 }
 
-func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
+func (r *OpenGLRenderer) initRectangle(rect *rectangle, x float32, y float32, colourAttr uint32) {
+
+	if rect == nil {
+		panic("rect pointer is nil")
+	}
+
+	if rect.vao != 0 {
+		gl.DeleteVertexArrays(1, &rect.vao)
+		rect.vao = 0
+	}
+
+	if rect.vbo != 0 {
+		gl.DeleteBuffers(1, &rect.vbo)
+		rect.vbo = 0
+	}
+
+	if rect.cv != 0 {
+		gl.DeleteBuffers(1, &rect.cv)
+		rect.cv = 0
+	}
 
 	halfAreaWidth := float32(r.areaWidth / 2)
 	halfAreaHeight := float32(r.areaHeight / 2)
@@ -62,8 +85,7 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 	w := r.cellWidth / halfAreaWidth
 	h := (r.cellHeight) / halfAreaHeight
 
-	rect := &rectangle{
-		points: []float32{
+    rect.points = [18]float32{
 			x, y, 0,
 			x, y + h, 0,
 			x + w, y + h, 0,
@@ -71,17 +93,15 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 			x + w, y, 0,
 			x, y, 0,
 			x + w, y + h, 0,
-		},
-		colourAttr: colourAttr,
-		prog:       r.program,
-	}
+		}
 
-	gl.UseProgram(rect.prog)
+	rect.colourAttr = colourAttr
+	rect.prog = r.program
 
 	// SHAPE
 	gl.GenBuffers(1, &rect.vbo)
 	gl.BindBuffer(gl.ARRAY_BUFFER, rect.vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, 4*len(rect.points), gl.Ptr(rect.points), gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, 4*len(rect.points), gl.Ptr(&rect.points[0]), gl.STATIC_DRAW)
 
 	gl.GenVertexArrays(1, &rect.vao)
 	gl.BindVertexArray(rect.vao)
@@ -94,6 +114,13 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 	gl.GenBuffers(1, &rect.cv)
 
 	rect.setColour([3]float32{0, 1, 0})
+}
+
+func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
+
+	rect := &rectangle{}
+
+	r.initRectangle(rect, x, y, colourAttr)
 
 	return rect
 }
@@ -132,6 +159,10 @@ func (rect *rectangle) Free() {
 	gl.DeleteVertexArrays(1, &rect.vao)
 	gl.DeleteBuffers(1, &rect.vbo)
 	gl.DeleteBuffers(1, &rect.cv)
+
+	rect.vao = 0
+	rect.vbo = 0
+	rect.cv = 0
 }
 
 func NewOpenGLRenderer(config *config.Config, fontMap *FontMap, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
@@ -167,21 +198,25 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	//= f.LineHeight()   // includes vertical padding
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
-	r.rectangles = map[[2]uint]*rectangle{}
+
+	r.Clean()
 }
 
 func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
-
-	rect, ok := r.rectangles[[2]uint{col, row}]
-	if ok {
-		rect.Free()
-	}
-
 	x := float32(float32(col) * r.cellWidth)
-	y := float32(float32(row)*r.cellHeight) + r.cellHeight
+	y := float32(float32(row) * r.cellHeight) + r.cellHeight
 
-	r.rectangles[[2]uint{col, row}] = r.newRectangle(x, y, r.colourAttr)
-	return r.rectangles[[2]uint{col, row}]
+	coords := [2]uint{col, row}
+
+	rect, ok := r.rectangles[coords]
+	if ok {
+		r.initRectangle(rect, x, y, r.colourAttr)
+		return rect
+	} else {
+		rect = r.newRectangle(x, y, r.colourAttr)
+		r.rectangles[coords] = rect
+		return rect
+	}
 }
 
 func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
