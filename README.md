@@ -6,7 +6,7 @@
 [![Slack](https://img.shields.io/badge/slack-%23aminal-%23ffcc00.svg)](http://gophers.slack.com/messages/aminal)
 ![License](https://img.shields.io/github/license/liamg/aminal.svg)
 
-Aminal is a modern terminal emulator for Mac/Linux implemented in Golang and utilising OpenGL. 
+Aminal is a modern terminal emulator for Mac/Linux/Windows implemented in Golang and utilising OpenGL. 
 
 ![Demo GIF](demo.gif)
 
@@ -41,7 +41,9 @@ brew install aminal
 
 ### Windows
 
-Dev environment setup instructions are available [there](windows.md).
+You can run Aminal with a binary from the [releases](https://github.com/liamg/aminal/releases) page.
+
+Dev environment setup instructions are available [here](windows.md).
 
 ### Prebuilt Binaries
 
@@ -97,7 +99,7 @@ Aminal looks for a config file in the following places, and stops when it finds 
 * `$HOME/.config/aminal/config.toml`
 * `$HOME/.aminal.toml`
 
-Note that on Windows Aminal uses `%USERPROFILE%` environment variable instead of `$HOME`
+Note that on Windows Aminal uses `%USERPROFILE%` environment variable instead of `$HOME`.
 
 It will write a config file to whichever of those directories exists (preferring the top of the list) the first time it runs, if one doesn't already exist.
 
