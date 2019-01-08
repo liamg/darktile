@@ -149,6 +149,10 @@ func (gui *GUI) scale() float32 {
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
+	if gui.window.GetAttrib(glfw.Iconified) != 0 {
+		return
+	}
+
 	gui.resizeLock.Lock()
 	defer gui.resizeLock.Unlock()
 
