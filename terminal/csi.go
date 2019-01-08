@@ -78,13 +78,18 @@ CSI:
 	return final, param, intermediate
 }
 
+func splitParams(paramString string) []string {
+	params := strings.Split(paramString, ";")
+	if paramString == "" {
+		params = []string{}
+	}
+	return params
+}
+
 func csiHandler(pty chan rune, terminal *Terminal) error {
 	final, param, intermediate := loadCSI(pty)
 
-	params := strings.Split(param, ";")
-	if param == "" {
-		params = []string{}
-	}
+	params := splitParams(param)
 
 	for _, sequence := range csiSequences {
 		if sequence.id == final {
@@ -233,8 +238,8 @@ func csiCursorCharacterAbsoluteHandler(params []string, intermediate string, ter
 	return nil
 }
 
-func csiCursorPositionHandler(params []string, intermediate string, terminal *Terminal) error {
-	x, y := 1, 1
+func parseCursorPosition(params []string) (x, y int) {
+	x, y = 1, 1
 	if len(params) == 2 {
 		var err error
 		if params[0] != "" {
@@ -250,6 +255,11 @@ func csiCursorPositionHandler(params []string, intermediate string, terminal *Te
 			}
 		}
 	}
+	return x, y
+}
+
+func csiCursorPositionHandler(params []string, intermediate string, terminal *Terminal) error {
+	x, y := parseCursorPosition(params)
 
 	terminal.ActiveBuffer().SetPosition(uint16(x-1), uint16(y-1))
 	return nil
