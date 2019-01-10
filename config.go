@@ -11,24 +11,31 @@ import (
 	"github.com/liamg/aminal/version"
 )
 
+func getActuallyProvidedFlags() map[string]bool {
+	result := make(map[string]bool)
+
+	flag.Visit(func(f *flag.Flag) {
+		result[f.Name] = true
+	})
+
+	return result
+}
+
 func getConfig() *config.Config {
-
 	showVersion := false
+	ignoreConfig := false
+	shell := ""
+	debugMode := false
+	slomo := false
+
 	flag.BoolVar(&showVersion, "version", showVersion, "Output version information")
+	flag.BoolVar(&ignoreConfig, "ignore-config", ignoreConfig, "Ignore user config files and use defaults")
+	flag.StringVar(&shell, "shell", shell, "Specify the shell to use")
+	flag.BoolVar(&debugMode, "debug", debugMode, "Enable debug logging")
+	flag.BoolVar(&slomo, "slomo", slomo, "Render in slow motion (useful for debugging)")
 
-	ignore := false
-	flag.BoolVar(&ignore, "ignore-config", ignore, "Ignore user config files and use defaults")
-	if ignore {
-		return &config.DefaultConfig
-	}
-
-	conf := loadConfigFile()
-
-	flag.StringVar(&conf.Shell, "shell", conf.Shell, "Specify the shell to use")
-	flag.BoolVar(&conf.DebugMode, "debug", conf.DebugMode, "Enable debug logging")
-	flag.BoolVar(&conf.Slomo, "slomo", conf.Slomo, "Render in slow motion (useful for debugging)")
-
-	flag.Parse()
+	flag.Parse()  // actual parsing and fetching flags from the command line
+	actuallyProvidedFlags := getActuallyProvidedFlags()
 
 	if showVersion {
 		v := version.Version
@@ -37,6 +44,26 @@ func getConfig() *config.Config {
 		}
 		fmt.Println(v)
 		os.Exit(0)
+	}
+
+	var conf *config.Config
+	if ignoreConfig {
+		conf = &config.DefaultConfig
+	} else {
+		conf = loadConfigFile()
+	}
+
+	// Override values in the configuration file with the values specified in the command line, if any.
+	if actuallyProvidedFlags["shell"] {
+		conf.Shell = shell
+	}
+
+	if actuallyProvidedFlags["debug"] {
+		conf.DebugMode = debugMode
+	}
+
+	if actuallyProvidedFlags["slomo"] {
+		conf.Slomo = slomo
 	}
 
 	return conf
