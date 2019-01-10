@@ -36,6 +36,8 @@ type GUI struct {
 	showDebugInfo     bool
 	keyboardShortcuts map[config.UserAction]*config.KeyCombination
 	resizeLock        *sync.Mutex
+	handCursor        *glfw.Cursor
+	arrowCursor       *glfw.Cursor
 }
 
 func Min(x, y int) int {
