@@ -49,11 +49,17 @@ var csiSequences = []csiMapping{
 	{id: '@', handler: csiInsertBlankCharactersHandler, description: "Insert Ps (Blank) Character(s) (default = 1) (ICH)"},
 }
 
-func csiHandler(pty chan rune, terminal *Terminal) error {
-	var final rune
+type runeRange struct {
+	min rune
+	max rune
+}
+
+var csiTerminators = runeRange{0x40, 0x7e}
+
+func loadCSI(pty chan rune) (final rune, param string, intermediate string) {
 	var b rune
-	param := ""
-	intermediate := ""
+	param = ""
+	intermediate = ""
 CSI:
 	for {
 		b = <-pty
@@ -63,16 +69,27 @@ CSI:
 		case b >= 0x20 && b <= 0x2F:
 			//intermediate? useful?
 			intermediate += string(b)
-		case b >= 0x40 && b <= 0x7e:
+		case b >= csiTerminators.min && b <= csiTerminators.max:
 			final = b
 			break CSI
 		}
 	}
 
-	params := strings.Split(param, ";")
-	if param == "" {
+	return final, param, intermediate
+}
+
+func splitParams(paramString string) []string {
+	params := strings.Split(paramString, ";")
+	if paramString == "" {
 		params = []string{}
 	}
+	return params
+}
+
+func csiHandler(pty chan rune, terminal *Terminal) error {
+	final, param, intermediate := loadCSI(pty)
+
+	params := splitParams(param)
 
 	for _, sequence := range csiSequences {
 		if sequence.id == final {
@@ -221,8 +238,8 @@ func csiCursorCharacterAbsoluteHandler(params []string, intermediate string, ter
 	return nil
 }
 
-func csiCursorPositionHandler(params []string, intermediate string, terminal *Terminal) error {
-	x, y := 1, 1
+func parseCursorPosition(params []string) (x, y int) {
+	x, y = 1, 1
 	if len(params) == 2 {
 		var err error
 		if params[0] != "" {
@@ -238,6 +255,11 @@ func csiCursorPositionHandler(params []string, intermediate string, terminal *Te
 			}
 		}
 	}
+	return x, y
+}
+
+func csiCursorPositionHandler(params []string, intermediate string, terminal *Terminal) error {
+	x, y := parseCursorPosition(params)
 
 	terminal.ActiveBuffer().SetPosition(uint16(x-1), uint16(y-1))
 	return nil
