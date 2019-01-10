@@ -133,7 +133,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		height:            600,
 		dpiScale:          1,
 		terminal:          terminal,
-		fontScale:         14.0,
+		fontScale:         10.0,
 		terminalAlpha:     1,
 		keyboardShortcuts: shortcuts,
 		resizeLock:        &sync.Mutex{},
