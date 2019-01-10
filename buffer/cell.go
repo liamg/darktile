@@ -53,8 +53,9 @@ func (cell *Cell) Bg() [3]float32 {
 	return cell.attr.BgColour
 }
 
-func (cell *Cell) erase() {
+func (cell *Cell) erase(bgColour  [3]float32) {
 	cell.setRune(0)
+	cell.attr.BgColour = bgColour
 }
 
 func (cell *Cell) setRune(r rune) {

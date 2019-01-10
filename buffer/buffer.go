@@ -837,7 +837,7 @@ func (buffer *Buffer) EraseLineToCursor() {
 	line := buffer.getCurrentLine()
 	for i := 0; i <= int(buffer.cursorX); i++ {
 		if i < len(line.cells) {
-			line.cells[i].erase()
+			line.cells[i].erase(buffer.defaultCell.attr.BgColour)
 		}
 	}
 }
@@ -898,7 +898,7 @@ func (buffer *Buffer) EraseCharacters(n int) {
 	}
 
 	for i := int(buffer.cursorX); i < max; i++ {
-		line.cells[i].erase()
+		line.cells[i].erase(buffer.defaultCell.attr.BgColour)
 	}
 }
 
@@ -928,7 +928,7 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 		if i >= len(line.cells) {
 			break
 		}
-		line.cells[i].erase()
+		line.cells[i].erase(buffer.defaultCell.attr.BgColour)
 	}
 	for i := uint16(0); i < buffer.cursorY; i++ {
 		rawLine := buffer.convertViewLineToRawLine(i)
