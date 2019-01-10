@@ -17,6 +17,22 @@ func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
 	}
 }
 
+func (gui *GUI) getHandCursor() *glfw.Cursor {
+	if gui.handCursor == nil {
+		gui.handCursor = glfw.CreateStandardCursor(glfw.HandCursor)
+	}
+
+	return gui.handCursor
+}
+
+func (gui  *GUI) getArrowCursor() *glfw.Cursor {
+	if gui.arrowCursor == nil {
+		gui.arrowCursor = glfw.CreateStandardCursor(glfw.ArrowCursor)
+	}
+
+	return gui.arrowCursor
+}
+
 func (gui *GUI) mouseMoveCallback(w *glfw.Window, px float64, py float64) {
 
 	scale := gui.scale()
@@ -40,9 +56,9 @@ func (gui *GUI) mouseMoveCallback(w *glfw.Window, px float64, py float64) {
 	}
 
 	if url := gui.terminal.ActiveBuffer().GetURLAtPosition(x, y); url != "" {
-		w.SetCursor(glfw.CreateStandardCursor(glfw.HandCursor))
+		w.SetCursor(gui.getHandCursor())
 	} else {
-		w.SetCursor(glfw.CreateStandardCursor(glfw.ArrowCursor))
+		w.SetCursor(gui.getArrowCursor())
 	}
 }
 
