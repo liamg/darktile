@@ -31,6 +31,16 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		}
 	case "?1":
 		terminal.modes.ApplicationCursorKeys = enabled
+	case "?3":
+		_, lines := terminal.GetSize()
+		if enabled {
+			// DECCOLM - COLumn mode, 132 characters per line
+			terminal.SetSize(132, uint(lines))
+		} else {
+			// DECCOLM - 80 characters per line (erases screen)
+			terminal.SetSize(80, uint(lines))
+			terminal.Clear()
+		}
 	case "?7":
 		// auto-wrap mode
 		//DECAWM
