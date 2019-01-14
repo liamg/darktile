@@ -24,6 +24,7 @@ type Font struct {
 	texture     uint32 // Holds the glyph texture id.
 	color       color
 	ttf         *truetype.Font
+	ttfFace     font.Face
 	scale       float32
 	linePadding float32
 	lineHeight  float32
@@ -51,8 +52,24 @@ func LoadFont(reader io.Reader, scale float32, windowWidth int, windowHeight int
 	//set screen resolution
 	resUniform := gl.GetUniformLocation(program, gl.Str("resolution\x00"))
 	gl.Uniform2f(resUniform, float32(windowWidth), float32(windowHeight))
+	gl.UseProgram(0)
 
 	return LoadTrueTypeFont(program, reader, scale)
+}
+
+func (f *Font) Free() {
+	for _, chr := range f.characters {
+		gl.DeleteTextures(1, &chr.textureID)
+	}
+
+	gl.DeleteBuffers(1, &f.vbo)
+	gl.DeleteVertexArrays(1, &f.vao)
+
+	gl.DeleteProgram(f.program)
+
+	f.vbo = 0
+	f.vao = 0
+	f.program = 0
 }
 
 //SetColor allows you to set the text color to be used when you draw the text
@@ -223,14 +240,7 @@ func (f *Font) GetRune(r rune) (*character, error) {
 
 	char := new(character)
 
-	//create new face to measure glyph diamensions
-	ttfFace := truetype.NewFace(f.ttf, &truetype.Options{
-		Size:    float64(f.scale),
-		DPI:     DPI,
-		Hinting: font.HintingFull,
-	})
-
-	gBnd, gAdv, ok := ttfFace.GlyphBounds(r)
+	gBnd, gAdv, ok := f.ttfFace.GlyphBounds(r)
 	if ok != true {
 		return nil, fmt.Errorf("ttf face glyphBounds error")
 	}

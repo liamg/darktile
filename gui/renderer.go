@@ -155,7 +155,6 @@ func (rect *rectangle) setColour(colour [3]float32) {
 }
 
 func (rect *rectangle) Free() {
-	gl.UseProgram(rect.prog)
 	gl.DeleteVertexArrays(1, &rect.vao)
 	gl.DeleteBuffers(1, &rect.vbo)
 	gl.DeleteBuffers(1, &rect.cv)
@@ -181,6 +180,24 @@ func NewOpenGLRenderer(config *config.Config, fontMap *FontMap, areaX int, areaY
 	}
 	r.SetArea(areaX, areaY, areaWidth, areaHeight)
 	return r
+}
+
+// This method ensures that all OpenGL resources are deleted correctly
+func (r *OpenGLRenderer) Free() {
+	for _, rect := range r.rectangles {
+		rect.Free()
+	}
+	r.rectangles = map[[2]uint]*rectangle{}
+
+	for _, tex := range r.textureMap {
+		gl.DeleteTextures(1, &tex)
+	}
+	r.textureMap = map[*image.RGBA]uint32{}
+
+	r.fontMap.Free()
+
+	gl.DeleteProgram(r.program)
+	r.program = 0
 }
 
 func (r *OpenGLRenderer) GetTermSize() (uint, uint) {
