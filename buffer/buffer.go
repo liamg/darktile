@@ -489,8 +489,8 @@ func (buffer *Buffer) insertLine() {
 
 		out := make([]Line, newLineCount)
 		copy(
-			out[ : pos - ( uint64(len(buffer.lines)) + 1 - newLineCount )],
-			buffer.lines[ uint64(len(buffer.lines)) + 1 - newLineCount : pos] )
+			out[:pos-(uint64(len(buffer.lines))+1-newLineCount)],
+			buffer.lines[uint64(len(buffer.lines))+1-newLineCount:pos])
 		out[pos] = newLine()
 		copy(out[pos+1:], buffer.lines[pos:])
 		buffer.lines = out
@@ -587,7 +587,7 @@ func (buffer *Buffer) Index() {
 		buffer.lines = append(buffer.lines, newLine())
 		maxLines := buffer.getMaxLines()
 		if uint64(len(buffer.lines)) > maxLines {
-			buffer.lines = buffer.lines[ uint64(len(buffer.lines)) - maxLines : ]
+			buffer.lines = buffer.lines[uint64(len(buffer.lines))-maxLines:]
 		}
 	} else {
 		buffer.cursorY++
@@ -924,7 +924,7 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 	defer buffer.emitDisplayChange()
 	line := buffer.getCurrentLine()
 
-	for i := 0; i < int(buffer.cursorX); i++ {
+	for i := 0; i <= int(buffer.cursorX); i++ {
 		if i >= len(line.cells) {
 			break
 		}
