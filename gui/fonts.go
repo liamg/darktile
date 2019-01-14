@@ -40,8 +40,7 @@ func (gui *GUI) loadFonts() error {
 	if gui.fontMap == nil {
 		gui.fontMap = NewFontMap(defaultFont, boldFont)
 	} else {
-		gui.fontMap.defaultFont = defaultFont
-		gui.fontMap.defaultBoldFont = boldFont
+		gui.fontMap.AssignFonts(defaultFont, boldFont)
 	}
 
 	// add special non-ascii fonts here
