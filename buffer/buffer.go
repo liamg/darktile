@@ -20,6 +20,7 @@ type Buffer struct {
 	topMargin             uint // see DECSTBM docs - this is for scrollable regions
 	bottomMargin          uint // see DECSTBM docs - this is for scrollable regions
 	replaceMode           bool // overwrite character at cursor or insert new
+	originMode            bool // see DECOM docs - whether cursor is positioned within the margins or not
 	autoWrap              bool
 	dirty                 bool
 	selectionStart        *Position
@@ -314,6 +315,11 @@ func (buffer *Buffer) SetAutoWrap(enabled bool) {
 	buffer.autoWrap = enabled
 }
 
+func (buffer *Buffer) SetOriginMode(enabled bool) {
+	buffer.originMode = enabled
+	buffer.SetPosition(0, 0)
+}
+
 func (buffer *Buffer) SetInsertMode() {
 	buffer.replaceMode = false
 }
@@ -416,11 +422,19 @@ func (buffer *Buffer) emitDisplayChange() {
 
 // Column returns cursor column
 func (buffer *Buffer) CursorColumn() uint16 {
+	// @todo originMode and left margin
 	return buffer.cursorX
 }
 
 // Line returns cursor line
 func (buffer *Buffer) CursorLine() uint16 {
+	if buffer.originMode {
+		result := buffer.cursorY - uint16(buffer.topMargin)
+		if result < 0 {
+			result = 0
+		}
+		return result
+	}
 	return buffer.cursorY
 }
 
@@ -766,17 +780,26 @@ func (buffer *Buffer) MovePosition(x int16, y int16) {
 func (buffer *Buffer) SetPosition(col uint16, line uint16) {
 	defer buffer.emitDisplayChange()
 
-	if col >= buffer.ViewWidth() {
-		col = buffer.ViewWidth() - 1
-		//logrus.Errorf("Cannot set cursor position: column %d is outside of the current view width (%d columns)", col, buffer.ViewWidth())
+	useCol := col
+	useLine := line
+	maxLine := buffer.ViewHeight() - 1
+
+	if buffer.originMode {
+		useLine += uint16(buffer.topMargin)
+		maxLine = uint16(buffer.bottomMargin)
+		// @todo left and right margins
 	}
-	if line >= buffer.ViewHeight() {
-		line = buffer.ViewHeight() - 1
-		//logrus.Errorf("Cannot set cursor position: line %d is outside of the current view height (%d lines)", line, buffer.ViewHeight())
+	if useLine > maxLine {
+		useLine = maxLine
 	}
 
-	buffer.cursorX = col
-	buffer.cursorY = line
+	if useCol >= buffer.ViewWidth() {
+		useCol = buffer.ViewWidth() - 1
+		//logrus.Errorf("Cannot set cursor position: column %d is outside of the current view width (%d columns)", col, buffer.ViewWidth())
+	}
+
+	buffer.cursorX = useCol
+	buffer.cursorY = useLine
 }
 
 func (buffer *Buffer) GetVisibleLines() []Line {
