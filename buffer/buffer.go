@@ -704,6 +704,13 @@ func (buffer *Buffer) incrementCursorPosition() {
 	}
 }
 
+func (buffer *Buffer) inDoWrap() bool {
+	// xterm uses 'do_wrap' flag for this special terminal state
+	// we use the cursor position right after the boundary
+	// let's see how it works out
+	return buffer.cursorX == buffer.viewWidth // @todo rightMargin
+}
+
 func (buffer *Buffer) Backspace() {
 
 	if buffer.cursorX == 0 {
@@ -713,6 +720,9 @@ func (buffer *Buffer) Backspace() {
 		} else {
 			//@todo ring bell or whatever - actually i think the pty will trigger this
 		}
+	} else if buffer.inDoWrap() {
+		// the "do_wrap" implementation
+		buffer.MovePosition(-2, 0)
 	} else {
 		buffer.MovePosition(-1, 0)
 	}
@@ -737,7 +747,19 @@ func (buffer *Buffer) CarriageReturn() {
 
 func (buffer *Buffer) Tab() {
 	tabSize := 4
+	max := tabSize
+
+	// @todo rightMargin
+	if buffer.cursorX < buffer.viewWidth {
+		max = int(buffer.viewWidth - buffer.cursorX - 1)
+	}
+
 	shift := tabSize - (int(buffer.cursorX+1) % tabSize)
+
+	if shift > max {
+		shift = max
+	}
+
 	for i := 0; i < shift; i++ {
 		buffer.Write(' ')
 	}
@@ -762,16 +784,17 @@ func (buffer *Buffer) MovePosition(x int16, y int16) {
 	var toX uint16
 	var toY uint16
 
-	if int16(buffer.cursorX)+x < 0 {
+	if int16(buffer.CursorColumn())+x < 0 {
 		toX = 0
 	} else {
-		toX = uint16(int16(buffer.cursorX) + x)
+		toX = uint16(int16(buffer.CursorColumn()) + x)
 	}
 
-	if int16(buffer.cursorY)+y < 0 {
+	// should either use CursorLine() and SetPosition() or use absolutes, mind Origin Mode (DECOM)
+	if int16(buffer.CursorLine())+y < 0 {
 		toY = 0
 	} else {
-		toY = uint16(int16(buffer.cursorY) + y)
+		toY = uint16(int16(buffer.CursorLine()) + y)
 	}
 
 	buffer.SetPosition(toX, toY)
