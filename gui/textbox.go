@@ -79,8 +79,6 @@ DONE:
 		addLine()
 	}
 
-	gui.renderer.Clean()
-
 	for hx := col; hx < col+uint16(longestLine)+1; hx++ {
 		for hy := row - 1; hy < row+uint16(len(lines))+1; hy++ {
 			gui.renderer.DrawCellBg(buffer.NewBackgroundCell(bg), uint(hx), uint(hy), false, nil, true)
