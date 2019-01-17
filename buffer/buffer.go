@@ -587,7 +587,8 @@ func (buffer *Buffer) Index() {
 		buffer.lines = append(buffer.lines, newLine())
 		maxLines := buffer.getMaxLines()
 		if uint64(len(buffer.lines)) > maxLines {
-			buffer.lines = buffer.lines[ uint64(len(buffer.lines)) - maxLines : ]
+			copy(buffer.lines, buffer.lines[ uint64(len(buffer.lines)) - maxLines:])
+			buffer.lines = buffer.lines[:maxLines]
 		}
 	} else {
 		buffer.cursorY++
@@ -968,6 +969,7 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 				if i+1 < len(buffer.lines) {
 					nextLine := &buffer.lines[i+1]
 					if nextLine.wrapped {
+
 						nextLine.cells = append(sillyCells, nextLine.cells...)
 						continue
 					}
