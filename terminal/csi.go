@@ -56,19 +56,18 @@ type runeRange struct {
 
 var csiTerminators = runeRange{0x40, 0x7e}
 
-func loadCSI(pty chan rune) (final rune, param string, intermediate string) {
+func loadCSI(pty chan rune) (final rune, param string, intermediate []rune) {
 	var b rune
 	param = ""
-	intermediate = ""
+	intermediate = []rune{}
 CSI:
 	for {
 		b = <-pty
 		switch true {
 		case b >= 0x30 && b <= 0x3F:
 			param = param + string(b)
-		case b >= 0x20 && b <= 0x2F:
-			//intermediate? useful?
-			intermediate += string(b)
+		case b > 0 && b <= 0x2F:
+			intermediate = append(intermediate, b)
 		case b >= csiTerminators.min && b <= csiTerminators.max:
 			final = b
 			break CSI
@@ -89,6 +88,11 @@ func splitParams(paramString string) []string {
 func csiHandler(pty chan rune, terminal *Terminal) error {
 	final, param, intermediate := loadCSI(pty)
 
+	// process intermediate control codes before the CSI
+	for _, b := range intermediate {
+		terminal.processRune(b)
+	}
+
 	params := splitParams(param)
 
 	for _, sequence := range csiSequences {
@@ -97,7 +101,7 @@ func csiHandler(pty chan rune, terminal *Terminal) error {
 				continue
 			}
 			x, y := terminal.ActiveBuffer().CursorColumn(), terminal.ActiveBuffer().CursorLine()
-			err := sequence.handler(params, intermediate, terminal)
+			err := sequence.handler(params, "", terminal) // @todo remove intermediate from handler
 			terminal.logger.Debugf("CSI 0x%02X (ESC[%s%s%s) %s - %d,%d -> %d,%d", final, param, intermediate, string(final), sequence.description, x, y, terminal.ActiveBuffer().CursorColumn(), terminal.ActiveBuffer().CursorLine())
 			return err
 		}
