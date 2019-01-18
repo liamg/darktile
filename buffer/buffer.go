@@ -21,6 +21,7 @@ type Buffer struct {
 	bottomMargin          uint // see DECSTBM docs - this is for scrollable regions
 	replaceMode           bool // overwrite character at cursor or insert new
 	originMode            bool // see DECOM docs - whether cursor is positioned within the margins or not
+	lineFeedMode          bool
 	autoWrap              bool
 	dirty                 bool
 	selectionStart        *Position
@@ -767,7 +768,9 @@ func (buffer *Buffer) Tab() {
 
 func (buffer *Buffer) NewLine() {
 
-	buffer.cursorX = 0
+	if buffer.NewLineMode() {
+		buffer.cursorX = 0
+	}
 	buffer.Index()
 
 	for {
@@ -777,6 +780,18 @@ func (buffer *Buffer) NewLine() {
 		}
 		buffer.Index()
 	}
+}
+
+func (buffer *Buffer) SetNewLineMode() {
+	buffer.lineFeedMode = false
+}
+
+func (buffer *Buffer) SetLineFeedMode() {
+	buffer.lineFeedMode = true
+}
+
+func (buffer *Buffer) NewLineMode() bool {
+	return buffer.lineFeedMode == false
 }
 
 func (buffer *Buffer) MovePosition(x int16, y int16) {

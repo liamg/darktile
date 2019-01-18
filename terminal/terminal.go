@@ -238,6 +238,14 @@ func (terminal *Terminal) Write(data []byte) error {
 	return err
 }
 
+func (terminal *Terminal) WriteReturn() error {
+	if terminal.ActiveBuffer().NewLineMode() {
+		return terminal.Write([]byte{0x0d, 0x0a})
+	} else {
+		return terminal.Write([]byte{0x0d})
+	}
+}
+
 func (terminal *Terminal) Paste(data []byte) error {
 
 	if terminal.bracketedPasteMode {

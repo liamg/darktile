@@ -29,6 +29,12 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			terminal.ActiveBuffer().SetReplaceMode()
 		}
+	case "20":
+		if enabled {
+			terminal.ActiveBuffer().SetNewLineMode()
+		} else {
+			terminal.ActiveBuffer().SetLineFeedMode()
+		}
 	case "?1":
 		terminal.modes.ApplicationCursorKeys = enabled
 	case "?3":
