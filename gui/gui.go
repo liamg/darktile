@@ -2,6 +2,9 @@ package gui
 
 import (
 	"fmt"
+	"image"
+	"image/png"
+	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -17,6 +20,7 @@ import (
 	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
 	"unsafe"
+	"github.com/kbinani/screenshot"
 )
 
 type GUI struct {
@@ -586,4 +590,18 @@ func (gui *GUI) launchTarget(target string) {
 func (gui *GUI) SwapBuffers() {
 	UpdateNSGLContext(gui.window)
 	gui.window.SwapBuffers()
+}
+
+func (gui *GUI) Screenshot(path string) {
+	x, y := gui.window.GetPos()
+	w, h := gui.window.GetSize()
+
+	img, err := screenshot.CaptureRect(image.Rectangle{ Min: image.Point{ X: x, Y: y },
+		Max: image.Point{ X: x + w, Y: y + h}})
+	if err != nil {
+		panic(err)
+	}
+	file, _ := os.Create(path)
+	defer file.Close()
+	png.Encode(file, img)
 }
