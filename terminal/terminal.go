@@ -3,13 +3,12 @@ package terminal
 import (
 	"bufio"
 	"fmt"
-	"io"
-	"sync"
-
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/platform"
 	"go.uber.org/zap"
+	"io"
+	"sync"
 )
 
 const (
