@@ -65,11 +65,33 @@ func TestCursorMovement(t *testing.T) {
 		if term.ActiveBuffer().Compare("vttest/test-cursor-movement-1") == false {
 			t.Error(fmt.Sprint("ActiveBuffer doesn't match vttest template"))
 		}
+		g.Screenshot ("test-cursor-movement-1.png")
+		compareImages("vttest/test-cursor-movement-1.png", "test-cursor-movement-1.png")
 
 		enter(term)
 		sleep()
 		g.Screenshot ("test-cursor-movement-2.png")
 		compareImages("vttest/test-cursor-movement-2.png", "test-cursor-movement-2.png")
+
+		enter(term)
+		sleep()
+		g.Screenshot ("test-cursor-movement-3.png")
+		compareImages("vttest/test-cursor-movement-3.png", "test-cursor-movement-3.png")
+
+		enter(term)
+		sleep()
+		g.Screenshot ("test-cursor-movement-4.png")
+		compareImages("vttest/test-cursor-movement-4.png", "test-cursor-movement-4.png")
+
+		enter(term)
+		sleep()
+		g.Screenshot ("test-cursor-movement-5.png")
+		compareImages("vttest/test-cursor-movement-5.png", "test-cursor-movement-5.png")
+
+		enter(term)
+		sleep()
+		g.Screenshot ("test-cursor-movement-6.png")
+		compareImages("vttest/test-cursor-movement-6.png", "test-cursor-movement-6.png")
 		os.Exit(0)
 	}
 
