@@ -674,9 +674,9 @@ func (buffer *Buffer) Write(runes ...rune) {
 
 				newLine := buffer.getCurrentLine()
 				if len(newLine.cells) == 0 {
-					newLine.cells = []Cell{{}}
+					newLine.cells = append(newLine.cells, buffer.defaultCell)
 				}
-				cell := &newLine.cells[buffer.CursorColumn()]
+				cell := &newLine.cells[0]
 				cell.setRune(r)
 				cell.attr = buffer.cursorAttr
 
