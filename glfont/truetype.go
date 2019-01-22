@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/golang/freetype/truetype"
+	"golang.org/x/image/font"
 )
 
 type character struct {
@@ -17,14 +18,14 @@ type character struct {
 	bearingV  int    //glyph bearing vertical
 }
 
-//LoadTrueTypeFont builds a set of textures based on a ttf files gylphs
+//LoadTrueTypeFont builds a set of textures based on a ttf files glyphs
 func LoadTrueTypeFont(program uint32, r io.Reader, scale float32) (*Font, error) {
 	data, err := ioutil.ReadAll(r)
 	if err != nil {
 		return nil, err
 	}
 
-	//make Font stuct type
+	//make Font struct type
 	f := new(Font)
 	f.scale = scale
 	f.characters = map[rune]*character{}
@@ -61,6 +62,13 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale float32) (*Font, error)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BindVertexArray(0)
+
+	//create new face to measure glyph dimensions
+	f.ttfFace = truetype.NewFace(f.ttf, &truetype.Options {
+		Size:    float64(f.scale),
+		DPI:     DPI,
+		Hinting: font.HintingFull,
+	})
 
 	return f, nil
 }

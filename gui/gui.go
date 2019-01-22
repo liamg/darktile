@@ -3,6 +3,9 @@ package gui
 import (
 	"fmt"
 	"math"
+	"image"
+	"image/png"
+	"os"
 	"os/exec"
 	"runtime"
 	"strconv"
@@ -17,6 +20,8 @@ import (
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
+	"unsafe"
+	"github.com/kbinani/screenshot"
 )
 
 type GUI struct {
@@ -142,7 +147,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		height:            600,
 		dpiScale:          1,
 		terminal:          terminal,
-		fontScale:         14.0,
+		fontScale:         10.0,
 		terminalAlpha:     1,
 		keyboardShortcuts: shortcuts,
 		resizeLock:        &sync.Mutex{},
@@ -461,7 +466,7 @@ func (gui *GUI) redraw(defaultCell buffer.Cell) {
 
 		if y < len(lines) {
 
-			bufStr := ""
+			var builder strings.Builder
 			bold := false
 			dim := false
 			col := 0
@@ -471,14 +476,14 @@ func (gui *GUI) redraw(defaultCell buffer.Cell) {
 			for x := 0; x < colCount; x++ {
 				if x < len(cells) {
 					cell := cells[x]
-					if bufStr != "" && (cell.Attr().Dim != dim || cell.Attr().Bold != bold || colour != cell.Fg()) {
+					if builder.Len() > 0 && (cell.Attr().Dim != dim || cell.Attr().Bold != bold || colour != cell.Fg()) {
 						var alpha float32 = 1.0
 						if dim {
 							alpha = 0.5
 						}
-						gui.renderer.DrawCellText(bufStr, uint(col), uint(y), alpha, colour, bold)
+						gui.renderer.DrawCellText(builder.String(), uint(col), uint(y), alpha, colour, bold)
 						col = x
-						bufStr = ""
+						builder.Reset()
 					}
 					dim = cell.Attr().Dim
 					colour = cell.Fg()
@@ -487,15 +492,15 @@ func (gui *GUI) redraw(defaultCell buffer.Cell) {
 					if r == 0 {
 						r = ' '
 					}
-					bufStr += string(r)
+					builder.WriteRune(r)
 				}
 			}
-			if bufStr != "" {
+			if builder.Len() > 0 {
 				var alpha float32 = 1.0
 				if dim {
 					alpha = 0.5
 				}
-				gui.renderer.DrawCellText(bufStr, uint(col), uint(y), alpha, colour, bold)
+				gui.renderer.DrawCellText(builder.String(), uint(col), uint(y), alpha, colour, bold)
 			}
 		}
 
@@ -574,12 +579,22 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 	return window, nil
 }
 
+func (gui *GUI) onDebugMessage(source uint32, gltype uint32, id uint32, severity uint32, length int32, message string, userParam unsafe.Pointer) {
+	gui.logger.Infof("GL debug message: %s", message)
+}
+
 // initOpenGL initializes OpenGL and returns an intiialized program.
 func (gui *GUI) createProgram() (uint32, error) {
 	if err := gl.Init(); err != nil {
 		return 0, fmt.Errorf("Failed to initialise OpenGL: %s", err)
 	}
 	gui.logger.Infof("OpenGL version %s", gl.GoStr(gl.GetString(gl.VERSION)))
+
+	if gui.config.DebugMode {
+		// This allows to catch some OpenGL errors
+		gl.DebugMessageCallback(gui.onDebugMessage, nil)
+		gl.Enable(gl.DEBUG_OUTPUT)
+	}
 
 	gui.logger.Debugf("Compiling shaders...")
 
@@ -597,6 +612,9 @@ func (gui *GUI) createProgram() (uint32, error) {
 	gl.AttachShader(prog, vertexShader)
 	gl.AttachShader(prog, fragmentShader)
 	gl.LinkProgram(prog)
+
+	gl.DeleteShader(vertexShader)
+	gl.DeleteShader(fragmentShader)
 
 	return prog, nil
 }
@@ -620,4 +638,18 @@ func (gui *GUI) launchTarget(target string) {
 func (gui *GUI) SwapBuffers() {
 	UpdateNSGLContext(gui.window)
 	gui.window.SwapBuffers()
+}
+
+func (gui *GUI) Screenshot(path string) {
+	x, y := gui.window.GetPos()
+	w, h := gui.window.GetSize()
+
+	img, err := screenshot.CaptureRect(image.Rectangle{ Min: image.Point{ X: x, Y: y },
+		Max: image.Point{ X: x + w, Y: y + h}})
+	if err != nil {
+		panic(err)
+	}
+	file, _ := os.Create(path)
+	defer file.Close()
+	png.Encode(file, img)
 }

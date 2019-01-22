@@ -11,8 +11,6 @@ import (
 )
 
 type OpenGLRenderer struct {
-	font          *glfont.Font
-	boldFont      *glfont.Font
 	areaWidth     int
 	areaHeight    int
 	areaX         int
@@ -22,7 +20,6 @@ type OpenGLRenderer struct {
 	termCols      uint
 	termRows      uint
 	cellPositions map[[2]uint][2]float32
-	rectangles    map[[2]uint]*rectangle
 	config        *config.Config
 	colourAttr    uint32
 	program       uint32
@@ -48,34 +45,9 @@ func (r *OpenGLRenderer) CellHeight() float32 {
 	return r.cellHeight
 }
 
-func (r *OpenGLRenderer) Clean() {
-	for _, rect := range r.rectangles {
-		rect.Free()
-	}
+func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
 
-	r.rectangles = map[[2]uint]*rectangle{}
-}
-
-func (r *OpenGLRenderer) initRectangle(rect *rectangle, x float32, y float32, colourAttr uint32) {
-
-	if rect == nil {
-		panic("rect pointer is nil")
-	}
-
-	if rect.vao != 0 {
-		gl.DeleteVertexArrays(1, &rect.vao)
-		rect.vao = 0
-	}
-
-	if rect.vbo != 0 {
-		gl.DeleteBuffers(1, &rect.vbo)
-		rect.vbo = 0
-	}
-
-	if rect.cv != 0 {
-		gl.DeleteBuffers(1, &rect.cv)
-		rect.cv = 0
-	}
+	rect := &rectangle{}
 
 	halfAreaWidth := float32(r.areaWidth / 2)
 	halfAreaHeight := float32(r.areaHeight / 2)
@@ -85,15 +57,15 @@ func (r *OpenGLRenderer) initRectangle(rect *rectangle, x float32, y float32, co
 	w := r.cellWidth / halfAreaWidth
 	h := (r.cellHeight) / halfAreaHeight
 
-    rect.points = [18]float32{
-			x, y, 0,
-			x, y + h, 0,
-			x + w, y + h, 0,
+	rect.points = [18]float32{
+		x, y, 0,
+		x, y + h, 0,
+		x + w, y + h, 0,
 
-			x + w, y, 0,
-			x, y, 0,
-			x + w, y + h, 0,
-		}
+		x + w, y, 0,
+		x, y, 0,
+		x + w, y + h, 0,
+	}
 
 	rect.colourAttr = colourAttr
 	rect.prog = r.program
@@ -114,13 +86,6 @@ func (r *OpenGLRenderer) initRectangle(rect *rectangle, x float32, y float32, co
 	gl.GenBuffers(1, &rect.cv)
 
 	rect.setColour([3]float32{0, 1, 0})
-}
-
-func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
-
-	rect := &rectangle{}
-
-	r.initRectangle(rect, x, y, colourAttr)
 
 	return rect
 }
@@ -155,7 +120,6 @@ func (rect *rectangle) setColour(colour [3]float32) {
 }
 
 func (rect *rectangle) Free() {
-	gl.UseProgram(rect.prog)
 	gl.DeleteVertexArrays(1, &rect.vao)
 	gl.DeleteBuffers(1, &rect.vbo)
 	gl.DeleteBuffers(1, &rect.cv)
@@ -172,7 +136,6 @@ func NewOpenGLRenderer(config *config.Config, fontMap *FontMap, areaX int, areaY
 		areaX:         areaX,
 		areaY:         areaY,
 		cellPositions: map[[2]uint][2]float32{},
-		rectangles:    map[[2]uint]*rectangle{},
 		config:        config,
 		colourAttr:    colourAttr,
 		program:       program,
@@ -181,6 +144,19 @@ func NewOpenGLRenderer(config *config.Config, fontMap *FontMap, areaX int, areaY
 	}
 	r.SetArea(areaX, areaY, areaWidth, areaHeight)
 	return r
+}
+
+// This method ensures that all OpenGL resources are deleted correctly
+func (r *OpenGLRenderer) Free() {
+	for _, tex := range r.textureMap {
+		gl.DeleteTextures(1, &tex)
+	}
+	r.textureMap = map[*image.RGBA]uint32{}
+
+	r.fontMap.Free()
+
+	gl.DeleteProgram(r.program)
+	r.program = 0
 }
 
 func (r *OpenGLRenderer) GetTermSize() (uint, uint) {
@@ -198,8 +174,6 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	//= f.LineHeight()   // includes vertical padding
 	r.termCols = uint(math.Floor(float64(float32(r.areaWidth) / r.cellWidth)))
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
-
-	r.Clean()
 }
 
 func (r *OpenGLRenderer) GetRectangleSize(col uint, row uint) (float32, float32) {
@@ -213,23 +187,15 @@ func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
 	x := float32(float32(col) * r.cellWidth)
 	y := float32(float32(row) * r.cellHeight) + r.cellHeight
 
-	coords := [2]uint{col, row}
-
-	rect, ok := r.rectangles[coords]
-	if ok {
-		r.initRectangle(rect, x, y, r.colourAttr)
-		return rect
-	} else {
-		rect = r.newRectangle(x, y, r.colourAttr)
-		r.rectangles[coords] = rect
-		return rect
-	}
+	return r.newRectangle(x, y, r.colourAttr)
 }
 
 func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
 	rect := r.getRectangle(col, row)
 	rect.setColour(colour)
 	rect.Draw()
+
+	rect.Free()
 }
 
 func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor bool, colour *config.Colour, force bool) {
@@ -251,6 +217,8 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 		rect := r.getRectangle(col, row)
 		rect.setColour(bg)
 		rect.Draw()
+
+		rect.Free()
 	}
 
 }
@@ -330,5 +298,4 @@ func (r *OpenGLRenderer) DrawCellImage(cell buffer.Cell, col uint, row uint) {
 		gl.COLOR_BUFFER_BIT, gl.LINEAR)
 	gl.BindFramebuffer(gl.READ_FRAMEBUFFER, 0)
 	gl.DeleteFramebuffers(1, &readFboId)
-
 }

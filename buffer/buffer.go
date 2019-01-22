@@ -1,8 +1,11 @@
 package buffer
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/url"
+	"os"
 	"time"
 )
 
@@ -602,7 +605,8 @@ func (buffer *Buffer) Index() {
 		buffer.lines = append(buffer.lines, newLine())
 		maxLines := buffer.getMaxLines()
 		if uint64(len(buffer.lines)) > maxLines {
-			buffer.lines = buffer.lines[uint64(len(buffer.lines))-maxLines:]
+			copy(buffer.lines, buffer.lines[ uint64(len(buffer.lines)) - maxLines:])
+			buffer.lines = buffer.lines[:maxLines]
 		}
 	} else {
 		buffer.cursorY++
@@ -1029,6 +1033,7 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 				if i+1 < len(buffer.lines) {
 					nextLine := &buffer.lines[i+1]
 					if nextLine.wrapped {
+
 						nextLine.cells = append(sillyCells, nextLine.cells...)
 						continue
 					}
@@ -1109,3 +1114,30 @@ func (buffer *Buffer) getMaxLines() uint64 {
 
 	return result
 }
+
+func (buffer *Buffer) Save(path string) {
+	f, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	for _, line := range buffer.lines {
+		f.WriteString(line.String())
+	}
+}
+
+func (buffer *Buffer) Compare(path string) bool {
+	f, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	bufferContent := []byte{}
+	for _, line := range buffer.lines {
+		lineBytes := []byte(line.String())
+		bufferContent = append(bufferContent, lineBytes...)
+	}
+	return bytes.Equal(f, bufferContent)
+}
+

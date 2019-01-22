@@ -2,17 +2,21 @@ package main
 
 import (
 	"fmt"
-	"os"
-	"runtime"
-
 	"github.com/liamg/aminal/gui"
 	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/riywo/loginshell"
+	"os"
+	"runtime"
 )
 
-func main() {
+type callback func(terminal *terminal.Terminal, g *gui.GUI)
 
+func main() {
+	initialize(nil)
+}
+
+func initialize(fn callback) {
 	runtime.LockOSThread()
 
 	conf := getConfig()
@@ -54,6 +58,10 @@ func main() {
 	g, err := gui.New(conf, terminal, logger)
 	if err != nil {
 		logger.Fatalf("Cannot start: %s", err)
+	}
+
+	if fn != nil {
+		go fn(terminal, g)
 	}
 
 	go func() {
