@@ -45,8 +45,8 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			// DECCOLM - 80 characters per line (erases screen)
 			terminal.SetSize(80, uint(lines))
-			terminal.Clear()
 		}
+		terminal.Clear()
 	/*
 		case "?4":
 			// DECSCLM
