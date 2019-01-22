@@ -14,13 +14,13 @@ import (
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/kbinani/screenshot"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
 	"unsafe"
-	"github.com/kbinani/screenshot"
 )
 
 type GUI struct {
@@ -30,6 +30,8 @@ type GUI struct {
 	terminal          *terminal.Terminal
 	width             int //window width in pixels
 	height            int //window height in pixels
+	appliedWidth      int
+	appliedHeight     int
 	dpiScale          float32
 	fontMap           *FontMap
 	fontScale         float32
@@ -120,6 +122,8 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		logger:            logger,
 		width:             800,
 		height:            600,
+		appliedWidth:	   0,
+		appliedHeight:     0,
 		dpiScale:          1,
 		terminal:          terminal,
 		fontScale:         10.0,
@@ -144,7 +148,7 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 		return
 	}
 
-	if gui.width == width && gui.height == height {
+	if gui.appliedWidth == width && gui.appliedHeight == height {
 		return
 	}
 
@@ -155,6 +159,8 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	gui.width = width
 	gui.height = height
+	gui.appliedWidth = width
+	gui.appliedHeight = height
 
 	gui.logger.Debugf("Updating font resolutions...")
 	gui.loadFonts()
