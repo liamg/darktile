@@ -40,6 +40,7 @@ type Terminal struct {
 	size                      Winsize
 	config                    *config.Config
 	titleHandlers             []chan bool
+	resizeHandlers            []chan bool
 	modes                     Modes
 	mouseMode                 MouseMode
 	bracketedPasteMode        bool
@@ -195,12 +196,24 @@ func (terminal *Terminal) AttachTitleChangeHandler(handler chan bool) {
 	terminal.titleHandlers = append(terminal.titleHandlers, handler)
 }
 
+func (terminal *Terminal) AttachResizeHandler(handler chan bool) {
+	terminal.resizeHandlers = append(terminal.resizeHandlers, handler)
+}
+
 func (terminal *Terminal) Modes() Modes {
 	return terminal.modes
 }
 
 func (terminal *Terminal) emitTitleChange() {
 	for _, h := range terminal.titleHandlers {
+		go func(c chan bool) {
+			c <- true
+		}(h)
+	}
+}
+
+func (terminal *Terminal) emitResize() {
+	for _, h := range terminal.resizeHandlers {
 		go func(c chan bool) {
 			c <- true
 		}(h)
@@ -290,14 +303,20 @@ func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
 	terminal.lock.Lock()
 	defer terminal.lock.Unlock()
 
-	terminal.size.Width = uint16(newCols)
-	terminal.size.Height = uint16(newLines)
+	if terminal.size.Width == uint16(newCols) && terminal.size.Height == uint16(newLines) {
+		return nil
+	}
 
 	err := terminal.pty.Resize(int(newCols), int(newLines))
 	if err != nil {
 		return fmt.Errorf("Failed to set terminal size vai ioctl: Error no %d", err)
 	}
 
+	terminal.size.Width = uint16(newCols)
+	terminal.size.Height = uint16(newLines)
+
 	terminal.ActiveBuffer().ResizeView(terminal.size.Width, terminal.size.Height)
+
+	terminal.emitResize()
 	return nil
 }
