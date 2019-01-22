@@ -108,22 +108,6 @@ func (g *GUI) RecalculateDpiScale() {
 	}
 }
 
-func (g *GUI) Width() int {
-	return int(float32(g.width) * g.dpiScale)
-}
-
-func (g *GUI) SetWidth(width int) {
-	g.width = int(float32(width) / g.dpiScale)
-}
-
-func (g *GUI) Height() int {
-	return int(float32(g.height) * g.dpiScale)
-}
-
-func (g *GUI) SetHeight(height int) {
-	g.height = int(float32(height) / g.dpiScale)
-}
-
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) (*GUI, error) {
 
 	shortcuts, err := config.KeyMapping.GenerateActionMap()
@@ -160,19 +144,23 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 		return
 	}
 
+	if gui.width == width && gui.height == height {
+		return
+	}
+
 	gui.resizeLock.Lock()
 	defer gui.resizeLock.Unlock()
 
 	gui.logger.Debugf("Initiating GUI resize to %dx%d", width, height)
 
-	gui.SetWidth(width)
-	gui.SetHeight(height)
+	gui.width = width
+	gui.height = height
 
 	gui.logger.Debugf("Updating font resolutions...")
 	gui.loadFonts()
 
 	gui.logger.Debugf("Setting renderer area...")
-	gui.renderer.SetArea(0, 0, gui.Width(), gui.Height())
+	gui.renderer.SetArea(0, 0, gui.width, gui.height)
 
 	gui.logger.Debugf("Calculating size in cols/rows...")
 	cols, rows := gui.renderer.GetTermSize()
@@ -183,7 +171,7 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	}
 
 	gui.logger.Debugf("Setting viewport size...")
-	gl.Viewport(0, 0, int32(gui.Width()), int32(gui.Height()))
+	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
 
 	gui.terminal.SetCharSize(gui.renderer.cellWidth, gui.renderer.cellHeight)
 
@@ -213,7 +201,8 @@ func (gui *GUI) Render() error {
 	var err error
 	gui.window, err = gui.createWindow()
 	gui.RecalculateDpiScale()
-	gui.window.SetSize(gui.Width(), gui.Height())
+	gui.window.SetSize(int(float32(gui.width) * gui.dpiScale),
+		int(float32(gui.height) * gui.dpiScale))
 	if err != nil {
 		return fmt.Errorf("Failed to create window: %s", err)
 	}
@@ -235,7 +224,7 @@ func (gui *GUI) Render() error {
 
 	titleChan := make(chan bool, 1)
 
-	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.Width(), gui.Height(), gui.colourAttr, program)
+	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width, gui.height, gui.colourAttr, program)
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
@@ -510,7 +499,8 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 	glfw.WindowHint(glfw.ContextVersionMajor, major)
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
 
-	window, err := glfw.CreateWindow(gui.Width(), gui.Height(), "Terminal", nil, nil)
+	window, err := glfw.CreateWindow(int(float32(gui.width) * gui.dpiScale),
+		int(float32(gui.height) * gui.dpiScale), "Terminal", nil, nil)
 	if err != nil {
 		e := err.Error()
 		if i := strings.Index(e, ", got version "); i > -1 {
