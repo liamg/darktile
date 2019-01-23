@@ -337,6 +337,11 @@ func (buffer *Buffer) SetVerticalMargins(top uint, bottom uint) {
 	buffer.bottomMargin = bottom
 }
 
+// ResetVerticalMargins resets margins to extreme positions
+func (buffer *Buffer) ResetVerticalMargins() {
+	buffer.SetVerticalMargins(0, uint(buffer.viewHeight-1))
+}
+
 func (buffer *Buffer) GetScrollOffset() uint {
 	return buffer.scrollLinesFromBottom
 }
@@ -1104,7 +1109,7 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 	line = buffer.getCurrentLine()
 	buffer.cursorX = uint16((len(line.cells) - cXFromEndOfLine) - 1)
 
-	buffer.SetVerticalMargins(0, uint(buffer.viewHeight-1))
+	buffer.ResetVerticalMargins()
 }
 
 func (buffer *Buffer) getMaxLines() uint64 {
