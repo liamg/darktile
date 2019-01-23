@@ -319,6 +319,10 @@ func (buffer *Buffer) SetAutoWrap(enabled bool) {
 	buffer.autoWrap = enabled
 }
 
+func (buffer *Buffer) IsAutoWrap() bool {
+	return buffer.autoWrap
+}
+
 func (buffer *Buffer) SetOriginMode(enabled bool) {
 	buffer.originMode = enabled
 	buffer.SetPosition(0, 0)
@@ -778,7 +782,7 @@ func (buffer *Buffer) Tab() {
 
 func (buffer *Buffer) NewLine() {
 
-	if buffer.NewLineMode() {
+	if buffer.IsNewLineMode() {
 		buffer.cursorX = 0
 	}
 	buffer.Index()
@@ -800,7 +804,7 @@ func (buffer *Buffer) SetLineFeedMode() {
 	buffer.lineFeedMode = true
 }
 
-func (buffer *Buffer) NewLineMode() bool {
+func (buffer *Buffer) IsNewLineMode() bool {
 	return buffer.lineFeedMode == false
 }
 

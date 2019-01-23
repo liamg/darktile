@@ -3,12 +3,13 @@ package terminal
 import (
 	"bufio"
 	"fmt"
+	"io"
+	"sync"
+
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/platform"
 	"go.uber.org/zap"
-	"io"
-	"sync"
 )
 
 const (
@@ -251,7 +252,7 @@ func (terminal *Terminal) Write(data []byte) error {
 }
 
 func (terminal *Terminal) WriteReturn() error {
-	if terminal.ActiveBuffer().NewLineMode() {
+	if terminal.ActiveBuffer().IsNewLineMode() {
 		return terminal.Write([]byte{0x0d, 0x0a})
 	} else {
 		return terminal.Write([]byte{0x0d})
