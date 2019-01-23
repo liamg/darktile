@@ -670,6 +670,7 @@ func (buffer *Buffer) Write(runes ...rune) {
 
 			if buffer.autoWrap {
 
+				buffer.cursorX = 0 // force regardless of line mode
 				buffer.NewLine()
 
 				newLine := buffer.getCurrentLine()
