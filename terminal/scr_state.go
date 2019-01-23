@@ -7,17 +7,22 @@ func screenStateHandler(pty chan rune, terminal *Terminal) error {
 	switch b {
 	case '8': // DECALN -- Screen Alignment Pattern
 		// hide cursor?
-		// reset margins to extreme positions
 		buffer := terminal.ActiveBuffer()
-		buffer.SetPosition(0, 0)
+		buffer.ResetVerticalMargins()
+		buffer.ScrollToEnd()
 
 		// Fill the whole screen with E's
 		count := buffer.ViewHeight() * buffer.ViewWidth()
 		for count > 0 {
 			buffer.Write('E')
 			count--
+			if count > 0 && !buffer.IsAutoWrap() && count%buffer.ViewWidth() == 0 {
+				buffer.Index()
+				buffer.CarriageReturn()
+			}
 		}
-		// restore cursor?
+		// restore cursor
+		buffer.SetPosition(0, 0)
 	default:
 		return fmt.Errorf("Screen State code not supported: 0x%02X [%v]", b, string(b))
 	}
