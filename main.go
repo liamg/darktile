@@ -51,6 +51,7 @@ func initialize(fn callback) {
 		pty.Close()
 		logger.Fatalf("Failed to start your shell: %s", err)
 	}
+	defer guestProcess.Close()
 
 	logger.Infof("Creating terminal...")
 	terminal := terminal.New(pty, logger, conf)
