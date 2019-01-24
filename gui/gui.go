@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"math"
 	"image"
 	"image/png"
 	"os"
@@ -32,6 +33,7 @@ type GUI struct {
 	height            int //window height in pixels
 	appliedWidth      int
 	appliedHeight     int
+	resizeCache       *ResizeCache // resize cache formed by resizeToTerminal()
 	dpiScale          float32
 	fontMap           *FontMap
 	fontScale         float32
@@ -61,6 +63,13 @@ func Max(x, y int) int {
 	return y
 }
 
+type ResizeCache struct {
+	Width  int
+	Height int
+	Cols   uint
+	Rows   uint
+}
+
 func (g *GUI) GetMonitor() *glfw.Monitor {
 
 	if g.window == nil {
@@ -80,8 +89,8 @@ func (g *GUI) GetMonitor() *glfw.Monitor {
 	for _, monitor := range monitors {
 		mode := monitor.GetVideoMode()
 		mx, my := monitor.GetPos()
-		overlap := Max(0, Min(x + w, mx + mode.Width) - Max(x, mx)) *
-			Max(0, Min(y + h, my + mode.Height) - Max(y, my))
+		overlap := Max(0, Min(x+w, mx+mode.Width)-Max(x, mx)) *
+			Max(0, Min(y+h, my+mode.Height)-Max(y, my))
 		if bestMatch < overlap {
 			bestMatch = overlap
 			currentMonitor = monitor
@@ -142,6 +151,35 @@ func (gui *GUI) scale() float32 {
 }
 
 // can only be called on OS thread
+func (gui *GUI) resizeToTerminal(newCols uint, newRows uint) {
+
+	if gui.window.GetAttrib(glfw.Iconified) != 0 {
+		return
+	}
+
+	gui.resizeLock.Lock()
+	defer gui.resizeLock.Unlock()
+
+	cols, rows := gui.renderer.GetTermSize()
+	if cols == newCols && rows == newRows {
+		return
+	}
+
+	gui.logger.Debugf("Initiating GUI resize to columns=%d rows=%d", newCols, newRows)
+
+	gui.logger.Debugf("Calculating size...")
+	width, height := gui.renderer.GetRectangleSize(newCols, newRows)
+
+	roundedWidth := int(math.Ceil(float64(width)))
+	roundedHeight := int(math.Ceil(float64(height)))
+
+	gui.resizeCache = &ResizeCache{roundedWidth, roundedHeight, newCols, newRows}
+
+	gui.logger.Debugf("Resizing window to %dx%d", roundedWidth, roundedHeight)
+	gui.window.SetSize(roundedWidth, roundedHeight) // will trigger resize()
+}
+
+// can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	if gui.window.GetAttrib(glfw.Iconified) != 0 {
@@ -168,13 +206,18 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	gui.logger.Debugf("Setting renderer area...")
 	gui.renderer.SetArea(0, 0, gui.width, gui.height)
 
-	gui.logger.Debugf("Calculating size in cols/rows...")
-	cols, rows := gui.renderer.GetTermSize()
-
-	gui.logger.Debugf("Resizing internal terminal...")
-	if err := gui.terminal.SetSize(cols, rows); err != nil {
-		gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", cols, rows, err)
+	if gui.resizeCache != nil && gui.resizeCache.Width == width && gui.resizeCache.Height == height {
+		gui.logger.Debugf("No need to resize internal terminal!")
+	} else {
+		gui.logger.Debugf("Calculating size in cols/rows...")
+		cols, rows := gui.renderer.GetTermSize()
+		gui.logger.Debugf("Resizing internal terminal...")
+		if err := gui.terminal.SetSize(cols, rows); err != nil {
+			gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", cols, rows, err)
+		}
 	}
+
+	gui.resizeCache = nil
 
 	gui.logger.Debugf("Setting viewport size...")
 	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
@@ -229,6 +272,7 @@ func (gui *GUI) Render() error {
 	}
 
 	titleChan := make(chan bool, 1)
+	resizeChan := make(chan bool, 1)
 
 	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width, gui.height, gui.colourAttr, program)
 
@@ -278,6 +322,7 @@ func (gui *GUI) Render() error {
 	)
 
 	gui.terminal.AttachTitleChangeHandler(titleChan)
+	gui.terminal.AttachResizeHandler(resizeChan)
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -311,6 +356,9 @@ func (gui *GUI) Render() error {
 		select {
 		case <-titleChan:
 			gui.window.SetTitle(gui.terminal.GetTitle())
+		case <-resizeChan:
+			cols, rows := gui.terminal.GetSize()
+			gui.resizeToTerminal(uint(cols), uint(rows))
 		default:
 			// this is more efficient than glfw.PollEvents()
 			glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
@@ -492,7 +540,7 @@ func (gui *GUI) createWindow() (*glfw.Window, error) {
 		return nil, fmt.Errorf("failed to create window, please update your graphics drivers and try again")
 	}
 
-	window.SetSizeLimits(int(300 * gui.dpiScale), int(150 * gui.dpiScale), 10000, 10000)
+	window.SetSizeLimits(int(300*gui.dpiScale), int(150*gui.dpiScale), 10000, 10000)
 	window.MakeContextCurrent()
 	window.Show()
 	window.Focus()

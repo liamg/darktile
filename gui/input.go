@@ -212,9 +212,7 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				0x09,
 			})
 		case glfw.KeyEnter:
-			gui.terminal.Write([]byte{
-				0x0d,
-			})
+			gui.terminal.WriteReturn()
 		case glfw.KeyKPEnter:
 			if gui.terminal.IsApplicationCursorKeysModeEnabled() {
 				gui.terminal.Write([]byte{
@@ -223,9 +221,7 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 					'M',
 				})
 			} else {
-				gui.terminal.Write([]byte{
-					0x0d,
-				})
+				gui.terminal.WriteReturn()
 			}
 		case glfw.KeyBackspace:
 			if modsPressed(mods, glfw.ModAlt) {

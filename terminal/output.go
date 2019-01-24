@@ -8,64 +8,79 @@ import (
 
 type TerminalCharSet int
 
+// single rune handler
+type runeHandler func(terminal *Terminal) error
+
 type escapeSequenceHandler func(pty chan rune, terminal *Terminal) error
 
-var escapeSequenceMap = map[rune]escapeSequenceHandler{
-	0x05: enqSequenceHandler,
-	0x07: bellSequenceHandler,
-	0x08: backspaceSequenceHandler,
-	0x09: tabSequenceHandler,
-	0x0a: newLineSequenceHandler,
-	0x0b: newLineSequenceHandler,
-	0x0c: newLineSequenceHandler,
-	0x0d: carriageReturnSequenceHandler,
-	0x0e: shiftOutSequenceHandler,
-	0x0f: shiftInSequenceHandler,
-	0x1b: ansiHandler,
+var runeMap = map[rune]runeHandler{
+	0x05: enqHandler,
+	0x07: bellHandler,
+	0x08: backspaceHandler,
+	0x09: tabHandler,
+	0x0a: newLineHandler,
+	0x0b: newLineHandler,
+	0x0c: newLineHandler,
+	0x0d: carriageReturnHandler,
+	0x0e: shiftOutHandler,
+	0x0f: shiftInHandler,
 }
 
-func newLineSequenceHandler(pty chan rune, terminal *Terminal) error {
+func newLineHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().NewLine()
 	terminal.isDirty = true
 	return nil
 }
 
-func tabSequenceHandler(pty chan rune, terminal *Terminal) error {
+func tabHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().Tab()
 	terminal.isDirty = true
 	return nil
 }
 
-func carriageReturnSequenceHandler(pty chan rune, terminal *Terminal) error {
+func carriageReturnHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().CarriageReturn()
 	terminal.isDirty = true
 	return nil
 }
 
-func backspaceSequenceHandler(pty chan rune, terminal *Terminal) error {
+func backspaceHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().Backspace()
 	terminal.isDirty = true
 	return nil
 }
 
-func bellSequenceHandler(pty chan rune, terminal *Terminal) error {
+func bellHandler(terminal *Terminal) error {
 	// @todo ring bell - flash red or some shit?
 	return nil
 }
 
-func enqSequenceHandler(pty chan rune, terminal *Terminal) error {
+func enqHandler(terminal *Terminal) error {
 	terminal.logger.Errorf("Received ENQ!")
 	return nil
 }
 
-func shiftOutSequenceHandler(pty chan rune, terminal *Terminal) error {
+func shiftOutHandler(terminal *Terminal) error {
 	terminal.logger.Errorf("Received shift out")
 	return nil
 }
 
-func shiftInSequenceHandler(pty chan rune, terminal *Terminal) error {
+func shiftInHandler(terminal *Terminal) error {
 	terminal.logger.Errorf("Received shift in")
 	return nil
+}
+
+func (terminal *Terminal) processRune(b rune) {
+	if handler, ok := runeMap[b]; ok {
+		if err := handler(terminal); err != nil {
+			terminal.logger.Errorf("Error handling control code: %s", err)
+		}
+		terminal.isDirty = true
+		return
+	}
+	//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
+	terminal.ActiveBuffer().Write(b)
+	terminal.isDirty = true
 }
 
 func (terminal *Terminal) processInput(pty chan rune) {
@@ -82,19 +97,15 @@ func (terminal *Terminal) processInput(pty chan rune) {
 
 		b = <-pty
 
-		if b < 0x20 {
-			if handler, ok := escapeSequenceMap[b]; ok {
-				//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
-				if err := handler(pty, terminal); err != nil {
-					terminal.logger.Errorf("Error handling escape sequence: %s", err)
-				}
-				terminal.isDirty = true
-				continue
+		if b == 0x1b {
+			//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
+			if err := ansiHandler(pty, terminal); err != nil {
+				terminal.logger.Errorf("Error handling escape sequence: %s", err)
 			}
+			terminal.isDirty = true
+			continue
 		}
 
-		//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
-		terminal.ActiveBuffer().Write(b)
-		terminal.isDirty = true
+		terminal.processRune(b)
 	}
 }

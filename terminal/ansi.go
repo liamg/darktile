@@ -11,9 +11,11 @@ var ansiSequenceMap = map[rune]escapeSequenceHandler{
 	'7': saveCursorHandler,
 	'8': restoreCursorHandler,
 	'D': indexHandler,
+	'E': nextLineHandler, // NEL
 	'M': reverseIndexHandler,
 	'P': sixelHandler,
-	'c': risHandler,        //RIS
+	'c': risHandler, //RIS
+	'#': screenStateHandler,
 	'(': swallowHandler(1), // character set bullshit
 	')': swallowHandler(1), // character set bullshit
 	'*': swallowHandler(1), // character set bullshit
@@ -67,4 +69,9 @@ func ansiHandler(pty chan rune, terminal *Terminal) error {
 	}
 
 	return fmt.Errorf("Unknown ANSI control sequence byte: 0x%02X [%v]", b, string(b))
+}
+
+func nextLineHandler(pty chan rune, terminal *Terminal) error {
+	terminal.ActiveBuffer().NewLineEx(true)
+	return nil
 }
