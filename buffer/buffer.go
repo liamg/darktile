@@ -679,8 +679,7 @@ func (buffer *Buffer) Write(runes ...rune) {
 
 			if buffer.autoWrap {
 
-				buffer.cursorX = 0 // force regardless of line mode
-				buffer.NewLine()
+				buffer.NewLineEx(true)
 
 				newLine := buffer.getCurrentLine()
 				if len(newLine.cells) == 0 {
@@ -781,8 +780,12 @@ func (buffer *Buffer) Tab() {
 }
 
 func (buffer *Buffer) NewLine() {
+	buffer.NewLineEx(false)
+}
 
-	if buffer.IsNewLineMode() {
+func (buffer *Buffer) NewLineEx(forceCursorToMargin bool) {
+
+	if buffer.IsNewLineMode() || forceCursorToMargin {
 		buffer.cursorX = 0
 	}
 	buffer.Index()

@@ -72,6 +72,6 @@ func ansiHandler(pty chan rune, terminal *Terminal) error {
 }
 
 func nextLineHandler(pty chan rune, terminal *Terminal) error {
-	terminal.ActiveBuffer().NewLine()
+	terminal.ActiveBuffer().NewLineEx(true)
 	return nil
 }
