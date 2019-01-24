@@ -26,10 +26,6 @@ var runeMap = map[rune]runeHandler{
 	0x0f: shiftInHandler,
 }
 
-var escapeSequenceMap = map[rune]escapeSequenceHandler{
-	0x1b: ansiHandler,
-}
-
 func newLineHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().NewLine()
 	terminal.isDirty = true
@@ -101,15 +97,13 @@ func (terminal *Terminal) processInput(pty chan rune) {
 
 		b = <-pty
 
-		if b < 0x20 {
-			if handler, ok := escapeSequenceMap[b]; ok {
-				//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
-				if err := handler(pty, terminal); err != nil {
-					terminal.logger.Errorf("Error handling escape sequence: %s", err)
-				}
-				terminal.isDirty = true
-				continue
+		if b == 0x1b {
+			//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
+			if err := ansiHandler(pty, terminal); err != nil {
+				terminal.logger.Errorf("Error handling escape sequence: %s", err)
 			}
+			terminal.isDirty = true
+			continue
 		}
 
 		terminal.processRune(b)
