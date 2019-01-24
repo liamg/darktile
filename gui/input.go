@@ -2,6 +2,7 @@ package gui
 
 import (
 	"fmt"
+	"strings"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 )
@@ -56,7 +57,7 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 		// get key name to handle alternative keyboard layouts
 		name := glfw.GetKeyName(key, scancode)
 		if len(name) == 1 {
-			r := rune(name[0])
+			r := rune(strings.ToLower(name)[0])
 			for userAction, shortcut := range gui.keyboardShortcuts {
 				if shortcut.Match(mods, r) {
 					f, ok := actionMap[userAction]
