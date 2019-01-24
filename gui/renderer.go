@@ -176,6 +176,13 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
 }
 
+func (r *OpenGLRenderer) GetRectangleSize(col uint, row uint) (float32, float32) {
+	x := float32(float32(col) * r.cellWidth)
+	y := float32(float32(row) * r.cellHeight)
+
+	return x, y
+}
+
 func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
 	x := float32(float32(col) * r.cellWidth)
 	y := float32(float32(row) * r.cellHeight) + r.cellHeight

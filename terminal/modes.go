@@ -29,8 +29,39 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			terminal.ActiveBuffer().SetReplaceMode()
 		}
+	case "20":
+		if enabled {
+			terminal.ActiveBuffer().SetNewLineMode()
+		} else {
+			terminal.ActiveBuffer().SetLineFeedMode()
+		}
 	case "?1":
 		terminal.modes.ApplicationCursorKeys = enabled
+	case "?3":
+		_, lines := terminal.GetSize()
+		if enabled {
+			// DECCOLM - COLumn mode, 132 characters per line
+			terminal.SetSize(132, uint(lines))
+		} else {
+			// DECCOLM - 80 characters per line (erases screen)
+			terminal.SetSize(80, uint(lines))
+		}
+		terminal.Clear()
+	/*
+		case "?4":
+			// DECSCLM
+			// @todo smooth scrolling / jump scrolling
+		case "?5":
+			// DECSCNM
+			if enabled {
+				// @todo SCreeN Mode, black on white background
+			} else {
+				// @todo Normal screen (white on black background)
+			}
+	*/
+	case "?6":
+		// DECOM
+		terminal.ActiveBuffer().SetOriginMode(enabled)
 	case "?7":
 		// auto-wrap mode
 		//DECAWM
@@ -78,7 +109,13 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 	case "?2004":
 		terminal.SetBracketedPasteMode(enabled)
 	default:
-		return fmt.Errorf("Unsupported CSI %sl code", modeStr)
+		code := ""
+		if enabled {
+			code = "h"
+		} else {
+			code = "l"
+		}
+		return fmt.Errorf("Unsupported CSI %s%s code", modeStr, code)
 	}
 
 	return nil

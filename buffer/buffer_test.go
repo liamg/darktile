@@ -508,7 +508,7 @@ func TestEraseDisplayToCursor(t *testing.T) {
 	lines := b.GetVisibleLines()
 	assert.Equal(t, "", lines[0].String())
 	assert.Equal(t, "", lines[1].String())
-	assert.Equal(t, "\x00\x00\x00ng", lines[2].String())
+	assert.Equal(t, "\x00\x00\x00\x00g", lines[2].String())
 
 }
 
