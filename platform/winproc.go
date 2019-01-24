@@ -145,7 +145,7 @@ import (
 	"errors"
 	"syscall"
 	"unicode/utf16"
-	"fmt"
+	"os"
 )
 
 var procsInitSucceeded = false
@@ -158,6 +158,8 @@ func init() {
 type winProcess struct {
 	hproc     uintptr
 	processID uint32
+
+	goProcess *os.Process
 }
 
 func createPtyChildProcess(imagePath string, hcon uintptr) (*winProcess, error) {
@@ -178,21 +180,34 @@ func createPtyChildProcess(imagePath string, hcon uintptr) (*winProcess, error) 
 		return nil, errors.New("Failed to create process: " + imagePath)
 	}
 
+	goProcess, err := os.FindProcess(int(dwProcessID))
+	if err != nil {
+		return nil, err
+	}
+
 	return &winProcess{
 		hproc:     uintptr(hproc),
 		processID: uint32(dwProcessID),
+		goProcess: goProcess,
 	}, nil
 }
 
 func (process *winProcess) Wait() error {
-	rc := uint(C.WaitForSingleObject(C.HANDLE(process.hproc), C.INFINITE))
-	if rc == C.WAIT_OBJECT_0 {
-		return nil
+	_, err := process.goProcess.Wait()
+	if err != nil {
+		return err
 	}
 
-	return fmt.Errorf("error 0x%.8X while waiting for external process ID = %d ", uint(C.GetLastError()), process.processID)
+	return nil
 }
 
 func (process *winProcess) Close() error {
-	return syscall.CloseHandle(syscall.Handle(process.hproc))
+	err := process.goProcess.Kill()
+	if err != nil {
+		return err
+	}
+
+	syscall.CloseHandle(syscall.Handle(process.hproc))
+
+	return nil
 }
