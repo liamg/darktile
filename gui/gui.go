@@ -15,13 +15,13 @@ import (
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/kbinani/screenshot"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
 	"unsafe"
-	"github.com/kbinani/screenshot"
 )
 
 type GUI struct {
@@ -29,8 +29,10 @@ type GUI struct {
 	logger            *zap.SugaredLogger
 	config            *config.Config
 	terminal          *terminal.Terminal
-	width             int          //window width in pixels
-	height            int          //window height in pixels
+	width             int //window width in pixels
+	height            int //window height in pixels
+	appliedWidth      int
+	appliedHeight     int
 	resizeCache       *ResizeCache // resize cache formed by resizeToTerminal()
 	dpiScale          float32
 	fontMap           *FontMap
@@ -117,22 +119,6 @@ func (g *GUI) RecalculateDpiScale() {
 	}
 }
 
-func (g *GUI) Width() int {
-	return int(float32(g.width) * g.dpiScale)
-}
-
-func (g *GUI) SetWidth(width int) {
-	g.width = int(float32(width) / g.dpiScale)
-}
-
-func (g *GUI) Height() int {
-	return int(float32(g.height) * g.dpiScale)
-}
-
-func (g *GUI) SetHeight(height int) {
-	g.height = int(float32(height) / g.dpiScale)
-}
-
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) (*GUI, error) {
 
 	shortcuts, err := config.KeyMapping.GenerateActionMap()
@@ -145,6 +131,8 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		logger:            logger,
 		width:             800,
 		height:            600,
+		appliedWidth:	   0,
+		appliedHeight:     0,
 		dpiScale:          1,
 		terminal:          terminal,
 		fontScale:         10.0,
@@ -198,19 +186,25 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 		return
 	}
 
+	if gui.appliedWidth == width && gui.appliedHeight == height {
+		return
+	}
+
 	gui.resizeLock.Lock()
 	defer gui.resizeLock.Unlock()
 
 	gui.logger.Debugf("Initiating GUI resize to %dx%d", width, height)
 
-	gui.SetWidth(width)
-	gui.SetHeight(height)
+	gui.width = width
+	gui.height = height
+	gui.appliedWidth = width
+	gui.appliedHeight = height
 
 	gui.logger.Debugf("Updating font resolutions...")
 	gui.loadFonts()
 
 	gui.logger.Debugf("Setting renderer area...")
-	gui.renderer.SetArea(0, 0, gui.Width(), gui.Height())
+	gui.renderer.SetArea(0, 0, gui.width, gui.height)
 
 	if gui.resizeCache != nil && gui.resizeCache.Width == width && gui.resizeCache.Height == height {
 		gui.logger.Debugf("No need to resize internal terminal!")
@@ -226,7 +220,7 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	gui.resizeCache = nil
 
 	gui.logger.Debugf("Setting viewport size...")
-	gl.Viewport(0, 0, int32(gui.Width()), int32(gui.Height()))
+	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
 
 	gui.terminal.SetCharSize(gui.renderer.cellWidth, gui.renderer.cellHeight)
 
@@ -256,7 +250,8 @@ func (gui *GUI) Render() error {
 	var err error
 	gui.window, err = gui.createWindow()
 	gui.RecalculateDpiScale()
-	gui.window.SetSize(gui.Width(), gui.Height())
+	gui.window.SetSize(int(float32(gui.width) * gui.dpiScale),
+		int(float32(gui.height) * gui.dpiScale))
 	if err != nil {
 		return fmt.Errorf("Failed to create window: %s", err)
 	}
@@ -279,7 +274,7 @@ func (gui *GUI) Render() error {
 	titleChan := make(chan bool, 1)
 	resizeChan := make(chan bool, 1)
 
-	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.Width(), gui.Height(), gui.colourAttr, program)
+	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width, gui.height, gui.colourAttr, program)
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
@@ -558,7 +553,8 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 	glfw.WindowHint(glfw.ContextVersionMajor, major)
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
 
-	window, err := glfw.CreateWindow(gui.Width(), gui.Height(), "Terminal", nil, nil)
+	window, err := glfw.CreateWindow(int(float32(gui.width) * gui.dpiScale),
+		int(float32(gui.height) * gui.dpiScale), "Terminal", nil, nil)
 	if err != nil {
 		e := err.Error()
 		if i := strings.Index(e, ", got version "); i > -1 {
