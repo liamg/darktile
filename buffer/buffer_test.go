@@ -10,7 +10,7 @@ import (
 )
 
 func TestTabbing(t *testing.T) {
-	b := NewBuffer(30, 3, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(30, 3, CellAttributes{}, 1000))
 	b.Write([]rune("hello")...)
 	b.Tab()
 	b.Write([]rune("x")...)
@@ -39,7 +39,7 @@ hell   xxx good
 }
 
 func TestOffsets(t *testing.T) {
-	b := NewBuffer(10, 3, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(10, 3, CellAttributes{}, 1000))
 	b.Write([]rune("hello")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -60,7 +60,7 @@ func TestOffsets(t *testing.T) {
 }
 
 func TestBufferCreation(t *testing.T) {
-	b := NewBuffer(10, 20, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(10, 20, CellAttributes{}, 1000))
 	assert.Equal(t, uint16(10), b.Width())
 	assert.Equal(t, uint16(20), b.ViewHeight())
 	assert.Equal(t, uint16(0), b.CursorColumn())
@@ -70,7 +70,7 @@ func TestBufferCreation(t *testing.T) {
 
 func TestBufferWriteIncrementsCursorCorrectly(t *testing.T) {
 
-	b := NewBuffer(5, 4, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(5, 4, CellAttributes{}, 1000))
 
 	/*01234
 	 |-----
@@ -117,21 +117,21 @@ func TestBufferWriteIncrementsCursorCorrectly(t *testing.T) {
 }
 
 func TestWritingNewLineAsFirstRuneOnWrappedLine(t *testing.T) {
-	b := NewBuffer(3, 20, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(3, 20, CellAttributes{}, 1000))
 	b.Write('a', 'b', 'c')
-	assert.Equal(t, uint16(3), b.cursorX)
-	assert.Equal(t, uint16(0), b.cursorY)
+	assert.Equal(t, uint16(3), b.terminalState.cursorX)
+	assert.Equal(t, uint16(0), b.terminalState.cursorY)
 	b.NewLine()
-	assert.Equal(t, uint16(0), b.cursorX)
-	assert.Equal(t, uint16(1), b.cursorY)
+	assert.Equal(t, uint16(0), b.terminalState.cursorX)
+	assert.Equal(t, uint16(1), b.terminalState.cursorY)
 
 	b.Write('d', 'e', 'f')
-	assert.Equal(t, uint16(3), b.cursorX)
-	assert.Equal(t, uint16(1), b.cursorY)
+	assert.Equal(t, uint16(3), b.terminalState.cursorX)
+	assert.Equal(t, uint16(1), b.terminalState.cursorY)
 	b.NewLine()
 
-	assert.Equal(t, uint16(0), b.cursorX)
-	assert.Equal(t, uint16(2), b.cursorY)
+	assert.Equal(t, uint16(0), b.terminalState.cursorX)
+	assert.Equal(t, uint16(2), b.terminalState.cursorY)
 
 	require.Equal(t, 3, len(b.lines))
 	assert.Equal(t, "abc", b.lines[0].String())
@@ -140,7 +140,7 @@ func TestWritingNewLineAsFirstRuneOnWrappedLine(t *testing.T) {
 }
 
 func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
-	b := NewBuffer(3, 20, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(3, 20, CellAttributes{}, 1000))
 	/*
 		|abc
 		|d
@@ -168,7 +168,7 @@ func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
 
 func TestSetPosition(t *testing.T) {
 
-	b := NewBuffer(120, 80, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(120, 80, CellAttributes{}, 1000))
 	assert.Equal(t, 0, int(b.CursorColumn()))
 	assert.Equal(t, 0, int(b.CursorLine()))
 	b.SetPosition(60, 10)
@@ -184,7 +184,7 @@ func TestSetPosition(t *testing.T) {
 }
 
 func TestMovePosition(t *testing.T) {
-	b := NewBuffer(120, 80, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(120, 80, CellAttributes{}, 1000))
 	assert.Equal(t, 0, int(b.CursorColumn()))
 	assert.Equal(t, 0, int(b.CursorLine()))
 	b.MovePosition(-1, -1)
@@ -206,7 +206,7 @@ func TestMovePosition(t *testing.T) {
 
 func TestVisibleLines(t *testing.T) {
 
-	b := NewBuffer(80, 10, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 10, CellAttributes{}, 1000))
 	b.Write([]rune("hello 1")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -256,7 +256,7 @@ func TestVisibleLines(t *testing.T) {
 }
 
 func TestClearWithoutFullView(t *testing.T) {
-	b := NewBuffer(80, 10, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 10, CellAttributes{}, 1000))
 	b.Write([]rune("hello 1")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -272,7 +272,7 @@ func TestClearWithoutFullView(t *testing.T) {
 }
 
 func TestClearWithFullView(t *testing.T) {
-	b := NewBuffer(80, 5, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello 1")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -303,7 +303,7 @@ func TestClearWithFullView(t *testing.T) {
 }
 
 func TestCarriageReturn(t *testing.T) {
-	b := NewBuffer(80, 20, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 20, CellAttributes{}, 1000))
 	b.Write([]rune("hello!")...)
 	b.CarriageReturn()
 	b.Write([]rune("secret")...)
@@ -312,7 +312,7 @@ func TestCarriageReturn(t *testing.T) {
 }
 
 func TestCarriageReturnOnFullLine(t *testing.T) {
-	b := NewBuffer(20, 20, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(20, 20, CellAttributes{}, 1000))
 	b.Write([]rune("abcdeabcdeabcdeabcde")...)
 	b.CarriageReturn()
 	b.Write([]rune("xxxxxxxxxxxxxxxxxxxx")...)
@@ -321,7 +321,7 @@ func TestCarriageReturnOnFullLine(t *testing.T) {
 }
 
 func TestCarriageReturnOnFullLastLine(t *testing.T) {
-	b := NewBuffer(20, 2, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(20, 2, CellAttributes{}, 1000))
 	b.NewLine()
 	b.Write([]rune("abcdeabcdeabcdeabcde")...)
 	b.CarriageReturn()
@@ -332,7 +332,7 @@ func TestCarriageReturnOnFullLastLine(t *testing.T) {
 }
 
 func TestCarriageReturnOnWrappedLine(t *testing.T) {
-	b := NewBuffer(80, 6, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 6, CellAttributes{}, 1000))
 	b.Write([]rune("hello!")...)
 	b.CarriageReturn()
 	b.Write([]rune("secret")...)
@@ -342,15 +342,15 @@ func TestCarriageReturnOnWrappedLine(t *testing.T) {
 }
 
 func TestCarriageReturnOnLineThatDoesntExist(t *testing.T) {
-	b := NewBuffer(6, 10, CellAttributes{}, 1000)
-	b.cursorY = 3
+	b := NewBuffer(NewTerminalState(6, 10, CellAttributes{}, 1000))
+	b.terminalState.cursorY = 3
 	b.CarriageReturn()
-	assert.Equal(t, uint16(0), b.cursorX)
-	assert.Equal(t, uint16(3), b.cursorY)
+	assert.Equal(t, uint16(0), b.terminalState.cursorX)
+	assert.Equal(t, uint16(3), b.terminalState.cursorY)
 }
 
 func TestGetCell(t *testing.T) {
-	b := NewBuffer(80, 20, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 20, CellAttributes{}, 1000))
 	b.Write([]rune("Hello")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -366,7 +366,7 @@ func TestGetCell(t *testing.T) {
 }
 
 func TestGetCellWithHistory(t *testing.T) {
-	b := NewBuffer(80, 2, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 2, CellAttributes{}, 1000))
 
 	b.Write([]rune("Hello")...)
 	b.CarriageReturn()
@@ -384,7 +384,7 @@ func TestGetCellWithHistory(t *testing.T) {
 }
 
 func TestGetCellWithBadCursor(t *testing.T) {
-	b := NewBuffer(80, 2, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 2, CellAttributes{}, 1000))
 	b.Write([]rune("Hello\r\nthere\r\nsomething...")...)
 	require.Nil(t, b.GetCell(8, 3))
 	require.Nil(t, b.GetCell(90, 0))
@@ -392,20 +392,20 @@ func TestGetCellWithBadCursor(t *testing.T) {
 }
 
 func TestCursorAttr(t *testing.T) {
-	b := NewBuffer(80, 2, CellAttributes{}, 1000)
-	assert.Equal(t, &b.cursorAttr, b.CursorAttr())
+	b := NewBuffer(NewTerminalState(80, 2, CellAttributes{}, 1000))
+	assert.Equal(t, &b.terminalState.cursorAttr, b.CursorAttr())
 }
 
 func TestCursorPositionQuerying(t *testing.T) {
-	b := NewBuffer(80, 20, CellAttributes{}, 1000)
-	b.cursorX = 17
-	b.cursorY = 9
-	assert.Equal(t, b.cursorX, b.CursorColumn())
-	assert.Equal(t, b.cursorY, b.CursorLine())
+	b := NewBuffer(NewTerminalState(80, 20, CellAttributes{}, 1000))
+	b.terminalState.cursorX = 17
+	b.terminalState.cursorY = 9
+	assert.Equal(t, b.terminalState.cursorX, b.CursorColumn())
+	assert.Equal(t, b.terminalState.cursorY, b.CursorLine())
 }
 
 func TestRawPositionQuerying(t *testing.T) {
-	b := NewBuffer(80, 5, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("a")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -435,14 +435,14 @@ func TestRawPositionQuerying(t *testing.T) {
 	b.NewLine()
 	b.Write([]rune("a")...)
 
-	b.cursorX = 3
-	b.cursorY = 4
+	b.terminalState.cursorX = 3
+	b.terminalState.cursorY = 4
 	assert.Equal(t, uint64(9), b.RawLine())
 }
 
 // CSI 2 K
 func TestEraseLine(t *testing.T) {
-	b := NewBuffer(80, 5, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello, this is a test")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -454,7 +454,7 @@ func TestEraseLine(t *testing.T) {
 
 // CSI 1 K
 func TestEraseLineToCursor(t *testing.T) {
-	b := NewBuffer(80, 5, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello, this is a test")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -468,7 +468,7 @@ func TestEraseLineToCursor(t *testing.T) {
 
 // CSI 0 K
 func TestEraseLineAfterCursor(t *testing.T) {
-	b := NewBuffer(80, 5, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello, this is a test")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -479,7 +479,7 @@ func TestEraseLineAfterCursor(t *testing.T) {
 	assert.Equal(t, "dele", b.lines[1].String())
 }
 func TestEraseDisplay(t *testing.T) {
-	b := NewBuffer(80, 5, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -495,7 +495,7 @@ func TestEraseDisplay(t *testing.T) {
 	}
 }
 func TestEraseDisplayToCursor(t *testing.T) {
-	b := NewBuffer(80, 5, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -513,7 +513,7 @@ func TestEraseDisplayToCursor(t *testing.T) {
 }
 
 func TestEraseDisplayFromCursor(t *testing.T) {
-	b := NewBuffer(80, 5, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello")...)
 	b.CarriageReturn()
 	b.NewLine()
@@ -529,7 +529,7 @@ func TestEraseDisplayFromCursor(t *testing.T) {
 	assert.Equal(t, "", lines[2].String())
 }
 func TestBackspace(t *testing.T) {
-	b := NewBuffer(80, 5, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello")...)
 	b.Backspace()
 	b.Backspace()
@@ -539,7 +539,7 @@ func TestBackspace(t *testing.T) {
 }
 
 func TestHorizontalResizeView(t *testing.T) {
-	b := NewBuffer(80, 10, CellAttributes{}, 1000)
+	b := NewBuffer(NewTerminalState(80, 10, CellAttributes{}, 1000))
 
 	// 60 characters
 	b.Write([]rune(`hellohellohellohellohellohellohellohellohellohellohellohello`)...)
@@ -549,8 +549,8 @@ func TestHorizontalResizeView(t *testing.T) {
 
 	b.Write([]rune(`goodbyegoodbye`)...)
 
-	require.Equal(t, uint16(14), b.cursorX)
-	require.Equal(t, uint16(1), b.cursorY)
+	require.Equal(t, uint16(14), b.terminalState.cursorX)
+	require.Equal(t, uint16(1), b.terminalState.cursorY)
 
 	b.ResizeView(40, 10)
 
@@ -558,8 +558,8 @@ func TestHorizontalResizeView(t *testing.T) {
 hellohellohellohello
 goodbyegoodbye`
 
-	require.Equal(t, uint16(14), b.cursorX)
-	require.Equal(t, uint16(2), b.cursorY)
+	require.Equal(t, uint16(14), b.terminalState.cursorX)
+	require.Equal(t, uint16(2), b.terminalState.cursorY)
 
 	lines := b.GetVisibleLines()
 	strs := []string{}
@@ -612,8 +612,8 @@ goodbyegoodbye`
 	}
 	require.Equal(t, expected, strings.Join(strs, "\n"))
 
-	require.Equal(t, uint16(1), b.cursorY)
-	require.Equal(t, uint16(14), b.cursorX)
+	require.Equal(t, uint16(1), b.terminalState.cursorY)
+	require.Equal(t, uint16(14), b.terminalState.cursorX)
 }
 
 /*
@@ -623,7 +623,7 @@ dbye
 */
 
 func TestBufferMaxLines(t *testing.T) {
-	b := NewBuffer(80, 2, CellAttributes{}, 2)
+	b := NewBuffer(NewTerminalState(80, 2, CellAttributes{}, 2))
 
 	b.Write([]rune("hello")...)
 	b.NewLine()

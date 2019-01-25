@@ -9,7 +9,7 @@ import (
 
 func (buffer *Buffer) GetHintAtPosition(col uint16, viewRow uint16) *hints.Hint {
 
-	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.scrollLinesFromBottom)
+	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
 
 	cell := buffer.GetRawCell(col, row)
 	if cell == nil || cell.Rune() == 0x00 {
@@ -32,7 +32,7 @@ func (buffer *Buffer) GetHintAtPosition(col uint16, viewRow uint16) *hints.Hint 
 	trimmed := strings.TrimLeft(candidate, " ")
 	sx := col - uint16(len(trimmed)-1)
 
-	for i := col + 1; i < buffer.viewWidth; i++ {
+	for i := col + 1; i < buffer.terminalState.viewWidth; i++ {
 		cell := buffer.GetRawCell(i, row)
 		if cell == nil {
 			break

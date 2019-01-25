@@ -48,6 +48,7 @@ type Terminal struct {
 	charWidth                 float32
 	charHeight                float32
 	lastBuffer                uint8
+	terminalState             *buffer.TerminalState
 	platformDependentSettings platform.PlatformDependentSettings
 }
 
@@ -66,20 +67,10 @@ type Winsize struct {
 
 func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Terminal {
 	t := &Terminal{
-		buffers: []*buffer.Buffer{
-			buffer.NewBuffer(1, 1, buffer.CellAttributes{
-				FgColour: config.ColourScheme.Foreground,
-				BgColour: config.ColourScheme.Background,
-			}, config.MaxLines),
-			buffer.NewBuffer(1, 1, buffer.CellAttributes{
-				FgColour: config.ColourScheme.Foreground,
-				BgColour: config.ColourScheme.Background,
-			}, config.MaxLines),
-			buffer.NewBuffer(1, 1, buffer.CellAttributes{
-				FgColour: config.ColourScheme.Foreground,
-				BgColour: config.ColourScheme.Background,
-			}, config.MaxLines),
-		},
+		terminalState: buffer.NewTerminalState(1, 1, buffer.CellAttributes{
+			FgColour: config.ColourScheme.Foreground,
+			BgColour: config.ColourScheme.Background,
+		}, config.MaxLines),
 		pty:           pty,
 		logger:        logger,
 		config:        config,
@@ -89,7 +80,12 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 		},
 		platformDependentSettings: pty.GetPlatformDependentSettings(),
 	}
-	t.activeBuffer = t.buffers[MainBuffer]
+	t.buffers = []*buffer.Buffer{
+		buffer.NewBuffer(t.terminalState),
+		buffer.NewBuffer(t.terminalState),
+		buffer.NewBuffer(t.terminalState),
+	}
+	t.activeBuffer = t.buffers[0]
 	return t
 
 }
@@ -252,7 +248,7 @@ func (terminal *Terminal) Write(data []byte) error {
 }
 
 func (terminal *Terminal) WriteReturn() error {
-	if terminal.ActiveBuffer().IsNewLineMode() {
+	if terminal.terminalState.IsNewLineMode() {
 		return terminal.Write([]byte{0x0d, 0x0a})
 	} else {
 		return terminal.Write([]byte{0x0d})
@@ -319,4 +315,37 @@ func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
 
 	terminal.emitResize()
 	return nil
+}
+
+func (terminal *Terminal) SetAutoWrap(enabled bool) {
+	terminal.terminalState.AutoWrap = enabled
+}
+
+func (terminal *Terminal) IsAutoWrap() bool {
+	return terminal.terminalState.AutoWrap
+}
+
+func (terminal *Terminal) SetOriginMode(enabled bool) {
+	terminal.terminalState.OriginMode = enabled
+	terminal.ActiveBuffer().SetPosition(0, 0)
+}
+
+func (terminal *Terminal) SetInsertMode() {
+	terminal.terminalState.ReplaceMode = false
+}
+
+func (terminal *Terminal) SetReplaceMode() {
+	terminal.terminalState.ReplaceMode = true
+}
+
+func (terminal *Terminal) SetNewLineMode() {
+	terminal.terminalState.LineFeedMode = false
+}
+
+func (terminal *Terminal) SetLineFeedMode() {
+	terminal.terminalState.LineFeedMode = true
+}
+
+func (terminal *Terminal) ResetVerticalMargins() {
+	terminal.terminalState.ResetVerticalMargins()
 }
