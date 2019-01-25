@@ -422,6 +422,7 @@ func csiEraseCharactersHandler(params []string, terminal *Terminal) error {
 }
 
 func csiResetModeHandler(params []string, terminal *Terminal) error {
+	terminal.ActiveBuffer().ClearSelection()
 	return csiSetMode(strings.Join(params, ""), false, terminal)
 }
 

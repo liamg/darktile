@@ -282,6 +282,14 @@ func (buffer *Buffer) EndSelection(col uint16, viewRow uint16, complete bool) {
 	}
 }
 
+func (buffer *Buffer) ClearSelection() {
+	buffer.selectionStart = nil
+	buffer.selectionEnd = nil
+	buffer.selectionComplete = true
+
+	buffer.emitDisplayChange()
+}
+
 func (buffer *Buffer) InSelection(col uint16, row uint16) bool {
 
 	if buffer.selectionStart == nil || buffer.selectionEnd == nil {
