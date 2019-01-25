@@ -8,7 +8,7 @@ func screenStateHandler(pty chan rune, terminal *Terminal) error {
 	case '8': // DECALN -- Screen Alignment Pattern
 		// hide cursor?
 		buffer := terminal.ActiveBuffer()
-		buffer.ResetVerticalMargins()
+		terminal.ResetVerticalMargins()
 		buffer.ScrollToEnd()
 
 		// Fill the whole screen with E's
@@ -16,7 +16,7 @@ func screenStateHandler(pty chan rune, terminal *Terminal) error {
 		for count > 0 {
 			buffer.Write('E')
 			count--
-			if count > 0 && !buffer.IsAutoWrap() && count%buffer.ViewWidth() == 0 {
+			if count > 0 && !terminal.IsAutoWrap() && count%buffer.ViewWidth() == 0 {
 				buffer.Index()
 				buffer.CarriageReturn()
 			}

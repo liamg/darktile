@@ -400,7 +400,7 @@ func csiSetMarginsHandler(params []string, terminal *Terminal) error {
 	top--
 	bottom--
 
-	terminal.ActiveBuffer().SetVerticalMargins(uint(top), uint(bottom))
+	terminal.terminalState.SetVerticalMargins(uint(top), uint(bottom))
 	terminal.ActiveBuffer().SetPosition(0, 0)
 
 	return nil

@@ -25,15 +25,15 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 	switch modeStr {
 	case "4":
 		if enabled { // @todo support replace mode
-			terminal.ActiveBuffer().SetInsertMode()
+			terminal.SetInsertMode()
 		} else {
-			terminal.ActiveBuffer().SetReplaceMode()
+			terminal.SetReplaceMode()
 		}
 	case "20":
 		if enabled {
-			terminal.ActiveBuffer().SetNewLineMode()
+			terminal.SetNewLineMode()
 		} else {
-			terminal.ActiveBuffer().SetLineFeedMode()
+			terminal.SetLineFeedMode()
 		}
 	case "?1":
 		terminal.modes.ApplicationCursorKeys = enabled
@@ -61,11 +61,11 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 	*/
 	case "?6":
 		// DECOM
-		terminal.ActiveBuffer().SetOriginMode(enabled)
+		terminal.SetOriginMode(enabled)
 	case "?7":
 		// auto-wrap mode
 		//DECAWM
-		terminal.ActiveBuffer().SetAutoWrap(enabled)
+		terminal.SetAutoWrap(enabled)
 	case "?9":
 		if enabled {
 			terminal.logger.Infof("Turning on X10 mouse mode")
