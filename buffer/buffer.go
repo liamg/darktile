@@ -756,16 +756,8 @@ func (buffer *Buffer) NewLineEx(forceCursorToMargin bool) {
 	}
 }
 
-func (buffer *Buffer) SetNewLineMode() {
-	buffer.lineFeedMode = false
-}
-
-func (buffer *Buffer) SetLineFeedMode() {
-	buffer.lineFeedMode = true
-}
-
 func (buffer *Buffer) IsNewLineMode() bool {
-	return buffer.lineFeedMode == false
+	return buffer.terminalState.LineFeedMode == false
 }
 
 func (buffer *Buffer) MovePosition(x int16, y int16) {
