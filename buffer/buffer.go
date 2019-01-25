@@ -1,8 +1,11 @@
 package buffer
 
 import (
+	"bytes"
 	"fmt"
+	"io/ioutil"
 	"net/url"
+	"os"
 	"time"
 )
 
@@ -20,6 +23,8 @@ type Buffer struct {
 	topMargin             uint // see DECSTBM docs - this is for scrollable regions
 	bottomMargin          uint // see DECSTBM docs - this is for scrollable regions
 	replaceMode           bool // overwrite character at cursor or insert new
+	originMode            bool // see DECOM docs - whether cursor is positioned within the margins or not
+	lineFeedMode          bool
 	autoWrap              bool
 	dirty                 bool
 	selectionStart        *Position
@@ -314,6 +319,15 @@ func (buffer *Buffer) SetAutoWrap(enabled bool) {
 	buffer.autoWrap = enabled
 }
 
+func (buffer *Buffer) IsAutoWrap() bool {
+	return buffer.autoWrap
+}
+
+func (buffer *Buffer) SetOriginMode(enabled bool) {
+	buffer.originMode = enabled
+	buffer.SetPosition(0, 0)
+}
+
 func (buffer *Buffer) SetInsertMode() {
 	buffer.replaceMode = false
 }
@@ -325,6 +339,11 @@ func (buffer *Buffer) SetReplaceMode() {
 func (buffer *Buffer) SetVerticalMargins(top uint, bottom uint) {
 	buffer.topMargin = top
 	buffer.bottomMargin = bottom
+}
+
+// ResetVerticalMargins resets margins to extreme positions
+func (buffer *Buffer) ResetVerticalMargins() {
+	buffer.SetVerticalMargins(0, uint(buffer.viewHeight-1))
 }
 
 func (buffer *Buffer) GetScrollOffset() uint {
@@ -416,11 +435,19 @@ func (buffer *Buffer) emitDisplayChange() {
 
 // Column returns cursor column
 func (buffer *Buffer) CursorColumn() uint16 {
+	// @todo originMode and left margin
 	return buffer.cursorX
 }
 
 // Line returns cursor line
 func (buffer *Buffer) CursorLine() uint16 {
+	if buffer.originMode {
+		result := buffer.cursorY - uint16(buffer.topMargin)
+		if result < 0 {
+			result = 0
+		}
+		return result
+	}
 	return buffer.cursorY
 }
 
@@ -489,8 +516,8 @@ func (buffer *Buffer) insertLine() {
 
 		out := make([]Line, newLineCount)
 		copy(
-			out[ : pos - ( uint64(len(buffer.lines)) + 1 - newLineCount )],
-			buffer.lines[ uint64(len(buffer.lines)) + 1 - newLineCount : pos] )
+			out[:pos-(uint64(len(buffer.lines))+1-newLineCount)],
+			buffer.lines[uint64(len(buffer.lines))+1-newLineCount:pos])
 		out[pos] = newLine()
 		copy(out[pos+1:], buffer.lines[pos:])
 		buffer.lines = out
@@ -652,13 +679,13 @@ func (buffer *Buffer) Write(runes ...rune) {
 
 			if buffer.autoWrap {
 
-				buffer.NewLine()
+				buffer.NewLineEx(true)
 
 				newLine := buffer.getCurrentLine()
 				if len(newLine.cells) == 0 {
-					newLine.cells = []Cell{{}}
+					newLine.cells = append(newLine.cells, buffer.defaultCell)
 				}
-				cell := &newLine.cells[buffer.CursorColumn()]
+				cell := &newLine.cells[0]
 				cell.setRune(r)
 				cell.attr = buffer.cursorAttr
 
@@ -691,6 +718,13 @@ func (buffer *Buffer) incrementCursorPosition() {
 	}
 }
 
+func (buffer *Buffer) inDoWrap() bool {
+	// xterm uses 'do_wrap' flag for this special terminal state
+	// we use the cursor position right after the boundary
+	// let's see how it works out
+	return buffer.cursorX == buffer.viewWidth // @todo rightMargin
+}
+
 func (buffer *Buffer) Backspace() {
 
 	if buffer.cursorX == 0 {
@@ -700,6 +734,9 @@ func (buffer *Buffer) Backspace() {
 		} else {
 			//@todo ring bell or whatever - actually i think the pty will trigger this
 		}
+	} else if buffer.inDoWrap() {
+		// the "do_wrap" implementation
+		buffer.MovePosition(-2, 0)
 	} else {
 		buffer.MovePosition(-1, 0)
 	}
@@ -724,15 +761,33 @@ func (buffer *Buffer) CarriageReturn() {
 
 func (buffer *Buffer) Tab() {
 	tabSize := 4
+	max := tabSize
+
+	// @todo rightMargin
+	if buffer.cursorX < buffer.viewWidth {
+		max = int(buffer.viewWidth - buffer.cursorX - 1)
+	}
+
 	shift := tabSize - (int(buffer.cursorX+1) % tabSize)
+
+	if shift > max {
+		shift = max
+	}
+
 	for i := 0; i < shift; i++ {
 		buffer.Write(' ')
 	}
 }
 
 func (buffer *Buffer) NewLine() {
+	buffer.NewLineEx(false)
+}
 
-	buffer.cursorX = 0
+func (buffer *Buffer) NewLineEx(forceCursorToMargin bool) {
+
+	if buffer.IsNewLineMode() || forceCursorToMargin {
+		buffer.cursorX = 0
+	}
 	buffer.Index()
 
 	for {
@@ -744,21 +799,34 @@ func (buffer *Buffer) NewLine() {
 	}
 }
 
+func (buffer *Buffer) SetNewLineMode() {
+	buffer.lineFeedMode = false
+}
+
+func (buffer *Buffer) SetLineFeedMode() {
+	buffer.lineFeedMode = true
+}
+
+func (buffer *Buffer) IsNewLineMode() bool {
+	return buffer.lineFeedMode == false
+}
+
 func (buffer *Buffer) MovePosition(x int16, y int16) {
 
 	var toX uint16
 	var toY uint16
 
-	if int16(buffer.cursorX)+x < 0 {
+	if int16(buffer.CursorColumn())+x < 0 {
 		toX = 0
 	} else {
-		toX = uint16(int16(buffer.cursorX) + x)
+		toX = uint16(int16(buffer.CursorColumn()) + x)
 	}
 
-	if int16(buffer.cursorY)+y < 0 {
+	// should either use CursorLine() and SetPosition() or use absolutes, mind Origin Mode (DECOM)
+	if int16(buffer.CursorLine())+y < 0 {
 		toY = 0
 	} else {
-		toY = uint16(int16(buffer.cursorY) + y)
+		toY = uint16(int16(buffer.CursorLine()) + y)
 	}
 
 	buffer.SetPosition(toX, toY)
@@ -767,17 +835,26 @@ func (buffer *Buffer) MovePosition(x int16, y int16) {
 func (buffer *Buffer) SetPosition(col uint16, line uint16) {
 	defer buffer.emitDisplayChange()
 
-	if col >= buffer.ViewWidth() {
-		col = buffer.ViewWidth() - 1
-		//logrus.Errorf("Cannot set cursor position: column %d is outside of the current view width (%d columns)", col, buffer.ViewWidth())
+	useCol := col
+	useLine := line
+	maxLine := buffer.ViewHeight() - 1
+
+	if buffer.originMode {
+		useLine += uint16(buffer.topMargin)
+		maxLine = uint16(buffer.bottomMargin)
+		// @todo left and right margins
 	}
-	if line >= buffer.ViewHeight() {
-		line = buffer.ViewHeight() - 1
-		//logrus.Errorf("Cannot set cursor position: line %d is outside of the current view height (%d lines)", line, buffer.ViewHeight())
+	if useLine > maxLine {
+		useLine = maxLine
 	}
 
-	buffer.cursorX = col
-	buffer.cursorY = line
+	if useCol >= buffer.ViewWidth() {
+		useCol = buffer.ViewWidth() - 1
+		//logrus.Errorf("Cannot set cursor position: column %d is outside of the current view width (%d columns)", col, buffer.ViewWidth())
+	}
+
+	buffer.cursorX = useCol
+	buffer.cursorY = useLine
 }
 
 func (buffer *Buffer) GetVisibleLines() []Line {
@@ -925,7 +1002,7 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 	defer buffer.emitDisplayChange()
 	line := buffer.getCurrentLine()
 
-	for i := 0; i < int(buffer.cursorX); i++ {
+	for i := 0; i <= int(buffer.cursorX); i++ {
 		if i >= len(line.cells) {
 			break
 		}
@@ -1039,7 +1116,7 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 	line = buffer.getCurrentLine()
 	buffer.cursorX = uint16((len(line.cells) - cXFromEndOfLine) - 1)
 
-	buffer.SetVerticalMargins(0, uint(buffer.viewHeight-1))
+	buffer.ResetVerticalMargins()
 }
 
 func (buffer *Buffer) getMaxLines() uint64 {
@@ -1050,3 +1127,30 @@ func (buffer *Buffer) getMaxLines() uint64 {
 
 	return result
 }
+
+func (buffer *Buffer) Save(path string) {
+	f, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
+	defer f.Close()
+
+	for _, line := range buffer.lines {
+		f.WriteString(line.String())
+	}
+}
+
+func (buffer *Buffer) Compare(path string) bool {
+	f, err := ioutil.ReadFile(path)
+	if err != nil {
+		panic(err)
+	}
+
+	bufferContent := []byte{}
+	for _, line := range buffer.lines {
+		lineBytes := []byte(line.String())
+		bufferContent = append(bufferContent, lineBytes...)
+	}
+	return bytes.Equal(f, bufferContent)
+}
+

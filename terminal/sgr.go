@@ -9,7 +9,7 @@ import (
 	"github.com/liamg/aminal/config"
 )
 
-func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal) error {
+func sgrSequenceHandler(params []string, terminal *Terminal) error {
 
 	if len(params) == 0 {
 		params = []string{"0"}
@@ -137,7 +137,7 @@ func sgrSequenceHandler(params []string, intermediate string, terminal *Terminal
 			terminal.ActiveBuffer().CursorAttr().BgColour = c
 			return nil
 		default:
-			return fmt.Errorf("Unknown SGR control sequence: (ESC[%s%sm)", params[i:], intermediate)
+			return fmt.Errorf("Unknown SGR control sequence: (ESC[%sm)", params[i:])
 		}
 	}
 
