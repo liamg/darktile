@@ -262,6 +262,14 @@ func (buffer *Buffer) EndSelection(col uint16, viewRow uint16, complete bool) {
 	}
 }
 
+func (buffer *Buffer) ClearSelection() {
+	buffer.selectionStart = nil
+	buffer.selectionEnd = nil
+	buffer.selectionComplete = true
+
+	buffer.emitDisplayChange()
+}
+
 func (buffer *Buffer) InSelection(col uint16, row uint16) bool {
 
 	if buffer.selectionStart == nil || buffer.selectionEnd == nil {
@@ -746,6 +754,18 @@ func (buffer *Buffer) NewLineEx(forceCursorToMargin bool) {
 		}
 		buffer.Index()
 	}
+}
+
+func (buffer *Buffer) SetNewLineMode() {
+	buffer.lineFeedMode = false
+}
+
+func (buffer *Buffer) SetLineFeedMode() {
+	buffer.lineFeedMode = true
+}
+
+func (buffer *Buffer) IsNewLineMode() bool {
+	return buffer.lineFeedMode == false
 }
 
 func (buffer *Buffer) MovePosition(x int16, y int16) {

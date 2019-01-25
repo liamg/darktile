@@ -15,7 +15,7 @@ func (gui *GUI) getPackedFont(name string) (*glfont.Font, error) {
 		return nil, fmt.Errorf("packaged font '%s' could not be read: %s", name, err)
 	}
 
-	font, err := glfont.LoadFont(bytes.NewReader(fontBytes), gui.fontScale*gui.dpiScale/gui.scale(), gui.Width(), gui.Height())
+	font, err := glfont.LoadFont(bytes.NewReader(fontBytes), gui.fontScale*gui.dpiScale/gui.scale(), gui.width, gui.height)
 	if err != nil {
 		return nil, fmt.Errorf("font '%s' failed to load: %v", name, err)
 	}
