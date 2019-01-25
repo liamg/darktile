@@ -89,7 +89,7 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 		},
 		platformDependentSettings: pty.GetPlatformDependentSettings(),
 	}
-	t.activeBuffer = t.buffers[0]
+	t.activeBuffer = t.buffers[MainBuffer]
 	return t
 
 }
