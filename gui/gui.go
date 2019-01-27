@@ -2,9 +2,9 @@ package gui
 
 import (
 	"fmt"
-	"math"
 	"image"
 	"image/png"
+	"math"
 	"os"
 	"os/exec"
 	"runtime"
@@ -12,6 +12,8 @@ import (
 	"strings"
 	"sync"
 	"time"
+
+	"unsafe"
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/go-gl/glfw/v3.2/glfw"
@@ -21,7 +23,6 @@ import (
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
-	"unsafe"
 )
 
 type GUI struct {
@@ -131,7 +132,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		logger:            logger,
 		width:             800,
 		height:            600,
-		appliedWidth:	   0,
+		appliedWidth:      0,
 		appliedHeight:     0,
 		dpiScale:          1,
 		terminal:          terminal,
@@ -250,8 +251,8 @@ func (gui *GUI) Render() error {
 	var err error
 	gui.window, err = gui.createWindow()
 	gui.RecalculateDpiScale()
-	gui.window.SetSize(int(float32(gui.width) * gui.dpiScale),
-		int(float32(gui.height) * gui.dpiScale))
+	gui.window.SetSize(int(float32(gui.width)*gui.dpiScale),
+		int(float32(gui.height)*gui.dpiScale))
 	if err != nil {
 		return fmt.Errorf("Failed to create window: %s", err)
 	}
@@ -505,7 +506,7 @@ func (gui *GUI) redraw(defaultCell buffer.Cell) {
 
 func (gui *GUI) createWindow() (*glfw.Window, error) {
 	if err := glfw.Init(); err != nil {
-		return nil, fmt.Errorf("Failed to initialise GLFW: %s", err)
+		return nil, fmt.Errorf("failed to initialise GLFW: %s", err)
 	}
 
 	glfw.WindowHint(glfw.Resizable, glfw.True)
@@ -529,9 +530,7 @@ func (gui *GUI) createWindow() (*glfw.Window, error) {
 	for _, v := range versions {
 		var err error
 		window, err = gui.createWindowWithOpenGLVersion(v[0], v[1])
-		if err != nil {
-			gui.logger.Warnf("Failed to create window: %s. Will attempt older version...", err)
-		} else {
+		if err == nil {
 			break
 		}
 	}
@@ -553,8 +552,8 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 	glfw.WindowHint(glfw.ContextVersionMajor, major)
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
 
-	window, err := glfw.CreateWindow(int(float32(gui.width) * gui.dpiScale),
-		int(float32(gui.height) * gui.dpiScale), "Terminal", nil, nil)
+	window, err := glfw.CreateWindow(int(float32(gui.width)*gui.dpiScale),
+		int(float32(gui.height)*gui.dpiScale), "Aminal", nil, nil)
 	if err != nil {
 		e := err.Error()
 		if i := strings.Index(e, ", got version "); i > -1 {
@@ -569,7 +568,7 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 			}
 		}
 
-		return nil, fmt.Errorf("Failed to create window using OpenGL v%d.%d: %s.", major, minor, err)
+		return nil, fmt.Errorf("failed to create window using OpenGL v%d.%d: %s", major, minor, err)
 	}
 
 	return window, nil
@@ -582,7 +581,7 @@ func (gui *GUI) onDebugMessage(source uint32, gltype uint32, id uint32, severity
 // initOpenGL initializes OpenGL and returns an intiialized program.
 func (gui *GUI) createProgram() (uint32, error) {
 	if err := gl.Init(); err != nil {
-		return 0, fmt.Errorf("Failed to initialise OpenGL: %s", err)
+		return 0, fmt.Errorf("failed to initialise OpenGL: %s", err)
 	}
 	gui.logger.Infof("OpenGL version %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
@@ -640,8 +639,8 @@ func (gui *GUI) Screenshot(path string) {
 	x, y := gui.window.GetPos()
 	w, h := gui.window.GetSize()
 
-	img, err := screenshot.CaptureRect(image.Rectangle{ Min: image.Point{ X: x, Y: y },
-		Max: image.Point{ X: x + w, Y: y + h}})
+	img, err := screenshot.CaptureRect(image.Rectangle{Min: image.Point{X: x, Y: y},
+		Max: image.Point{X: x + w, Y: y + h}})
 	if err != nil {
 		panic(err)
 	}
