@@ -717,22 +717,11 @@ func (buffer *Buffer) CarriageReturn() {
 }
 
 func (buffer *Buffer) Tab() {
-	tabSize := 4
-	max := tabSize
-
-	// @todo rightMargin
-	if buffer.terminalState.cursorX < buffer.terminalState.viewWidth {
-		max = int(buffer.terminalState.viewWidth - buffer.terminalState.cursorX - 1)
-	}
-
-	shift := tabSize - (int(buffer.terminalState.cursorX+1) % tabSize)
-
-	if shift > max {
-		shift = max
-	}
-
-	for i := 0; i < shift; i++ {
+	for buffer.terminalState.cursorX < buffer.terminalState.viewWidth-1 { // @todo rightMargin
 		buffer.Write(' ')
+		if buffer.terminalState.IsTabSetAtCursor() {
+			break
+		}
 	}
 }
 
