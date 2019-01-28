@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/liamg/aminal/terminal"
+	"time"
 )
 
 func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
@@ -35,12 +36,7 @@ func (gui  *GUI) getArrowCursor() *glfw.Cursor {
 
 func (gui *GUI) mouseMoveCallback(w *glfw.Window, px float64, py float64) {
 
-	scale := gui.scale()
-	px = px / float64(scale)
-	py = py / float64(scale)
-
-	x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
-	y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
+	x, y := gui.convertMouseCoordinates(px, py)
 
 	if gui.mouseDown {
 		gui.terminal.ActiveBuffer().EndSelection(x, y, false)
@@ -62,6 +58,35 @@ func (gui *GUI) mouseMoveCallback(w *glfw.Window, px float64, py float64) {
 	}
 }
 
+func (gui *GUI) convertMouseCoordinates(px float64, py float64) (uint16, uint16) {
+	scale := gui.scale()
+	px = px / float64(scale)
+	py = py / float64(scale)
+	x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
+	y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
+
+	return x, y
+}
+
+func (gui *GUI) updateLeftClickCount(x uint16, y uint16) int {
+	defer func() {
+		gui.leftClickTime = time.Now()
+		gui.prevLeftClickX = x
+		gui.prevLeftClickY = y
+	}()
+
+	if gui.prevLeftClickX == x && gui.prevLeftClickY == y && time.Since(gui.leftClickTime) < time.Millisecond * 500 {
+		gui.leftClickCount++
+		if gui.leftClickCount > 3 {
+			gui.leftClickCount = 3
+		}
+	} else {
+		gui.leftClickCount = 1
+	}
+
+	return gui.leftClickCount
+}
+
 func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 
 	if gui.overlay != nil {
@@ -72,28 +97,58 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 	}
 
 	// before we forward clicks on (below), we need to handle them locally for url clicking, text highlighting etc.
-	px, py := w.GetCursorPos()
-	scale := gui.scale()
-	px = px / float64(scale)
-	py = py / float64(scale)
-	x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
-	y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
+	x, y := gui.convertMouseCoordinates(w.GetCursorPos())
 	tx := int(x) + 1 // vt100 is 1 indexed
 	ty := int(y) + 1
 
-	if button == glfw.MouseButtonLeft {
+	activeBuffer := gui.terminal.ActiveBuffer()
 
+	switch button {
+	case glfw.MouseButtonLeft:
 		if action == glfw.Press {
 			gui.mouseDown = true
-			gui.terminal.ActiveBuffer().StartSelection(x, y)
+
+			clickCount := gui.updateLeftClickCount(x, y)
+			if clickCount == 1 || !activeBuffer.IsSelectionComplete() {
+				activeBuffer.StartSelection(x, y)
+			} else {
+				switch clickCount {
+				case 2:
+					activeBuffer.SelectWordAtPosition(x, y)
+				case 3:
+					activeBuffer.SelectLineAtPosition(x, y)
+				}
+			}
 		} else if action == glfw.Release {
 			gui.mouseDown = false
-			gui.terminal.ActiveBuffer().EndSelection(x, y, true)
-			if url := gui.terminal.ActiveBuffer().GetURLAtPosition(x, y); url != "" {
-				go gui.launchTarget(url)
+			activeBuffer.EndSelection(x, y, true)
+
+			handled := false
+			if gui.config.CopyAndPasteWithMouse {
+				selectedText := activeBuffer.GetSelectedText()
+				if selectedText != "" {
+					gui.window.SetClipboardString(selectedText)
+					handled = true
+				}
+			}
+
+			if !handled {
+				if url := activeBuffer.GetURLAtPosition(x, y); url != "" {
+					go gui.launchTarget(url)
+				}
+			}
+		}
+
+	case glfw.MouseButtonRight:
+		if gui.config.CopyAndPasteWithMouse && action == glfw.Press {
+			str, err := gui.window.GetClipboardString()
+			if err == nil {
+				activeBuffer.ClearSelection()
+				_ = gui.terminal.Paste([]byte(str))
 			}
 		}
 	}
+
 	// https://www.xfree86.org/4.8.0/ctlseqs.html
 
 	/*

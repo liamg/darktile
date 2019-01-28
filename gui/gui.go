@@ -47,6 +47,11 @@ type GUI struct {
 	resizeLock        *sync.Mutex
 	handCursor        *glfw.Cursor
 	arrowCursor       *glfw.Cursor
+
+	prevLeftClickX    uint16
+	prevLeftClickY    uint16
+	leftClickTime     time.Time
+	leftClickCount    int  // number of clicks in a serie - single click, double click, or triple click
 }
 
 func Min(x, y int) int {
