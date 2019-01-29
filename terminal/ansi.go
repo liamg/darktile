@@ -12,6 +12,7 @@ var ansiSequenceMap = map[rune]escapeSequenceHandler{
 	'8': restoreCursorHandler,
 	'D': indexHandler,
 	'E': nextLineHandler, // NEL
+	'H': tabSetHandler,   // HTS
 	'M': reverseIndexHandler,
 	'P': sixelHandler,
 	'c': risHandler, //RIS
@@ -73,5 +74,10 @@ func ansiHandler(pty chan rune, terminal *Terminal) error {
 
 func nextLineHandler(pty chan rune, terminal *Terminal) error {
 	terminal.ActiveBuffer().NewLineEx(true)
+	return nil
+}
+
+func tabSetHandler(pty chan rune, terminal *Terminal) error {
+	terminal.terminalState.TabSetAtCursor()
 	return nil
 }

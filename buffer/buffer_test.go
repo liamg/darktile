@@ -26,8 +26,8 @@ func TestTabbing(t *testing.T) {
 	b.CarriageReturn()
 	b.NewLine()
 	expected := `
-hello  x   goodbye
-hell   xxx good
+hello   x   goodbye
+hell    xxx good
 `
 
 	lines := b.GetVisibleLines()

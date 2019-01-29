@@ -24,6 +24,7 @@ var csiSequences = []csiMapping{
 	{id: 'c', handler: csiSendDeviceAttributesHandler, description: " Send Device Attributes (Primary/Secondary/Tertiary DA)"},
 	{id: 'd', handler: csiLinePositionAbsolute, expectedParams: &expectedParams{min: 0, max: 1}, description: "Line Position Absolute  [row] (default = [1,column]) (VPA)"},
 	{id: 'f', handler: csiCursorPositionHandler, description: "Horizontal and Vertical Position [row;column] (default = [1,1]) (HVP)"},
+	{id: 'g', handler: csiTabClearHandler, description: "Tab Clear (TBC)"},
 	{id: 'h', handler: csiSetModeHandler, expectedParams: &expectedParams{min: 1, max: 1}, description: "Set Mode (SM)"},
 	{id: 'l', handler: csiResetModeHandler, expectedParams: &expectedParams{min: 1, max: 1}, description: "Reset Mode (RM)"},
 	{id: 'm', handler: sgrSequenceHandler, description: "Character Attributes (SGR)"},
@@ -460,6 +461,24 @@ func csiDeleteHandler(params []string, terminal *Terminal) error {
 	}
 
 	terminal.ActiveBuffer().DeleteChars(n)
+	return nil
+}
+
+func csiTabClearHandler(params []string, terminal *Terminal) error {
+	n := "0"
+	if len(params) > 0 {
+		n = params[0]
+	}
+	switch n {
+
+	case "0", "":
+		terminal.terminalState.TabClearAtCursor()
+	case "3":
+		terminal.terminalState.TabZonk()
+	default:
+		return fmt.Errorf("Ignored TBC: CSI %s g", n)
+	}
+
 	return nil
 }
 
