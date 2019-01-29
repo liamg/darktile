@@ -137,7 +137,7 @@
   branch = "master"
   name = "github.com/riywo/loginshell"
   packages = ["."]
-  revision = "5da3acff02554cee5e8ccb4651cc5a4072f41790"
+  revision = "c2f4167b23039c6289b5a488080176426ec5dad9"
 
 [[projects]]
   name = "github.com/stretchr/testify"
