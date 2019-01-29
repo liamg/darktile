@@ -6,7 +6,6 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
-	"time"
 )
 
 type Buffer struct {
@@ -18,8 +17,6 @@ type Buffer struct {
 	selectionStart        *Position
 	selectionEnd          *Position
 	selectionComplete     bool // whether the selected text can update or whether it is final
-	selectionExpanded     bool // whether the selection to word expansion has already run on this point
-	selectionClickTime    time.Time
 	terminalState         *TerminalState
 }
 
@@ -48,7 +45,7 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
 
 	candidate := ""
 
-	for i := col; i >= 0; i-- {
+	for i := col; i >= uint16(0); i-- {
 		cell := buffer.GetRawCell(i, row)
 		if cell == nil {
 			break
@@ -82,6 +79,26 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
 	return candidate
 }
 
+func (buffer *Buffer) IsSelectionComplete() bool {
+	return buffer.selectionComplete
+}
+
+func (buffer *Buffer) SelectLineAtPosition(col uint16, viewRow uint16) {
+	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
+
+	buffer.selectionStart = &Position {
+		Col: 0,
+		Line: int(row),
+	}
+	buffer.selectionEnd = &Position {
+		Col: int(buffer.ViewWidth() - 1),
+		Line: int(row),
+	}
+
+	buffer.selectionComplete = true
+	buffer.emitDisplayChange()
+}
+
 func (buffer *Buffer) SelectWordAtPosition(col uint16, viewRow uint16) {
 
 	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
@@ -94,7 +111,7 @@ func (buffer *Buffer) SelectWordAtPosition(col uint16, viewRow uint16) {
 	start := col
 	end := col
 
-	for i := col; i >= 0; i-- {
+	for i := col; i >= uint16(0); i-- {
 		cell := buffer.GetRawCell(i, row)
 		if cell == nil {
 			break
@@ -124,8 +141,9 @@ func (buffer *Buffer) SelectWordAtPosition(col uint16, viewRow uint16) {
 		Col:  int(end),
 		Line: int(row),
 	}
-	buffer.emitDisplayChange()
 
+	buffer.selectionComplete = true
+	buffer.emitDisplayChange()
 }
 
 // bounds for word selection
@@ -202,37 +220,14 @@ func (buffer *Buffer) GetSelectedText() string {
 
 func (buffer *Buffer) StartSelection(col uint16, viewRow uint16) {
 	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
-	if buffer.selectionComplete {
-		buffer.selectionEnd = nil
-
-		if buffer.selectionStart != nil && time.Since(buffer.selectionClickTime) < time.Millisecond*500 {
-			if buffer.selectionExpanded {
-				//select whole line!
-				buffer.selectionStart = &Position{
-					Col:  0,
-					Line: int(row),
-				}
-				buffer.selectionEnd = &Position{
-					Col:  int(buffer.ViewWidth() - 1),
-					Line: int(row),
-				}
-				buffer.emitDisplayChange()
-			} else {
-				buffer.SelectWordAtPosition(col, viewRow)
-				buffer.selectionExpanded = true
-			}
-			return
-		}
-
-		buffer.selectionExpanded = false
-	}
-
 	buffer.selectionComplete = false
-	buffer.selectionStart = &Position{
+
+	buffer.selectionStart = &Position {
 		Col:  int(col),
 		Line: int(row),
 	}
-	buffer.selectionClickTime = time.Now()
+
+	buffer.selectionEnd = nil
 }
 
 func (buffer *Buffer) EndSelection(col uint16, viewRow uint16, complete bool) {
