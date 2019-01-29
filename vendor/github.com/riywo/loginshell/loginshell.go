@@ -17,15 +17,29 @@ func Shell() (string, error) {
           return LinuxShell()
         case "darwin":
           return DarwinShell()
+        case "windows":
+          return WindowsShell()
     }
     return "", errors.New("Undefined GOOS: " + runtime.GOOS)
 }
 
+func WindowsShell() (string, error) {
+    consoleApp := os.Getenv("COMSPEC")
+    if consoleApp == "" {
+        consoleApp = "cmd.exe"
+    }
+    return consoleApp, nil
+}
+
 func LinuxShell() (string, error) {
     user, err := user.Current()
-    if err != nil { return "", err }
+    if err != nil {
+        return "", err
+    }
     out, err := exec.Command("getent", "passwd", user.Uid).Output()
-    if err != nil { return "", err }
+    if err != nil {
+        return "", err
+    }
 
     ent := strings.Split(strings.TrimSuffix(string(out), "\n"), ":")
     return ent[6], nil
@@ -34,11 +48,15 @@ func LinuxShell() (string, error) {
 func DarwinShell() (string, error) {
     dir := "Local/Default/Users/" + os.Getenv("USER")
     out, err := exec.Command("dscl", "localhost", "-read", dir, "UserShell").Output()
-    if err != nil { return "", err }
+    if err != nil {
+        return "", err
+    }
 
     re := regexp.MustCompile("UserShell: (/[^ ]+)\n")
     matched := re.FindStringSubmatch(string(out))
     shell := matched[1]
-    if shell == "" { return "", errors.New(fmt.Sprintf("Invalid output: %s", string(out))) }
+    if shell == "" {
+        return "", errors.New(fmt.Sprintf("Invalid output: %s", string(out)))
+    }
     return shell, nil
 }
