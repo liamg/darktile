@@ -6,7 +6,6 @@ import (
 	"image/png"
 	"math"
 	"os"
-	"os/exec"
 	"runtime"
 	"strconv"
 	"strings"
@@ -23,6 +22,7 @@ import (
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
+	"github.com/liamg/aminal/platform"
 )
 
 type GUI struct {
@@ -638,17 +638,9 @@ func (gui *GUI) createProgram() (uint32, error) {
 
 func (gui *GUI) launchTarget(target string) {
 
-	cmd := "xdg-open"
-
-	switch runtime.GOOS {
-	case "darwin":
-		cmd = "open"
-	case "windows":
-		cmd = "start"
-	}
-
-	if err := exec.Command(cmd, target).Run(); err != nil {
-		gui.logger.Errorf("Failed to launch external command %s: %s", cmd, err)
+	err := platform.LaunchTarget(target)
+	if err != nil {
+		gui.logger.Errorf("Failed to launch target %s: %s", target, err)
 	}
 }
 
