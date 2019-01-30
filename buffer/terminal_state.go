@@ -4,8 +4,7 @@ type TerminalState struct {
 	scrollLinesFromBottom uint
 	cursorX               uint16
 	cursorY               uint16
-	cursorAttr            CellAttributes
-	defaultCell           Cell
+	CursorAttr            CellAttributes
 	viewHeight            uint16
 	viewWidth             uint16
 	topMargin             uint // see DECSTBM docs - this is for scrollable regions
@@ -13,6 +12,7 @@ type TerminalState struct {
 	ReplaceMode           bool // overwrite character at cursor or insert new
 	OriginMode            bool // see DECOM docs - whether cursor is positioned within the margins or not
 	LineFeedMode          bool
+	ScreenMode            bool // DECSCNM (black on white background)
 	AutoWrap              bool
 	maxLines              uint64
 	tabStops              map[uint16]struct{}
@@ -23,9 +23,8 @@ func NewTerminalState(viewCols uint16, viewLines uint16, attr CellAttributes, ma
 	b := &TerminalState{
 		cursorX:      0,
 		cursorY:      0,
-		cursorAttr:   attr,
+		CursorAttr:   attr,
 		AutoWrap:     true,
-		defaultCell:  Cell{attr: attr},
 		maxLines:     maxLines,
 		viewWidth:    viewCols,
 		viewHeight:   viewLines,
@@ -34,6 +33,19 @@ func NewTerminalState(viewCols uint16, viewLines uint16, attr CellAttributes, ma
 	}
 	b.TabReset()
 	return b
+}
+
+func (terminalState *TerminalState) DefaultCell(applyEffects bool) Cell {
+	attr := terminalState.CursorAttr
+	if !applyEffects {
+		attr.Blink = false
+		attr.Bold = false
+		attr.Dim = false
+		attr.Inverse = false
+		attr.Underline = false
+		attr.Dim = false
+	}
+	return Cell{attr: attr}
 }
 
 func (terminalState *TerminalState) SetVerticalMargins(top uint, bottom uint) {

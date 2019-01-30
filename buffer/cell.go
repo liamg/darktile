@@ -17,7 +17,7 @@ type CellAttributes struct {
 	Dim       bool
 	Underline bool
 	Blink     bool
-	Reverse   bool
+	Inverse   bool
 	Hidden    bool
 }
 
@@ -40,20 +40,20 @@ func (cell *Cell) Rune() rune {
 }
 
 func (cell *Cell) Fg() [3]float32 {
-	if cell.Attr().Reverse {
+	if cell.Attr().Inverse {
 		return cell.attr.BgColour
 	}
 	return cell.attr.FgColour
 }
 
 func (cell *Cell) Bg() [3]float32 {
-	if cell.Attr().Reverse {
+	if cell.Attr().Inverse {
 		return cell.attr.FgColour
 	}
 	return cell.attr.BgColour
 }
 
-func (cell *Cell) erase(bgColour  [3]float32) {
+func (cell *Cell) erase(bgColour [3]float32) {
 	cell.setRune(0)
 	cell.attr.BgColour = bgColour
 }
@@ -68,4 +68,10 @@ func NewBackgroundCell(colour [3]float32) Cell {
 			BgColour: colour,
 		},
 	}
+}
+
+func (cellAttr *CellAttributes) ReverseVideo() {
+	oldFgColour := cellAttr.FgColour
+	cellAttr.FgColour = cellAttr.BgColour
+	cellAttr.BgColour = oldFgColour
 }

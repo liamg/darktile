@@ -20,6 +20,12 @@ func (line *Line) Cells() []Cell {
 	return line.cells
 }
 
+func (line *Line) ReverseVideo() {
+	for i, _ := range line.cells {
+		line.cells[i].attr.ReverseVideo()
+	}
+}
+
 // Cleanse removes null bytes from the end of the row
 func (line *Line) Cleanse() {
 	cut := 0

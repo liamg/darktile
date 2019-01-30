@@ -11,20 +11,21 @@ import (
 )
 
 type OpenGLRenderer struct {
-	areaWidth     int
-	areaHeight    int
-	areaX         int
-	areaY         int
-	cellWidth     float32
-	cellHeight    float32
-	termCols      uint
-	termRows      uint
-	cellPositions map[[2]uint][2]float32
-	config        *config.Config
-	colourAttr    uint32
-	program       uint32
-	textureMap    map[*image.RGBA]uint32
-	fontMap       *FontMap
+	areaWidth        int
+	areaHeight       int
+	areaX            int
+	areaY            int
+	cellWidth        float32
+	cellHeight       float32
+	termCols         uint
+	termRows         uint
+	cellPositions    map[[2]uint][2]float32
+	config           *config.Config
+	colourAttr       uint32
+	program          uint32
+	textureMap       map[*image.RGBA]uint32
+	fontMap          *FontMap
+	backgroundColour [3]float32
 }
 
 type rectangle struct {
@@ -185,7 +186,7 @@ func (r *OpenGLRenderer) GetRectangleSize(col uint, row uint) (float32, float32)
 
 func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
 	x := float32(float32(col) * r.cellWidth)
-	y := float32(float32(row) * r.cellHeight) + r.cellHeight
+	y := float32(float32(row)*r.cellHeight) + r.cellHeight
 
 	return r.newRectangle(x, y, r.colourAttr)
 }
@@ -207,13 +208,17 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 	} else {
 
 		if cursor {
-			bg = r.config.ColourScheme.Cursor
+			if r.config.ColourScheme.Cursor != r.backgroundColour {
+				bg = r.config.ColourScheme.Cursor
+			} else {
+				bg = cell.Fg()
+			}
 		} else {
 			bg = cell.Bg()
 		}
 	}
 
-	if bg != r.config.ColourScheme.Background || force {
+	if bg != r.backgroundColour || force {
 		rect := r.getRectangle(col, row)
 		rect.setColour(bg)
 		rect.Draw()

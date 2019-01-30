@@ -48,6 +48,7 @@ type GUI struct {
 	resizeLock        *sync.Mutex
 	handCursor        *glfw.Cursor
 	arrowCursor       *glfw.Cursor
+	defaultCell       *buffer.Cell
 
 	prevLeftClickX    uint16
 	prevLeftClickY    uint16
@@ -185,6 +186,22 @@ func (gui *GUI) resizeToTerminal(newCols uint, newRows uint) {
 	gui.window.SetSize(roundedWidth, roundedHeight) // will trigger resize()
 }
 
+func (gui *GUI) generateDefaultCell(reverse bool) {
+	color := gui.config.ColourScheme.Background
+	if reverse {
+		color = gui.config.ColourScheme.Foreground
+	}
+	cell := buffer.NewBackgroundCell(color)
+	gui.renderer.backgroundColour = color
+	gui.defaultCell = &cell
+	gl.ClearColor(
+		color[0],
+		color[1],
+		color[2],
+		1.0,
+	)
+}
+
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
@@ -232,7 +249,7 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	gui.logger.Debugf("Resize complete!")
 
-	gui.redraw(buffer.NewBackgroundCell(gui.config.ColourScheme.Background))
+	gui.redraw()
 	gui.window.SwapBuffers()
 }
 
@@ -279,6 +296,7 @@ func (gui *GUI) Render() error {
 
 	titleChan := make(chan bool, 1)
 	resizeChan := make(chan bool, 1)
+	reverseChan := make(chan bool, 1)
 
 	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width, gui.height, gui.colourAttr, program)
 
@@ -296,6 +314,8 @@ func (gui *GUI) Render() error {
 			gui.terminal.SetDirty()
 		}
 	})
+
+	gui.generateDefaultCell(false)
 
 	{
 		w, h := gui.window.GetFramebufferSize()
@@ -320,20 +340,12 @@ func (gui *GUI) Render() error {
 	gl.Disable(gl.DEPTH_TEST)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
-	gl.ClearColor(
-		gui.config.ColourScheme.Background[0],
-		gui.config.ColourScheme.Background[1],
-		gui.config.ColourScheme.Background[2],
-		1.0,
-	)
-
 	gui.terminal.AttachTitleChangeHandler(titleChan)
 	gui.terminal.AttachResizeHandler(resizeChan)
+	gui.terminal.AttachReverseHandler(reverseChan)
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
-
-	defaultCell := buffer.NewBackgroundCell(gui.config.ColourScheme.Background)
 
 	go func() {
 		for {
@@ -359,20 +371,25 @@ func (gui *GUI) Render() error {
 
 	for !gui.window.ShouldClose() {
 
+		forceRedraw := false
+
 		select {
 		case <-titleChan:
 			gui.window.SetTitle(gui.terminal.GetTitle())
 		case <-resizeChan:
 			cols, rows := gui.terminal.GetSize()
 			gui.resizeToTerminal(uint(cols), uint(rows))
+		case reverse := <-reverseChan:
+			gui.generateDefaultCell(reverse)
+			forceRedraw = true
 		default:
 			// this is more efficient than glfw.PollEvents()
 			glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
 		}
 
-		if gui.terminal.CheckDirty() {
+		if gui.terminal.CheckDirty() || forceRedraw {
 
-			gui.redraw(defaultCell)
+			gui.redraw()
 
 			if gui.showDebugInfo {
 				gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d
@@ -422,7 +439,7 @@ Buffer Size: %d lines
 
 }
 
-func (gui *GUI) redraw(defaultCell buffer.Cell) {
+func (gui *GUI) redraw() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
 	lines := gui.terminal.GetVisibleLines()
 	lineCount := int(gui.terminal.ActiveBuffer().ViewHeight())
@@ -446,18 +463,18 @@ func (gui *GUI) redraw(defaultCell buffer.Cell) {
 					colour = nil
 				}
 
-				cell := defaultCell
+				cell := gui.defaultCell
 				if colour != nil || cursor || x < len(cells) {
 
 					if x < len(cells) {
-						cell = cells[x]
+						cell = &cells[x]
 						if cell.Image() != nil {
-							gui.renderer.DrawCellImage(cell, uint(x), uint(y))
+							gui.renderer.DrawCellImage(*cell, uint(x), uint(y))
 							continue
 						}
 					}
 
-					gui.renderer.DrawCellBg(cell, uint(x), uint(y), cursor, colour, false)
+					gui.renderer.DrawCellBg(*cell, uint(x), uint(y), cursor, colour, false)
 				}
 
 			}
