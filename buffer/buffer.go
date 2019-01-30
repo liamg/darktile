@@ -6,6 +6,7 @@ import (
 	"io/ioutil"
 	"net/url"
 	"os"
+	"strings"
 )
 
 type Buffer struct {
@@ -170,8 +171,6 @@ func (buffer *Buffer) GetSelectedText() string {
 		return ""
 	}
 
-	text := ""
-
 	var x1, x2, y1, y2 int
 
 	if buffer.selectionStart.Line > buffer.selectionEnd.Line || (buffer.selectionStart.Line == buffer.selectionEnd.Line && buffer.selectionStart.Col > buffer.selectionEnd.Col) {
@@ -186,6 +185,9 @@ func (buffer *Buffer) GetSelectedText() string {
 		x2 = buffer.selectionEnd.Col
 	}
 
+	var builder strings.Builder
+	builder.Grow( int(buffer.terminalState.viewWidth) * (y2 - y1 + 1)) // reserve space to minimize allocations
+
 	for row := y1; row <= y2; row++ {
 
 		if row >= len(buffer.lines) {
@@ -199,7 +201,7 @@ func (buffer *Buffer) GetSelectedText() string {
 		if row == y1 {
 			minX = x1
 		} else if !line.wrapped {
-			text += "\n"
+			builder.WriteString("\n")
 		}
 		if row == y2 {
 			maxX = x2
@@ -209,13 +211,15 @@ func (buffer *Buffer) GetSelectedText() string {
 			if col >= len(line.cells) {
 				break
 			}
-			cell := line.cells[col]
-			text += string(cell.Rune())
+			r := line.cells[col].Rune()
+			if r == 0x00 {
+				r = ' '
+			}
+			builder.WriteRune(r)
 		}
-
 	}
 
-	return text
+	return builder.String()
 }
 
 func (buffer *Buffer) StartSelection(col uint16, viewRow uint16) {
