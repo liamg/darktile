@@ -35,7 +35,7 @@ func sgrSequenceHandler(params []string, terminal *Terminal) error {
 		case "5", "05":
 			terminal.ActiveBuffer().CursorAttr().Blink = true
 		case "7", "07":
-			terminal.ActiveBuffer().CursorAttr().Reverse = true
+			terminal.ActiveBuffer().CursorAttr().Inverse = true
 		case "8", "08":
 			terminal.ActiveBuffer().CursorAttr().Hidden = true
 		case "21":
@@ -49,7 +49,7 @@ func sgrSequenceHandler(params []string, terminal *Terminal) error {
 		case "25":
 			terminal.ActiveBuffer().CursorAttr().Blink = false
 		case "27":
-			terminal.ActiveBuffer().CursorAttr().Reverse = false
+			terminal.ActiveBuffer().CursorAttr().Inverse = false
 		case "28":
 			terminal.ActiveBuffer().CursorAttr().Hidden = false
 		case "29":

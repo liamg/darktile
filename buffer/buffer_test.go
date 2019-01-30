@@ -393,7 +393,7 @@ func TestGetCellWithBadCursor(t *testing.T) {
 
 func TestCursorAttr(t *testing.T) {
 	b := NewBuffer(NewTerminalState(80, 2, CellAttributes{}, 1000))
-	assert.Equal(t, &b.terminalState.cursorAttr, b.CursorAttr())
+	assert.Equal(t, &b.terminalState.CursorAttr, b.CursorAttr())
 }
 
 func TestCursorPositionQuerying(t *testing.T) {

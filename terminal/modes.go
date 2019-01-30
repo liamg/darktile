@@ -47,18 +47,13 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 			terminal.SetSize(80, uint(lines))
 		}
 		terminal.Clear()
-	/*
-		case "?4":
-			// DECSCLM
-			// @todo smooth scrolling / jump scrolling
-		case "?5":
-			// DECSCNM
-			if enabled {
-				// @todo SCreeN Mode, black on white background
-			} else {
-				// @todo Normal screen (white on black background)
-			}
-	*/
+		/*
+			case "?4":
+				// DECSCLM
+				// @todo smooth scrolling / jump scrolling
+		*/
+	case "?5": // DECSCNM
+		terminal.SetScreenMode(enabled)
 	case "?6":
 		// DECOM
 		terminal.SetOriginMode(enabled)

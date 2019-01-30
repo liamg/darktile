@@ -41,6 +41,7 @@ type Terminal struct {
 	config                    *config.Config
 	titleHandlers             []chan bool
 	resizeHandlers            []chan bool
+	reverseHandlers           []chan bool
 	modes                     Modes
 	mouseMode                 MouseMode
 	bracketedPasteMode        bool
@@ -196,6 +197,10 @@ func (terminal *Terminal) AttachResizeHandler(handler chan bool) {
 	terminal.resizeHandlers = append(terminal.resizeHandlers, handler)
 }
 
+func (terminal *Terminal) AttachReverseHandler(handler chan bool) {
+	terminal.reverseHandlers = append(terminal.reverseHandlers, handler)
+}
+
 func (terminal *Terminal) Modes() Modes {
 	return terminal.modes
 }
@@ -212,6 +217,14 @@ func (terminal *Terminal) emitResize() {
 	for _, h := range terminal.resizeHandlers {
 		go func(c chan bool) {
 			c <- true
+		}(h)
+	}
+}
+
+func (terminal *Terminal) emitReverse(reverse bool) {
+	for _, h := range terminal.reverseHandlers {
+		go func(c chan bool) {
+			c <- reverse
 		}(h)
 	}
 }
@@ -348,4 +361,16 @@ func (terminal *Terminal) SetLineFeedMode() {
 
 func (terminal *Terminal) ResetVerticalMargins() {
 	terminal.terminalState.ResetVerticalMargins()
+}
+
+func (terminal *Terminal) SetScreenMode(enabled bool) {
+	if terminal.terminalState.ScreenMode == enabled {
+		return
+	}
+	terminal.terminalState.ScreenMode = enabled
+	terminal.terminalState.CursorAttr.ReverseVideo()
+	for _, buffer := range terminal.buffers {
+		buffer.ReverseVideo()
+	}
+	terminal.emitReverse(enabled)
 }

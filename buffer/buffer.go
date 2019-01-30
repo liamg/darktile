@@ -366,7 +366,7 @@ func (buffer *Buffer) RestoreCursor() {
 }
 
 func (buffer *Buffer) CursorAttr() *CellAttributes {
-	return &buffer.terminalState.cursorAttr
+	return &buffer.terminalState.CursorAttr
 }
 
 func (buffer *Buffer) GetCell(viewCol uint16, viewRow uint16) *Cell {
@@ -507,7 +507,7 @@ func (buffer *Buffer) InsertBlankCharacters(count int) {
 	index := int(buffer.RawLine())
 	for i := 0; i < count; i++ {
 		cells := buffer.lines[index].cells
-		buffer.lines[index].cells = append(cells[:buffer.terminalState.cursorX], append([]Cell{buffer.terminalState.defaultCell}, cells[buffer.terminalState.cursorX:]...)...)
+		buffer.lines[index].cells = append(cells[:buffer.terminalState.cursorX], append([]Cell{buffer.terminalState.DefaultCell(true)}, cells[buffer.terminalState.cursorX:]...)...)
 	}
 }
 
@@ -624,9 +624,9 @@ func (buffer *Buffer) Write(runes ...rune) {
 			}
 
 			for int(buffer.CursorColumn()) >= len(line.cells) {
-				line.cells = append(line.cells, buffer.terminalState.defaultCell)
+				line.cells = append(line.cells, buffer.terminalState.DefaultCell(int(buffer.CursorColumn()) == len(line.cells)))
 			}
-			line.cells[buffer.terminalState.cursorX].attr = buffer.terminalState.cursorAttr
+			line.cells[buffer.terminalState.cursorX].attr = buffer.terminalState.CursorAttr
 			line.cells[buffer.terminalState.cursorX].setRune(r)
 			buffer.incrementCursorPosition()
 			continue
@@ -640,11 +640,11 @@ func (buffer *Buffer) Write(runes ...rune) {
 
 				newLine := buffer.getCurrentLine()
 				if len(newLine.cells) == 0 {
-					newLine.cells = append(newLine.cells, buffer.terminalState.defaultCell)
+					newLine.cells = append(newLine.cells, buffer.terminalState.DefaultCell(true))
 				}
 				cell := &newLine.cells[0]
 				cell.setRune(r)
-				cell.attr = buffer.terminalState.cursorAttr
+				cell.attr = buffer.terminalState.CursorAttr
 
 			} else {
 				// no more room on line and wrapping is disabled
@@ -655,12 +655,12 @@ func (buffer *Buffer) Write(runes ...rune) {
 		} else {
 
 			for int(buffer.CursorColumn()) >= len(line.cells) {
-				line.cells = append(line.cells, buffer.terminalState.defaultCell)
+				line.cells = append(line.cells, buffer.terminalState.DefaultCell(int(buffer.CursorColumn()) == len(line.cells)))
 			}
 
 			cell := &line.cells[buffer.CursorColumn()]
 			cell.setRune(r)
-			cell.attr = buffer.terminalState.cursorAttr
+			cell.attr = buffer.terminalState.CursorAttr
 		}
 
 		buffer.incrementCursorPosition()
@@ -853,7 +853,7 @@ func (buffer *Buffer) EraseLineToCursor() {
 	line := buffer.getCurrentLine()
 	for i := 0; i <= int(buffer.terminalState.cursorX); i++ {
 		if i < len(line.cells) {
-			line.cells[i].erase(buffer.terminalState.defaultCell.attr.BgColour)
+			line.cells[i].erase(buffer.terminalState.CursorAttr.BgColour)
 		}
 	}
 }
@@ -914,7 +914,7 @@ func (buffer *Buffer) EraseCharacters(n int) {
 	}
 
 	for i := int(buffer.terminalState.cursorX); i < max; i++ {
-		line.cells[i].erase(buffer.terminalState.defaultCell.attr.BgColour)
+		line.cells[i].erase(buffer.terminalState.CursorAttr.BgColour)
 	}
 }
 
@@ -944,7 +944,7 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 		if i >= len(line.cells) {
 			break
 		}
-		line.cells[i].erase(buffer.terminalState.defaultCell.attr.BgColour)
+		line.cells[i].erase(buffer.terminalState.CursorAttr.BgColour)
 	}
 	for i := uint16(0); i < buffer.terminalState.cursorY; i++ {
 		rawLine := buffer.convertViewLineToRawLine(i)
@@ -1090,4 +1090,12 @@ func (buffer *Buffer) Compare(path string) bool {
 		bufferContent = append(bufferContent, lineBytes...)
 	}
 	return bytes.Equal(f, bufferContent)
+}
+
+func (buffer *Buffer) ReverseVideo() {
+	defer buffer.emitDisplayChange()
+
+	for _, line := range buffer.lines {
+		line.ReverseVideo()
+	}
 }
