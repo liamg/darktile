@@ -49,6 +49,11 @@ type GUI struct {
 	handCursor        *glfw.Cursor
 	arrowCursor       *glfw.Cursor
 	defaultCell       *buffer.Cell
+
+	prevLeftClickX    uint16
+	prevLeftClickY    uint16
+	leftClickTime     time.Time
+	leftClickCount    int  // number of clicks in a serie - single click, double click, or triple click
 }
 
 func Min(x, y int) int {
@@ -523,7 +528,7 @@ func (gui *GUI) redraw() {
 
 func (gui *GUI) createWindow() (*glfw.Window, error) {
 	if err := glfw.Init(); err != nil {
-		return nil, fmt.Errorf("Failed to initialise GLFW: %s", err)
+		return nil, fmt.Errorf("failed to initialise GLFW: %s", err)
 	}
 
 	glfw.WindowHint(glfw.Resizable, glfw.True)
@@ -547,9 +552,7 @@ func (gui *GUI) createWindow() (*glfw.Window, error) {
 	for _, v := range versions {
 		var err error
 		window, err = gui.createWindowWithOpenGLVersion(v[0], v[1])
-		if err != nil {
-			gui.logger.Warnf("Failed to create window: %s. Will attempt older version...", err)
-		} else {
+		if err == nil {
 			break
 		}
 	}
@@ -572,7 +575,7 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
 
 	window, err := glfw.CreateWindow(int(float32(gui.width)*gui.dpiScale),
-		int(float32(gui.height)*gui.dpiScale), "Terminal", nil, nil)
+		int(float32(gui.height)*gui.dpiScale), "Aminal", nil, nil)
 	if err != nil {
 		e := err.Error()
 		if i := strings.Index(e, ", got version "); i > -1 {
@@ -587,7 +590,7 @@ func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Windo
 			}
 		}
 
-		return nil, fmt.Errorf("Failed to create window using OpenGL v%d.%d: %s.", major, minor, err)
+		return nil, fmt.Errorf("failed to create window using OpenGL v%d.%d: %s", major, minor, err)
 	}
 
 	return window, nil
@@ -600,7 +603,7 @@ func (gui *GUI) onDebugMessage(source uint32, gltype uint32, id uint32, severity
 // initOpenGL initializes OpenGL and returns an intiialized program.
 func (gui *GUI) createProgram() (uint32, error) {
 	if err := gl.Init(); err != nil {
-		return 0, fmt.Errorf("Failed to initialise OpenGL: %s", err)
+		return 0, fmt.Errorf("failed to initialise OpenGL: %s", err)
 	}
 	gui.logger.Infof("OpenGL version %s", gl.GoStr(gl.GetString(gl.VERSION)))
 
