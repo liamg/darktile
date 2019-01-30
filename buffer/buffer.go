@@ -391,7 +391,12 @@ func (buffer *Buffer) CursorColumn() uint16 {
 	return buffer.terminalState.cursorX
 }
 
-// Line returns cursor line
+// CursorLineAbsolute returns absolute cursor line coordinate (ignoring Origin Mode)
+func (buffer *Buffer) CursorLineAbsolute() uint16 {
+	return buffer.terminalState.cursorY
+}
+
+// CursorLine returns cursor line (in Origin Mode it is relative to the top margin)
 func (buffer *Buffer) CursorLine() uint16 {
 	if buffer.terminalState.OriginMode {
 		result := buffer.terminalState.cursorY - uint16(buffer.terminalState.topMargin)

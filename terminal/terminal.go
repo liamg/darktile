@@ -239,10 +239,10 @@ func (terminal *Terminal) GetLogicalCursorX() uint16 {
 
 func (terminal *Terminal) GetLogicalCursorY() uint16 {
 	if terminal.ActiveBuffer().CursorColumn() >= terminal.ActiveBuffer().Width() {
-		return terminal.ActiveBuffer().CursorLine() + 1
+		return terminal.ActiveBuffer().CursorLineAbsolute() + 1
 	}
 
-	return terminal.ActiveBuffer().CursorLine()
+	return terminal.ActiveBuffer().CursorLineAbsolute()
 }
 
 func (terminal *Terminal) GetTitle() string {
