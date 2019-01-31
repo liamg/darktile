@@ -30,6 +30,7 @@ func NewTerminalState(viewCols uint16, viewLines uint16, attr CellAttributes, ma
 		viewHeight:   viewLines,
 		topMargin:    0,
 		bottomMargin: uint(viewLines - 1),
+		LineFeedMode: true,
 	}
 	b.TabReset()
 	return b
