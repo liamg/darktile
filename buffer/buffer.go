@@ -14,11 +14,14 @@ type Buffer struct {
 	displayChangeHandlers []chan bool
 	savedX                uint16
 	savedY                uint16
+	savedCursorAttr       *CellAttributes
 	dirty                 bool
 	selectionStart        *Position
 	selectionEnd          *Position
 	selectionComplete     bool // whether the selected text can update or whether it is final
 	terminalState         *TerminalState
+	savedCharsets         []*map[rune]rune
+	savedCurrentCharset   int
 }
 
 type Position struct {
@@ -355,13 +358,27 @@ func (buffer *Buffer) ScrollToEnd() {
 }
 
 func (buffer *Buffer) SaveCursor() {
+	copiedAttr := buffer.terminalState.CursorAttr
+	buffer.savedCursorAttr = &copiedAttr
 	buffer.savedX = buffer.terminalState.cursorX
 	buffer.savedY = buffer.terminalState.cursorY
+	buffer.savedCharsets = make([]*map[rune]rune, len(buffer.terminalState.Charsets))
+	copy(buffer.savedCharsets, buffer.terminalState.Charsets)
+	buffer.savedCurrentCharset = buffer.terminalState.CurrentCharset
 }
 
 func (buffer *Buffer) RestoreCursor() {
+	if buffer.savedCursorAttr != nil {
+		copiedAttr := *buffer.savedCursorAttr
+		buffer.terminalState.CursorAttr = copiedAttr // @todo ignore colors?
+	}
 	buffer.terminalState.cursorX = buffer.savedX
 	buffer.terminalState.cursorY = buffer.savedY
+	if buffer.savedCharsets != nil {
+		buffer.terminalState.Charsets = make([]*map[rune]rune, len(buffer.savedCharsets))
+		copy(buffer.terminalState.Charsets, buffer.savedCharsets)
+		buffer.terminalState.CurrentCharset = buffer.savedCurrentCharset
+	}
 }
 
 func (buffer *Buffer) CursorAttr() *CellAttributes {

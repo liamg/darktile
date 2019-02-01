@@ -61,12 +61,14 @@ func enqHandler(terminal *Terminal) error {
 }
 
 func shiftOutHandler(terminal *Terminal) error {
-	terminal.logger.Errorf("Received shift out")
+	terminal.logger.Debugf("Received shift out")
+	terminal.terminalState.CurrentCharset = 1
 	return nil
 }
 
 func shiftInHandler(terminal *Terminal) error {
-	terminal.logger.Errorf("Received shift in")
+	terminal.logger.Debugf("Received shift in")
+	terminal.terminalState.CurrentCharset = 0
 	return nil
 }
 
@@ -79,8 +81,20 @@ func (terminal *Terminal) processRune(b rune) {
 		return
 	}
 	//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
-	terminal.ActiveBuffer().Write(b)
+	terminal.ActiveBuffer().Write(terminal.translateRune(b))
 	terminal.isDirty = true
+}
+
+func (terminal *Terminal) translateRune(b rune) rune {
+	table := terminal.terminalState.Charsets[terminal.terminalState.CurrentCharset]
+	if table == nil {
+		return b
+	}
+	chr, ok := (*table)[b]
+	if ok {
+		return chr
+	}
+	return b
 }
 
 func (terminal *Terminal) processInput(pty chan rune) {

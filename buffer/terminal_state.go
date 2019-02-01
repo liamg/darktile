@@ -16,6 +16,8 @@ type TerminalState struct {
 	AutoWrap              bool
 	maxLines              uint64
 	tabStops              map[uint16]struct{}
+	Charsets              []*map[rune]rune // array of 2 charsets, nil means ASCII (no conversion)
+	CurrentCharset        int              // active charset index in Charsets array, valid values are 0 or 1
 }
 
 // NewTerminalMode creates a new terminal state
@@ -30,6 +32,7 @@ func NewTerminalState(viewCols uint16, viewLines uint16, attr CellAttributes, ma
 		viewHeight:   viewLines,
 		topMargin:    0,
 		bottomMargin: uint(viewLines - 1),
+		Charsets:     []*map[rune]rune{nil, nil},
 		LineFeedMode: true,
 	}
 	b.TabReset()

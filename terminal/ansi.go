@@ -17,8 +17,8 @@ var ansiSequenceMap = map[rune]escapeSequenceHandler{
 	'P': sixelHandler,
 	'c': risHandler, //RIS
 	'#': screenStateHandler,
-	'(': swallowHandler(1), // character set bullshit
-	')': swallowHandler(1), // character set bullshit
+	'(': scs0Handler,       // select character set into G0
+	')': scs1Handler,       // select character set into G1
 	'*': swallowHandler(1), // character set bullshit
 	'+': swallowHandler(1), // character set bullshit
 	'>': swallowHandler(0), // numeric char selection  //@todo

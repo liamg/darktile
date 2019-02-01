@@ -20,7 +20,7 @@ func sgrSequenceHandler(params []string, terminal *Terminal) error {
 		p := strings.Replace(strings.Replace(params[i], "[", "", -1), "]", "", -1)
 
 		switch p {
-		case "00", "0":
+		case "00", "0", "":
 			attr := terminal.ActiveBuffer().CursorAttr()
 			*attr = buffer.CellAttributes{
 				FgColour: terminal.config.ColourScheme.Foreground,
