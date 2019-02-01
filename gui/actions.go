@@ -18,7 +18,11 @@ var actionMap = map[config.UserAction]func(gui *GUI){
 }
 
 func actionCopy(gui *GUI) {
-	gui.window.SetClipboardString(gui.terminal.ActiveBuffer().GetSelectedText())
+	selectedText := gui.terminal.ActiveBuffer().GetSelectedText()
+
+	if selectedText != "" {
+		gui.window.SetClipboardString(selectedText)
+	}
 }
 
 func actionPaste(gui *GUI) {
