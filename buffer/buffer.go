@@ -9,6 +9,13 @@ import (
 	"strings"
 )
 
+type SelectionMode int
+const (
+	SelectionChar SelectionMode = iota        // char-by-char selection
+	SelectionWord SelectionMode = iota        // by word selection
+	SelectionLine SelectionMode = iota        // whole line selection
+)
+
 type Buffer struct {
 	lines                 []Line
 	displayChangeHandlers []chan bool
@@ -18,7 +25,8 @@ type Buffer struct {
 	dirty                 bool
 	selectionStart        *Position
 	selectionEnd          *Position
-	selectionComplete     bool // whether the selected text can update or whether it is final
+	selectionMode         SelectionMode
+	isSelectionComplete   bool
 	terminalState         *TerminalState
 	savedCharsets         []*map[rune]rune
 	savedCurrentCharset   int
@@ -29,11 +37,26 @@ type Position struct {
 	Col  int
 }
 
+func comparePositions(pos1 *Position, pos2 *Position) int {
+	if pos1.Line < pos2.Line || (pos1.Line == pos2.Line && pos1.Col < pos2.Col) {
+		return 1
+	}
+	if pos1.Line > pos2.Line || (pos1.Line == pos2.Line && pos1.Col > pos2.Col) {
+		return -1
+	}
+
+	return 0
+}
+
 // NewBuffer creates a new terminal buffer
 func NewBuffer(terminalState *TerminalState) *Buffer {
 	b := &Buffer{
-		lines:         []Line{},
-		terminalState: terminalState,
+		lines:                []Line{},
+		selectionStart:       nil,
+		selectionEnd:         nil,
+		selectionMode:        SelectionChar,
+		isSelectionComplete:  true,
+		terminalState:        terminalState,
 	}
 	return b
 }
@@ -84,50 +107,13 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
 }
 
 func (buffer *Buffer) IsSelectionComplete() bool {
-	return buffer.selectionComplete
+	return buffer.isSelectionComplete
 }
 
-func (buffer *Buffer) SelectLineAtPosition(col uint16, viewRow uint16) {
-	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
-
-	buffer.selectionStart = &Position {
-		Col: 0,
-		Line: int(row),
-	}
-	buffer.selectionEnd = &Position {
-		Col: int(buffer.ViewWidth() - 1),
-		Line: int(row),
-	}
-
-	buffer.selectionComplete = true
-	buffer.emitDisplayChange()
-}
-
-func (buffer *Buffer) SelectWordAtPosition(col uint16, viewRow uint16) {
-
-	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
-
-	cell := buffer.GetRawCell(col, row)
-	if cell == nil || cell.Rune() == 0x00 {
-		return
-	}
-
-	start := col
+func (buffer *Buffer) findEndOfWord(col int, row int) int {
 	end := col
-
-	for i := col; i >= uint16(0); i-- {
-		cell := buffer.GetRawCell(i, row)
-		if cell == nil {
-			break
-		}
-		if isRuneWordSelectionMarker(cell.Rune()) {
-			break
-		}
-		start = i
-	}
-
-	for i := col; i < buffer.terminalState.viewWidth; i++ {
-		cell := buffer.GetRawCell(i, row)
+	for i := col; i < int(buffer.terminalState.viewWidth); i++ {
+		cell := buffer.GetRawCell(uint16(i), uint64(row))
 		if cell == nil {
 			break
 		}
@@ -136,18 +122,22 @@ func (buffer *Buffer) SelectWordAtPosition(col uint16, viewRow uint16) {
 		}
 		end = i
 	}
+	return end
+}
 
-	buffer.selectionStart = &Position{
-		Col:  int(start),
-		Line: int(row),
+func (buffer *Buffer) findBeginningOfWord(col int, row int) int {
+	start := col
+	for i := col; i >= 0; i-- {
+		cell := buffer.GetRawCell(uint16(i), uint64(row))
+		if cell == nil {
+			break
+		}
+		if isRuneWordSelectionMarker(cell.Rune()) {
+			break
+		}
+		start = i
 	}
-	buffer.selectionEnd = &Position{
-		Col:  int(end),
-		Line: int(row),
-	}
-
-	buffer.selectionComplete = true
-	buffer.emitDisplayChange()
+	return start
 }
 
 // bounds for word selection
@@ -170,29 +160,15 @@ func isRuneURLSelectionMarker(r rune) bool {
 }
 
 func (buffer *Buffer) GetSelectedText() string {
-	if buffer.selectionStart == nil || buffer.selectionEnd == nil {
+	start, end := buffer.getActualSelection()
+	if start == nil || end == nil {
 		return ""
 	}
 
-	var x1, x2, y1, y2 int
-
-	if buffer.selectionStart.Line > buffer.selectionEnd.Line || (buffer.selectionStart.Line == buffer.selectionEnd.Line && buffer.selectionStart.Col > buffer.selectionEnd.Col) {
-		y2 = buffer.selectionStart.Line
-		y1 = buffer.selectionEnd.Line
-		x2 = buffer.selectionStart.Col
-		x1 = buffer.selectionEnd.Col
-	} else {
-		y1 = buffer.selectionStart.Line
-		y2 = buffer.selectionEnd.Line
-		x1 = buffer.selectionStart.Col
-		x2 = buffer.selectionEnd.Col
-	}
-
 	var builder strings.Builder
-	builder.Grow( int(buffer.terminalState.viewWidth) * (y2 - y1 + 1)) // reserve space to minimize allocations
+	builder.Grow( int(buffer.terminalState.viewWidth) * (end.Line - start.Line + 1)) // reserve space to minimize allocations
 
-	for row := y1; row <= y2; row++ {
-
+	for row := start.Line; row <= end.Line; row++ {
 		if row >= len(buffer.lines) {
 			break
 		}
@@ -201,13 +177,13 @@ func (buffer *Buffer) GetSelectedText() string {
 
 		minX := 0
 		maxX := int(buffer.terminalState.viewWidth) - 1
-		if row == y1 {
-			minX = x1
+		if row == start.Line {
+			minX = start.Col
 		} else if !line.wrapped {
 			builder.WriteString("\n")
 		}
-		if row == y2 {
-			maxX = x2
+		if row == end.Line {
+			maxX = end.Col
 		}
 
 		for col := minX; col <= maxX; col++ {
@@ -225,25 +201,34 @@ func (buffer *Buffer) GetSelectedText() string {
 	return builder.String()
 }
 
-func (buffer *Buffer) StartSelection(col uint16, viewRow uint16) {
+func (buffer *Buffer) StartSelection(col uint16, viewRow uint16, mode SelectionMode) {
 	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
-	buffer.selectionComplete = false
+	buffer.selectionMode = mode
 
 	buffer.selectionStart = &Position {
 		Col:  int(col),
 		Line: int(row),
 	}
 
-	buffer.selectionEnd = nil
-}
-
-func (buffer *Buffer) EndSelection(col uint16, viewRow uint16, complete bool) {
-
-	if buffer.selectionComplete {
-		return
+	if mode == SelectionChar {
+		buffer.selectionEnd = nil
+	} else {
+		buffer.selectionEnd = &Position {
+			Col: int(col),
+			Line: int(row),
+		}
 	}
 
-	buffer.selectionComplete = complete
+	buffer.isSelectionComplete = false
+
+	buffer.emitDisplayChange()
+}
+
+func (buffer *Buffer) ExtendSelection(col uint16, viewRow uint16, complete bool) {
+
+	if buffer.isSelectionComplete {
+		return
+	}
 
 	defer buffer.emitDisplayChange()
 
@@ -254,47 +239,82 @@ func (buffer *Buffer) EndSelection(col uint16, viewRow uint16, complete bool) {
 
 	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
 
-	if int(col) == buffer.selectionStart.Col && int(row) == int(buffer.selectionStart.Line) && complete {
-		return
+	buffer.selectionEnd = &Position {
+		Col: int(col),
+		Line: int(row),
 	}
 
-	buffer.selectionEnd = &Position{
-		Col:  int(col),
-		Line: int(row),
+	if complete {
+		buffer.isSelectionComplete = true
 	}
 }
 
 func (buffer *Buffer) ClearSelection() {
 	buffer.selectionStart = nil
 	buffer.selectionEnd = nil
-	buffer.selectionComplete = true
+	buffer.isSelectionComplete = true
 
 	buffer.emitDisplayChange()
 }
 
-func (buffer *Buffer) InSelection(col uint16, row uint16) bool {
-
+func (buffer *Buffer) getActualSelection() (*Position, *Position) {
 	if buffer.selectionStart == nil || buffer.selectionEnd == nil {
+		return nil, nil
+	}
+
+	start := &Position {}
+	end := &Position {}
+
+	if comparePositions(buffer.selectionStart, buffer.selectionEnd) >= 0 {
+		start.Col = buffer.selectionStart.Col
+		start.Line = buffer.selectionStart.Line
+
+		end.Col = buffer.selectionEnd.Col
+		end.Line = buffer.selectionEnd.Line
+	} else {
+		start.Col = buffer.selectionEnd.Col
+		start.Line = buffer.selectionEnd.Line
+
+		end.Col = buffer.selectionStart.Col
+		end.Line = buffer.selectionStart.Line
+	}
+
+	switch buffer.selectionMode {
+	case SelectionChar:
+		// no action
+
+	case SelectionWord:
+		start.Col = buffer.findBeginningOfWord(start.Col, start.Line)
+		end.Col = buffer.findEndOfWord(end.Col, end.Line)
+
+	case SelectionLine:
+		start.Col = 0
+		end.Col = int(buffer.ViewWidth() - 1)
+	}
+
+	if start.Line >= len(buffer.lines) {
+		start.Col = 0
+	} else if start.Col >= len(buffer.lines[start.Line].cells) {
+		start.Col = len(buffer.lines[start.Line].cells)
+	}
+
+	if end.Line >= len(buffer.lines) || end.Col >= len(buffer.lines[end.Line].cells) {
+		end.Col = int(buffer.ViewWidth() - 1)
+	}
+
+	return start, end
+}
+
+func (buffer *Buffer) InSelection(col uint16, row uint16) bool {
+	start, end := buffer.getActualSelection()
+	if start == nil || end == nil {
 		return false
 	}
 
-	var x1, x2, y1, y2 int
-
-	// first, let's put the selection points in the correct order, earliest first
-	if buffer.selectionStart.Line > buffer.selectionEnd.Line || (buffer.selectionStart.Line == buffer.selectionEnd.Line && buffer.selectionStart.Col > buffer.selectionEnd.Col) {
-		y2 = buffer.selectionStart.Line
-		y1 = buffer.selectionEnd.Line
-		x2 = buffer.selectionStart.Col
-		x1 = buffer.selectionEnd.Col
-	} else {
-		y1 = buffer.selectionStart.Line
-		y2 = buffer.selectionEnd.Line
-		x1 = buffer.selectionStart.Col
-		x2 = buffer.selectionEnd.Col
-	}
-
 	rawY := int(buffer.convertViewLineToRawLine(row) - uint64(buffer.terminalState.scrollLinesFromBottom))
-	return (rawY > y1 || (rawY == y1 && int(col) >= x1)) && (rawY < y2 || (rawY == y2 && int(col) <= x2))
+
+	return (rawY > start.Line || (rawY == start.Line && int(col) >= start.Col)) &&
+		(rawY < end.Line || (rawY == end.Line && int(col) <= end.Col))
 }
 
 func (buffer *Buffer) IsDirty() bool {

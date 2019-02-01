@@ -54,6 +54,7 @@ type GUI struct {
 	prevLeftClickY    uint16
 	leftClickTime     time.Time
 	leftClickCount    int  // number of clicks in a serie - single click, double click, or triple click
+	mouseMovedAfterSelectionStarted bool
 }
 
 func Min(x, y int) int {

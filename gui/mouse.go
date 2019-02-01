@@ -7,6 +7,7 @@ import (
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/liamg/aminal/terminal"
 	"time"
+	"github.com/liamg/aminal/buffer"
 )
 
 func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
@@ -39,7 +40,7 @@ func (gui *GUI) mouseMoveCallback(w *glfw.Window, px float64, py float64) {
 	x, y := gui.convertMouseCoordinates(px, py)
 
 	if gui.mouseDown {
-		gui.terminal.ActiveBuffer().EndSelection(x, y, false)
+		gui.terminal.ActiveBuffer().ExtendSelection(x, y, false)
 	} else {
 
 		hint := gui.terminal.ActiveBuffer().GetHintAtPosition(x, y)
@@ -48,7 +49,6 @@ func (gui *GUI) mouseMoveCallback(w *glfw.Window, px float64, py float64) {
 		} else {
 			gui.setOverlay(nil)
 		}
-
 	}
 
 	if url := gui.terminal.ActiveBuffer().GetURLAtPosition(x, y); url != "" {
@@ -109,20 +109,28 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 			gui.mouseDown = true
 
 			clickCount := gui.updateLeftClickCount(x, y)
-			if clickCount == 1 || !activeBuffer.IsSelectionComplete() {
-				activeBuffer.StartSelection(x, y)
-			} else {
-				switch clickCount {
-				case 2:
-					activeBuffer.SelectWordAtPosition(x, y)
-				case 3:
-					activeBuffer.SelectLineAtPosition(x, y)
-				}
+			switch clickCount {
+			case 1:
+				activeBuffer.StartSelection(x, y, buffer.SelectionChar)
+			case 2:
+				activeBuffer.StartSelection(x, y, buffer.SelectionWord)
+			case 3:
+				activeBuffer.StartSelection(x, y, buffer.SelectionLine)
 			}
+			gui.mouseMovedAfterSelectionStarted = false
+
 		} else if action == glfw.Release {
 			gui.mouseDown = false
-			activeBuffer.EndSelection(x, y, true)
 
+			if x != gui.prevLeftClickX || y != gui.prevLeftClickY {
+				gui.mouseMovedAfterSelectionStarted = true
+			}
+
+			if gui.leftClickCount != 1 || gui.mouseMovedAfterSelectionStarted {
+				activeBuffer.ExtendSelection(x, y, true)
+			}
+
+			// Do copy to clipboard *or* open URL, but not both.
 			handled := false
 			if gui.config.CopyAndPasteWithMouse {
 				selectedText := activeBuffer.GetSelectedText()
