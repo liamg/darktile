@@ -54,6 +54,7 @@ type GUI struct {
 	prevLeftClickY    uint16
 	leftClickTime     time.Time
 	leftClickCount    int  // number of clicks in a serie - single click, double click, or triple click
+	internalResize    bool
 }
 
 func Min(x, y int) int {
@@ -146,6 +147,7 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		terminalAlpha:     1,
 		keyboardShortcuts: shortcuts,
 		resizeLock:        &sync.Mutex{},
+		internalResize:    false,
 	}, nil
 }
 
@@ -183,7 +185,9 @@ func (gui *GUI) resizeToTerminal(newCols uint, newRows uint) {
 	gui.resizeCache = &ResizeCache{roundedWidth, roundedHeight, newCols, newRows}
 
 	gui.logger.Debugf("Resizing window to %dx%d", roundedWidth, roundedHeight)
+	gui.internalResize = true
 	gui.window.SetSize(roundedWidth, roundedHeight) // will trigger resize()
+	gui.internalResize = false
 }
 
 func (gui *GUI) generateDefaultCell(reverse bool) {
@@ -213,8 +217,10 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 		return
 	}
 
-	gui.resizeLock.Lock()
-	defer gui.resizeLock.Unlock()
+	if gui.internalResize == false {
+		gui.resizeLock.Lock()
+		defer gui.resizeLock.Unlock()
+	}
 
 	gui.logger.Debugf("Initiating GUI resize to %dx%d", width, height)
 
