@@ -19,10 +19,10 @@ import (
 	"github.com/kbinani/screenshot"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
-	"github.com/liamg/aminal/platform"
 )
 
 type GUI struct {
@@ -519,6 +519,37 @@ func (gui *GUI) redraw() {
 					alpha = 0.5
 				}
 				gui.renderer.DrawCellText(builder.String(), uint(col), uint(y), alpha, colour, bold)
+			}
+		}
+
+	}
+	// underlines
+	for y := 0; y < lineCount; y++ {
+
+		if y < len(lines) {
+
+			span := 0
+			col := 0
+			colour := [3]float32{0, 0, 0}
+			cells := lines[y].Cells()
+
+			for x := 0; x < colCount; x++ {
+				if x < len(cells) {
+					cell := cells[x]
+					if span > 0 && (!cell.Attr().Underline || colour != cell.Fg()) {
+						gui.renderer.DrawUnderline(span, uint(col), uint(y), colour)
+						col = x
+						span = 0
+					}
+
+					colour = cell.Fg()
+					if cell.Attr().Underline {
+						span++
+					}
+				}
+			}
+			if span > 0 {
+				gui.renderer.DrawUnderline(span, uint(col), uint(y), colour)
 			}
 		}
 

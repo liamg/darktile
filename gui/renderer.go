@@ -46,7 +46,7 @@ func (r *OpenGLRenderer) CellHeight() float32 {
 	return r.cellHeight
 }
 
-func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
+func (r *OpenGLRenderer) newRectangleEx(x float32, y float32, width float32, height float32, colourAttr uint32) *rectangle {
 
 	rect := &rectangle{}
 
@@ -55,8 +55,8 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 
 	x = (x - halfAreaWidth) / halfAreaWidth
 	y = -(y - (halfAreaHeight)) / halfAreaHeight
-	w := r.cellWidth / halfAreaWidth
-	h := (r.cellHeight) / halfAreaHeight
+	w := width / halfAreaWidth
+	h := height / halfAreaHeight
 
 	rect.points = [18]float32{
 		x, y, 0,
@@ -89,6 +89,10 @@ func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *
 	rect.setColour([3]float32{0, 1, 0})
 
 	return rect
+}
+
+func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
+	return r.newRectangleEx(x, y, r.cellWidth, r.cellHeight, colourAttr)
 }
 
 func (rect *rectangle) Draw() {
@@ -226,6 +230,20 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 		rect.Free()
 	}
 
+}
+
+// DrawUnderline draws a line under 'span' characters starting at (col, row)
+func (r *OpenGLRenderer) DrawUnderline(span int, col uint, row uint, colour [3]float32) {
+	//calculate coordinates
+	x := float32(r.areaX) + float32(col)*r.cellWidth
+	y := float32(r.areaY) + (float32(row+1) * r.cellHeight)
+
+	rect := r.newRectangleEx(x, y, r.cellWidth*float32(span), r.cellHeight/8, r.colourAttr)
+
+	rect.setColour(colour)
+	rect.Draw()
+
+	rect.Free()
 }
 
 func (r *OpenGLRenderer) DrawCellText(text string, col uint, row uint, alpha float32, colour [3]float32, bold bool) {
