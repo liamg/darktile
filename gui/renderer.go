@@ -236,7 +236,7 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 func (r *OpenGLRenderer) DrawUnderline(span int, col uint, row uint, colour [3]float32) {
 	//calculate coordinates
 	x := float32(float32(col) * r.cellWidth)
-	y := (float32(row+1) - 0.08) * r.cellHeight
+	y := (float32(row+1))*r.cellHeight + r.fontMap.DefaultFont().MinY()*0.25
 
 	thickness := r.cellHeight / 16
 	if thickness < 1 {
