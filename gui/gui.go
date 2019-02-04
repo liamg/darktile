@@ -206,6 +206,20 @@ func (gui *GUI) generateDefaultCell(reverse bool) {
 	)
 }
 
+func (gui *GUI) getCursorBg(cell *buffer.Cell) (bg [3]float32) {
+	if gui.config.ColourScheme.Cursor != cell.Bg() {
+		bg = gui.config.ColourScheme.Cursor
+	} else {
+		bg = cell.Fg()
+	}
+	return bg
+}
+
+func (gui *GUI) getCursorFg(cell *buffer.Cell) (fg [3]float32) {
+	fg = cell.Bg()
+	return fg
+}
+
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
@@ -480,7 +494,12 @@ func (gui *GUI) redraw() {
 						}
 					}
 
-					gui.renderer.DrawCellBg(*cell, uint(x), uint(y), cursor, colour, false)
+					if cursor {
+						var bgColour config.Colour = gui.getCursorBg(cell)
+						colour = &bgColour
+					}
+
+					gui.renderer.DrawCellBg(*cell, uint(x), uint(y), colour, false)
 				}
 
 			}
@@ -500,7 +519,20 @@ func (gui *GUI) redraw() {
 			for x := 0; x < colCount; x++ {
 				if x < len(cells) {
 					cell := cells[x]
-					if builder.Len() > 0 && (cell.Attr().Dim != dim || cell.Attr().Bold != bold || colour != cell.Fg()) {
+
+					cursor := false
+					if gui.terminal.Modes().ShowCursor {
+						cursor = cx == uint(x) && cy == uint(y)
+					}
+
+					var newFg [3]float32
+					if cursor {
+						newFg = gui.getCursorFg(&cell)
+					} else {
+						newFg = cell.Fg()
+					}
+
+					if builder.Len() > 0 && (cell.Attr().Dim != dim || cell.Attr().Bold != bold || colour != newFg) {
 						var alpha float32 = 1.0
 						if dim {
 							alpha = 0.5
@@ -510,7 +542,7 @@ func (gui *GUI) redraw() {
 						builder.Reset()
 					}
 					dim = cell.Attr().Dim
-					colour = cell.Fg()
+					colour = newFg
 					bold = cell.Attr().Bold
 					r := cell.Rune()
 					if r == 0 {

@@ -199,23 +199,14 @@ func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
 	rect.Free()
 }
 
-func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor bool, colour *config.Colour, force bool) {
+func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, colour *config.Colour, force bool) {
 
 	var bg [3]float32
 
 	if colour != nil {
 		bg = *colour
 	} else {
-
-		if cursor {
-			if r.config.ColourScheme.Cursor != r.backgroundColour {
-				bg = r.config.ColourScheme.Cursor
-			} else {
-				bg = cell.Fg()
-			}
-		} else {
-			bg = cell.Bg()
-		}
+		bg = cell.Bg()
 	}
 
 	if bg != r.backgroundColour || force {
