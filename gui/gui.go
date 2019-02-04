@@ -19,10 +19,10 @@ import (
 	"github.com/kbinani/screenshot"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
-	"github.com/liamg/aminal/platform"
 )
 
 type GUI struct {
@@ -80,7 +80,6 @@ type ResizeCache struct {
 }
 
 func (g *GUI) GetMonitor() *glfw.Monitor {
-
 	if g.window == nil {
 		panic("to determine current monitor the window must be set")
 	}
@@ -107,7 +106,8 @@ func (g *GUI) GetMonitor() *glfw.Monitor {
 	}
 
 	if currentMonitor == nil {
-		panic("was not able to resolve current monitor")
+		// Monitor couldn't be found (xrandr scaling?) - default to primary
+		return glfw.GetPrimaryMonitor()
 	}
 
 	return currentMonitor
