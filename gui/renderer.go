@@ -235,10 +235,14 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, cursor
 // DrawUnderline draws a line under 'span' characters starting at (col, row)
 func (r *OpenGLRenderer) DrawUnderline(span int, col uint, row uint, colour [3]float32) {
 	//calculate coordinates
-	x := float32(r.areaX) + float32(col)*r.cellWidth
-	y := float32(r.areaY) + (float32(row+1) * r.cellHeight)
+	x := float32(float32(col) * r.cellWidth)
+	y := (float32(row+1) - 0.08) * r.cellHeight
 
-	rect := r.newRectangleEx(x, y, r.cellWidth*float32(span), r.cellHeight/8, r.colourAttr)
+	thickness := r.cellHeight / 16
+	if thickness < 1 {
+		thickness = 1
+	}
+	rect := r.newRectangleEx(x, y, r.cellWidth*float32(span), thickness, r.colourAttr)
 
 	rect.setColour(colour)
 	rect.Draw()
