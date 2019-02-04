@@ -639,3 +639,75 @@ func TestBufferMaxLines(t *testing.T) {
 	assert.Equal(t, "funny", b.lines[0].String())
 	assert.Equal(t, "world", b.lines[1].String())
 }
+
+func makeBufferForTestingSelection() *Buffer {
+	b := NewBuffer(NewTerminalState(80, 10, CellAttributes{}, 10))
+	b.terminalState.LineFeedMode = false
+
+	b.Write([]rune("The quick brown")...)
+	b.NewLine()
+	b.Write([]rune("fox jumps over")...)
+	b.NewLine()
+	b.Write([]rune("the lazy dog")...)
+
+	return b
+}
+
+func TestSelectingChars(t *testing.T) {
+	b := makeBufferForTestingSelection()
+
+	b.StartSelection(2, 0, SelectionChar)
+	b.ExtendSelection(4, 1, true)
+
+	assert.Equal(t, "e quick brown\nfox j", b.GetSelectedText())
+}
+
+func TestSelectingWordsDown(t *testing.T) {
+	b := makeBufferForTestingSelection()
+
+	b.StartSelection(6, 1, SelectionWord)
+	b.ExtendSelection(5, 2, true)
+
+	assert.Equal(t, "jumps over\nthe lazy", b.GetSelectedText())
+}
+
+func TestSelectingWordsUp(t *testing.T) {
+	b := makeBufferForTestingSelection()
+
+	b.StartSelection(5, 2, SelectionWord)
+	b.ExtendSelection(6, 1, true)
+
+	assert.Equal(t, "jumps over\nthe lazy", b.GetSelectedText())
+}
+
+func TestSelectingLinesDown(t *testing.T) {
+	b := makeBufferForTestingSelection()
+
+	b.StartSelection(6, 1, SelectionLine)
+	b.ExtendSelection(4, 2, true)
+
+	assert.Equal(t, "fox jumps over\nthe lazy dog", b.GetSelectedText())
+}
+
+func TestSelectingLineUp(t *testing.T) {
+	b := makeBufferForTestingSelection()
+
+	b.StartSelection(8, 2, SelectionLine)
+	b.ExtendSelection(3, 1, true)
+
+	assert.Equal(t, "fox jumps over\nthe lazy dog", b.GetSelectedText())
+}
+
+func TestSelectingAfterText(t *testing.T) {
+	b := makeBufferForTestingSelection()
+
+	b.StartSelection(6, 3, SelectionChar)
+	b.ExtendSelection(6, 3, true)
+
+	start, end := b.getActualSelection()
+
+	assert.Equal(t, start.Col, 0)
+	assert.Equal(t, start.Line, 3)
+	assert.Equal(t, end.Col, 79)
+	assert.Equal(t, end.Line, 3)
+}
