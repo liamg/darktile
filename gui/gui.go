@@ -19,10 +19,10 @@ import (
 	"github.com/kbinani/screenshot"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
 	"go.uber.org/zap"
-	"github.com/liamg/aminal/platform"
 )
 
 type GUI struct {
@@ -50,12 +50,12 @@ type GUI struct {
 	arrowCursor       *glfw.Cursor
 	defaultCell       *buffer.Cell
 
-	prevLeftClickX    uint16
-	prevLeftClickY    uint16
-	leftClickTime     time.Time
-	leftClickCount    int  // number of clicks in a serie - single click, double click, or triple click
+	prevLeftClickX                  uint16
+	prevLeftClickY                  uint16
+	leftClickTime                   time.Time
+	leftClickCount                  int // number of clicks in a serie - single click, double click, or triple click
 	mouseMovedAfterSelectionStarted bool
-	internalResize    bool
+	internalResize                  bool
 }
 
 func Min(x, y int) int {
@@ -113,23 +113,32 @@ func (g *GUI) GetMonitor() *glfw.Monitor {
 	return currentMonitor
 }
 
-// RecalculateDpiScale calculates dpi scale in comparison with "standard" monitor's dpi values
-func (g *GUI) RecalculateDpiScale() {
+// SetDPIScale sets the GUI DPI scale from user configuration (if set)
+// or by calculating it from the monitor's configuration and size.
+func (g *GUI) SetDPIScale() {
+	if g.config.DPIScale > 0 {
+		g.dpiScale = g.config.DPIScale
+		return
+	}
+	g.dpiScale = g.calculateDpiScale()
+}
+
+// calculateDpiScale determines the DPI scale in comparison with "standard" monitor's DPI values.
+func (g *GUI) calculateDpiScale() float32 {
 	const standardDpi = 96
 	const mmPerInch = 25.4
+
 	m := g.GetMonitor()
 	widthMM, _ := m.GetPhysicalSize()
-
 	if widthMM == 0 {
-		g.dpiScale = 1.0
-	} else {
-		monitorDpi := float32(m.GetVideoMode().Width) / (float32(widthMM) / mmPerInch)
-		g.dpiScale = monitorDpi / standardDpi
+		return 1.0
 	}
+
+	monitorDpi := float32(m.GetVideoMode().Width) / (float32(widthMM) / mmPerInch)
+	return monitorDpi / standardDpi
 }
 
 func New(config *config.Config, terminal *terminal.Terminal, logger *zap.SugaredLogger) (*GUI, error) {
-
 	shortcuts, err := config.KeyMapping.GenerateActionMap()
 	if err != nil {
 		return nil, err
@@ -279,7 +288,7 @@ func (gui *GUI) Render() error {
 	gui.logger.Debugf("Creating window...")
 	var err error
 	gui.window, err = gui.createWindow()
-	gui.RecalculateDpiScale()
+	gui.SetDPIScale()
 	gui.window.SetSize(int(float32(gui.width)*gui.dpiScale),
 		int(float32(gui.height)*gui.dpiScale))
 	if err != nil {
