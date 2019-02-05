@@ -80,7 +80,6 @@ type ResizeCache struct {
 }
 
 func (g *GUI) GetMonitor() *glfw.Monitor {
-
 	if g.window == nil {
 		panic("to determine current monitor the window must be set")
 	}
@@ -107,7 +106,8 @@ func (g *GUI) GetMonitor() *glfw.Monitor {
 	}
 
 	if currentMonitor == nil {
-		panic("was not able to resolve current monitor")
+		// Monitor couldn't be found (xrandr scaling?) - default to primary
+		return glfw.GetPrimaryMonitor()
 	}
 
 	return currentMonitor
