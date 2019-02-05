@@ -114,6 +114,7 @@ shell = "/bin/bash"         # The shell to run for the terminal session. Default
 search_url = "https://www.google.com/search?q=$QUERY" # The search engine to use for the "search selected text" action. Defaults to google. Set this to your own search url using $QUERY as the keywords to replace when searching.
 max_lines = 1000            # Maximum number of lines in the terminal buffer.
 copy_and_paste_with_mouse = true # Text selected with the mouse is copied to the clipboard on end selection, and is pasted on right mouse button click.
+dpi-scale = 0.0             # Override DPI scale. Defaults to 0.0 (let Aminal determine the DPI scale itself).
 
 [colours]
   cursor        = "#e8dfd6" 
