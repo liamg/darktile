@@ -10,10 +10,11 @@ import (
 )
 
 type SelectionMode int
+
 const (
-	SelectionChar SelectionMode = iota        // char-by-char selection
-	SelectionWord SelectionMode = iota        // by word selection
-	SelectionLine SelectionMode = iota        // whole line selection
+	SelectionChar SelectionMode = iota // char-by-char selection
+	SelectionWord SelectionMode = iota // by word selection
+	SelectionLine SelectionMode = iota // whole line selection
 )
 
 type Buffer struct {
@@ -214,7 +215,7 @@ func (buffer *Buffer) StartSelection(col uint16, viewRow uint16, mode SelectionM
 		buffer.selectionEnd = nil
 	} else {
 		buffer.selectionEnd = &Position {
-			Col: int(col),
+			Col:  int(col),
 			Line: int(row),
 		}
 	}
@@ -240,7 +241,7 @@ func (buffer *Buffer) ExtendSelection(col uint16, viewRow uint16, complete bool)
 	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
 
 	buffer.selectionEnd = &Position {
-		Col: int(col),
+		Col:  int(col),
 		Line: int(row),
 	}
 
@@ -665,7 +666,7 @@ func (buffer *Buffer) Write(runes ...rune) {
 			}
 
 			for int(buffer.CursorColumn()) >= len(line.cells) {
-				line.cells = append(line.cells, buffer.terminalState.DefaultCell(int(buffer.CursorColumn()) == len(line.cells)))
+				line.Append(buffer.terminalState.DefaultCell(int(buffer.CursorColumn()) == len(line.cells)))
 			}
 			line.cells[buffer.terminalState.cursorX].attr = buffer.terminalState.CursorAttr
 			line.cells[buffer.terminalState.cursorX].setRune(r)
@@ -681,7 +682,7 @@ func (buffer *Buffer) Write(runes ...rune) {
 
 				newLine := buffer.getCurrentLine()
 				if len(newLine.cells) == 0 {
-					newLine.cells = append(newLine.cells, buffer.terminalState.DefaultCell(true))
+					newLine.Append(buffer.terminalState.DefaultCell(true))
 				}
 				cell := &newLine.cells[0]
 				cell.setRune(r)
@@ -696,7 +697,7 @@ func (buffer *Buffer) Write(runes ...rune) {
 		} else {
 
 			for int(buffer.CursorColumn()) >= len(line.cells) {
-				line.cells = append(line.cells, buffer.terminalState.DefaultCell(int(buffer.CursorColumn()) == len(line.cells)))
+				line.Append(buffer.terminalState.DefaultCell(int(buffer.CursorColumn()) == len(line.cells)))
 			}
 
 			cell := &line.cells[buffer.CursorColumn()]
@@ -909,14 +910,12 @@ func (buffer *Buffer) EraseLineFromCursor() {
 			line.cells = line.cells[:buffer.terminalState.cursorX]
 		}
 	}
-
 	max := int(buffer.ViewWidth()) - len(line.cells)
 
-	buffer.SaveCursor()
 	for i := 0; i < max; i++ {
-		buffer.Write(0)
+		line.Append(buffer.terminalState.DefaultCell(true))
 	}
-	buffer.RestoreCursor()
+
 }
 
 func (buffer *Buffer) EraseDisplay() {
@@ -969,11 +968,9 @@ func (buffer *Buffer) EraseDisplayFromCursor() {
 	}
 
 	line.cells = line.cells[:max]
-	for i := buffer.terminalState.cursorY + 1; i < buffer.ViewHeight(); i++ {
-		rawLine := buffer.convertViewLineToRawLine(i)
-		if int(rawLine) < len(buffer.lines) {
-			buffer.lines[int(rawLine)].cells = []Cell{}
-		}
+
+	for rawLine := buffer.convertViewLineToRawLine(buffer.terminalState.cursorY) + 1; int(rawLine) < len(buffer.lines); rawLine++ {
+		buffer.lines[int(rawLine)].cells = []Cell{}
 	}
 }
 
@@ -1061,7 +1058,7 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 				if moveCount > len(nextLine.cells) {
 					moveCount = len(nextLine.cells)
 				}
-				line.cells = append(line.cells, nextLine.cells[:moveCount]...)
+				line.Append(nextLine.cells[:moveCount]...)
 				if moveCount == len(nextLine.cells) {
 
 					if i+offset <= int(buffer.terminalState.cursorY) {
