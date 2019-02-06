@@ -37,7 +37,7 @@ var csiSequences = []csiMapping{
 	{id: 'D', handler: csiCursorBackwardHandler, description: "Cursor Backward Ps Times (default = 1) (CUB)"},
 	{id: 'E', handler: csiCursorNextLineHandler, description: "Cursor Next Line Ps Times (default = 1) (CNL)"},
 	{id: 'F', handler: csiCursorPrecedingLineHandler, description: "Cursor Preceding Line Ps Times (default = 1) (CPL)"},
-	{id: 'G', handler: csiCursorCharacterAbsoluteHandler, description: "Cursor Character Absolute  [column] (default = [row,1]) (CHA)"},
+	{id: 'G', handler: csiCursorCharacterAbsoluteHandler, description: "Cursor Horizontal Absolute  [column] (default = [row,1]) (CHA)"},
 	{id: 'H', handler: csiCursorPositionHandler, description: "Cursor Position [row;column] (default = [1,1]) (CUP)"},
 	{id: 'J', handler: csiEraseInDisplayHandler, description: "Erase in Display (ED), VT100"},
 	{id: 'K', handler: csiEraseInLineHandler, description: "Erase in Line (EL), VT100"},
