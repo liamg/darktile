@@ -6,7 +6,6 @@ import (
 	"image/png"
 	"math"
 	"os"
-	"runtime"
 	"strconv"
 	"strings"
 	"sync"
@@ -295,9 +294,6 @@ func (gui *GUI) Close() {
 }
 
 func (gui *GUI) Render() error {
-
-	gui.logger.Debugf("Locking OS thread...")
-	runtime.LockOSThread()
 
 	gui.logger.Debugf("Creating window...")
 	var err error

@@ -1104,27 +1104,27 @@ func (buffer *Buffer) getMaxLines() uint64 {
 	return result
 }
 
-func (buffer *Buffer) Save(path string) {
+func (buffer *Buffer) SaveViewLines(path string) {
 	f, err := os.Create(path)
 	if err != nil {
 		panic(err)
 	}
 	defer f.Close()
 
-	for _, line := range buffer.lines {
-		f.WriteString(line.String())
+	for i := uint16(0); i <= buffer.ViewHeight(); i++ {
+		f.WriteString(buffer.getViewLine(i).String())
 	}
 }
 
-func (buffer *Buffer) Compare(path string) bool {
+func (buffer *Buffer) CompareViewLines(path string) bool {
 	f, err := ioutil.ReadFile(path)
 	if err != nil {
 		panic(err)
 	}
 
 	bufferContent := []byte{}
-	for _, line := range buffer.lines {
-		lineBytes := []byte(line.String())
+	for i := uint16(0); i <= buffer.ViewHeight(); i++ {
+		lineBytes := []byte(buffer.getViewLine(i).String())
 		bufferContent = append(bufferContent, lineBytes...)
 	}
 	return bytes.Equal(f, bufferContent)
