@@ -593,15 +593,7 @@ func (buffer *Buffer) Index() {
 		if uint(buffer.terminalState.cursorY) < buffer.terminalState.bottomMargin {
 			buffer.terminalState.cursorY++
 		} else {
-
-			topIndex := buffer.convertViewLineToRawLine(uint16(buffer.terminalState.topMargin))
-			bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.terminalState.bottomMargin))
-
-			for i := topIndex; i < bottomIndex; i++ {
-				buffer.lines[i] = buffer.lines[i+1]
-			}
-
-			buffer.lines[bottomIndex] = newLine()
+			buffer.AreaScrollUp(1)
 		}
 
 		return
@@ -623,25 +615,9 @@ func (buffer *Buffer) ReverseIndex() {
 
 	defer buffer.emitDisplayChange()
 
-	if buffer.InScrollableRegion() {
-
-		if uint(buffer.terminalState.cursorY) > buffer.terminalState.topMargin {
-			buffer.terminalState.cursorY--
-		} else {
-
-			topIndex := buffer.convertViewLineToRawLine(uint16(buffer.terminalState.topMargin))
-			bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.terminalState.bottomMargin))
-
-			for i := bottomIndex; i > topIndex; i-- {
-				buffer.lines[i] = buffer.lines[i-1]
-			}
-
-			buffer.lines[topIndex] = newLine()
-		}
-		return
-	}
-
-	if buffer.terminalState.cursorY > 0 {
+	if uint(buffer.terminalState.cursorY) == buffer.terminalState.topMargin {
+		buffer.AreaScrollDown(1)
+	} else if buffer.terminalState.cursorY > 0 {
 		buffer.terminalState.cursorY--
 	}
 }
