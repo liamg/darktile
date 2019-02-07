@@ -53,8 +53,11 @@ func enter(terminal *terminal.Terminal) {
 	terminal.Write([]byte("\n"))
 }
 
-func TestCursorMovement(t *testing.T) {
+func TestMain(m *testing.M) {
+	testCursorMovement()
+}
 
+func testCursorMovement() {
 	testFunc := func(term *terminal.Terminal, g *gui.GUI) {
 		sleep()
 		send(term, "vttest\n")
@@ -62,8 +65,8 @@ func TestCursorMovement(t *testing.T) {
 		send(term, "1\n")
 		sleep()
 
-		if term.ActiveBuffer().Compare("vttest/test-cursor-movement-1") == false {
-			t.Error(fmt.Sprint("ActiveBuffer doesn't match vttest template"))
+		if term.ActiveBuffer().CompareViewLines("vttest/test-cursor-movement-1") == false {
+			os.Exit(terminate(fmt.Sprintf("ActiveBuffer doesn't match vttest template vttest/test-cursor-movement-1")))
 		}
 		g.Screenshot ("test-cursor-movement-1.png")
 		compareImages("vttest/test-cursor-movement-1.png", "test-cursor-movement-1.png")
