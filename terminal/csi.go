@@ -299,7 +299,7 @@ func csiScrollUpHandler(params []string, terminal *Terminal) error {
 		}
 	}
 	terminal.logger.Debugf("Scrolling up %d", distance)
-	terminal.ScrollUp(uint16(distance))
+	terminal.AreaScrollUp(uint16(distance))
 	return nil
 }
 
@@ -370,7 +370,7 @@ func csiScrollDownHandler(params []string, terminal *Terminal) error {
 		}
 	}
 	terminal.logger.Debugf("Scrolling down %d", distance)
-	terminal.ScrollDown(uint16(distance))
+	terminal.AreaScrollDown(uint16(distance))
 	return nil
 }
 

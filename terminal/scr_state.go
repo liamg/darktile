@@ -9,7 +9,7 @@ func screenStateHandler(pty chan rune, terminal *Terminal) error {
 		// hide cursor?
 		buffer := terminal.ActiveBuffer()
 		terminal.ResetVerticalMargins()
-		buffer.ScrollToEnd()
+		terminal.ScrollToEnd()
 
 		// Fill the whole screen with E's
 		count := buffer.ViewHeight() * buffer.ViewWidth()

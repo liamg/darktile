@@ -10,10 +10,11 @@ import (
 )
 
 type SelectionMode int
+
 const (
-	SelectionChar SelectionMode = iota        // char-by-char selection
-	SelectionWord SelectionMode = iota        // by word selection
-	SelectionLine SelectionMode = iota        // whole line selection
+	SelectionChar SelectionMode = iota // char-by-char selection
+	SelectionWord SelectionMode = iota // by word selection
+	SelectionLine SelectionMode = iota // whole line selection
 )
 
 type Buffer struct {
@@ -325,10 +326,6 @@ func (buffer *Buffer) IsDirty() bool {
 	return true
 }
 
-func (buffer *Buffer) GetScrollOffset() uint {
-	return buffer.terminalState.scrollLinesFromBottom
-}
-
 func (buffer *Buffer) HasScrollableRegion() bool {
 	return buffer.terminalState.topMargin > 0 || buffer.terminalState.bottomMargin < uint(buffer.ViewHeight())-1
 }
@@ -337,44 +334,47 @@ func (buffer *Buffer) InScrollableRegion() bool {
 	return buffer.HasScrollableRegion() && uint(buffer.terminalState.cursorY) >= buffer.terminalState.topMargin && uint(buffer.terminalState.cursorY) <= buffer.terminalState.bottomMargin
 }
 
-func (buffer *Buffer) ScrollDown(lines uint16) {
+// NOTE: bottom is exclusive
+func (buffer *Buffer) getAreaScrollRange() (top uint64, bottom uint64) {
+	top = buffer.convertViewLineToRawLine(uint16(buffer.terminalState.topMargin))
+	bottom = buffer.convertViewLineToRawLine(uint16(buffer.terminalState.bottomMargin)) + 1
+	if bottom > uint64(len(buffer.lines)) {
+		bottom = uint64(len(buffer.lines))
+	}
+	return top, bottom
+}
 
+func (buffer *Buffer) AreaScrollDown(lines uint16) {
 	defer buffer.emitDisplayChange()
 
-	if buffer.Height() < int(buffer.ViewHeight()) {
-		return
-	}
+	// NOTE: bottom is exclusive
+	top, bottom := buffer.getAreaScrollRange()
 
-	if uint(lines) > buffer.terminalState.scrollLinesFromBottom {
-		lines = uint16(buffer.terminalState.scrollLinesFromBottom)
+	for i := bottom; i > top; {
+		i--
+		from := i - uint64(lines)
+		if from >= top {
+			buffer.lines[i] = buffer.lines[from]
+		} else {
+			buffer.lines[i] = newLine()
+		}
 	}
-	buffer.terminalState.scrollLinesFromBottom -= uint(lines)
 }
 
-func (buffer *Buffer) ScrollUp(lines uint16) {
-
+func (buffer *Buffer) AreaScrollUp(lines uint16) {
 	defer buffer.emitDisplayChange()
 
-	if buffer.Height() < int(buffer.ViewHeight()) {
-		return
-	}
+	// NOTE: bottom is exclusive
+	top, bottom := buffer.getAreaScrollRange()
 
-	if uint(lines)+buffer.terminalState.scrollLinesFromBottom >= (uint(buffer.Height()) - uint(buffer.ViewHeight())) {
-		buffer.terminalState.scrollLinesFromBottom = uint(buffer.Height()) - uint(buffer.ViewHeight())
-	} else {
-		buffer.terminalState.scrollLinesFromBottom += uint(lines)
+	for i := top; i < bottom; i++ {
+		from := i + uint64(lines)
+		if from < bottom {
+			buffer.lines[i] = buffer.lines[from]
+		} else {
+			buffer.lines[i] = newLine()
+		}
 	}
-}
-
-func (buffer *Buffer) ScrollPageDown() {
-	buffer.ScrollDown(buffer.terminalState.viewHeight)
-}
-func (buffer *Buffer) ScrollPageUp() {
-	buffer.ScrollUp(buffer.terminalState.viewHeight)
-}
-func (buffer *Buffer) ScrollToEnd() {
-	defer buffer.emitDisplayChange()
-	buffer.terminalState.scrollLinesFromBottom = 0
 }
 
 func (buffer *Buffer) SaveCursor() {
