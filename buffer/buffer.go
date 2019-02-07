@@ -352,9 +352,8 @@ func (buffer *Buffer) AreaScrollDown(lines uint16) {
 
 	for i := bottom; i > top; {
 		i--
-		from := i - uint64(lines)
-		if from >= top {
-			buffer.lines[i] = buffer.lines[from]
+		if i >= top+uint64(lines) {
+			buffer.lines[i] = buffer.lines[i-uint64(lines)]
 		} else {
 			buffer.lines[i] = newLine()
 		}
