@@ -340,6 +340,8 @@ func (gui *GUI) Render() error {
 			gui.terminal.SetDirty()
 		}
 	})
+	gui.window.SetPosCallback(gui.windowPosChangeCallback)
+	glfw.SetMonitorCallback(gui.monitorChangeCallback)
 
 	gui.generateDefaultCell(false)
 
@@ -735,3 +737,12 @@ func (gui *GUI) Screenshot(path string) {
 	defer file.Close()
 	png.Encode(file, img)
 }
+
+func (gui *GUI) windowPosChangeCallback(w *glfw.Window, xpos int, ypos int) {
+	gui.SetDPIScale()
+}
+
+func (gui *GUI) monitorChangeCallback(monitor *glfw.Monitor, event glfw.MonitorEvent) {
+	gui.SetDPIScale()
+}
+

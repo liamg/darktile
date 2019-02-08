@@ -19,9 +19,11 @@ package platform
 //            PVOID                        lpPreviousValue,
 //            PSIZE_T                      lpReturnSize
 //      );
+//  typedef BOOL (* SetProcessDpiAwarenessContextType)(handle_t);
 //
 //  InitializeProcThreadAttributeListProcType pfnInitializeProcThreadAttributeList = NULL;
 //  UpdateProcThreadAttributeProcType pfnUpdateProcThreadAttribute = NULL;
+//  SetProcessDpiAwarenessContextType pfnSetProcessDpiAwarenessContext = NULL;
 //
 //  #define ProcThreadAttributePseudoConsole 22
 //
@@ -42,6 +44,10 @@ package platform
 //      STARTUPINFOW                 StartupInfo;
 //      LPPROC_THREAD_ATTRIBUTE_LIST lpAttributeList;
 //  } STARTUPINFOEXW, *LPSTARTUPINFOEXW;
+//
+//   #ifndef DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2
+//   #define DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 ((handle_t)-4)
+//   #endif
 //
 //  HMODULE hLibKernel32_Proc = NULL;
 //
@@ -65,6 +71,22 @@ package platform
 //          return -1;
 //      }
 //
+//      return 0;
+//  }
+//
+//  DWORD enableHiDpiSupport() {
+//      HMODULE hLibUser32_Proc = LoadLibrary( "User32.dll" );
+//      if( hLibUser32_Proc == NULL )
+//      {
+//          return -1;
+//      }
+//
+//      pfnSetProcessDpiAwarenessContext = (SetProcessDpiAwarenessContextType) GetProcAddress(hLibUser32_Proc, "SetProcessDpiAwarenessContext" );
+//      if( pfnInitializeProcThreadAttributeList == NULL )
+//      {
+//          return -1;
+//      }
+//      (*pfnSetProcessDpiAwarenessContext)( DPI_AWARENESS_CONTEXT_PER_MONITOR_AWARE_V2 );
 //      return 0;
 //  }
 //
@@ -152,6 +174,9 @@ var procsInitSucceeded = false
 
 func init() {
 	ret := int(C.initProcKernFuncs())
+	if ret == 0 {
+		ret = int(C.enableHiDpiSupport())
+	}
 	procsInitSucceeded = (ret == 0)
 }
 
