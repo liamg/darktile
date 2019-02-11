@@ -280,25 +280,25 @@ static void updateClipRect(_GLFWwindow* window)
 
 // Translates a GLFW standard cursor to a resource ID
 //
-static LPWSTR translateCursorShape(int shape)
+static int translateCursorShape(int shape)
 {
     switch (shape)
     {
         case GLFW_ARROW_CURSOR:
-            return IDC_ARROW;
+            return OCR_NORMAL;
         case GLFW_IBEAM_CURSOR:
-            return IDC_IBEAM;
+            return OCR_IBEAM;
         case GLFW_CROSSHAIR_CURSOR:
-            return IDC_CROSS;
+            return OCR_CROSS;
         case GLFW_HAND_CURSOR:
-            return IDC_HAND;
+            return OCR_HAND;
         case GLFW_HRESIZE_CURSOR:
-            return IDC_SIZEWE;
+            return OCR_SIZEWE;
         case GLFW_VRESIZE_CURSOR:
-            return IDC_SIZENS;
+            return OCR_SIZENS;
     }
 
-    return NULL;
+    return 0;
 }
 
 // Retrieves and translates modifier keys
@@ -1523,7 +1523,8 @@ int _glfwPlatformCreateCursor(_GLFWcursor* cursor,
 int _glfwPlatformCreateStandardCursor(_GLFWcursor* cursor, int shape)
 {
     cursor->win32.handle =
-        CopyCursor(LoadCursorW(NULL, translateCursorShape(shape)));
+        (HCURSOR)LoadImage(NULL, MAKEINTRESOURCE(translateCursorShape(shape)), IMAGE_CURSOR,
+                           0, 0, LR_DEFAULTSIZE | LR_SHARED);
     if (!cursor->win32.handle)
     {
         _glfwInputError(GLFW_PLATFORM_ERROR,
