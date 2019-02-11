@@ -154,12 +154,22 @@ func (terminal *Terminal) UsingMainBuffer() bool {
 }
 
 func (terminal *Terminal) GetScrollOffset() uint {
-	return terminal.ActiveBuffer().GetScrollOffset()
+	return terminal.terminalState.GetScrollOffset()
 }
 
-func (terminal *Terminal) ScrollDown(lines uint16) {
-	terminal.ActiveBuffer().ScrollDown(lines)
+func (terminal *Terminal) ScreenScrollDown(lines uint16) {
+	defer terminal.SetDirty()
+	buffer := terminal.ActiveBuffer()
 
+	if buffer.Height() < int(buffer.ViewHeight()) {
+		return
+	}
+
+	offset := terminal.terminalState.GetScrollOffset()
+	if uint(lines) > offset {
+		lines = uint16(offset)
+	}
+	terminal.terminalState.SetScrollOffset(offset - uint(lines))
 }
 
 func (terminal *Terminal) SetCharSize(w float32, h float32) {
@@ -167,18 +177,41 @@ func (terminal *Terminal) SetCharSize(w float32, h float32) {
 	terminal.charHeight = h
 }
 
-func (terminal *Terminal) ScrollUp(lines uint16) {
-	terminal.ActiveBuffer().ScrollUp(lines)
+func (terminal *Terminal) AreaScrollUp(lines uint16) {
+	terminal.ActiveBuffer().AreaScrollUp(lines)
+}
+
+func (terminal *Terminal) AreaScrollDown(lines uint16) {
+	terminal.ActiveBuffer().AreaScrollDown(lines)
+}
+
+func (terminal *Terminal) ScreenScrollUp(lines uint16) {
+	defer terminal.SetDirty()
+	buffer := terminal.ActiveBuffer()
+
+	if buffer.Height() < int(buffer.ViewHeight()) {
+		return
+	}
+
+	offset := terminal.terminalState.GetScrollOffset()
+
+	if uint(lines)+offset >= (uint(buffer.Height()) - uint(buffer.ViewHeight())) {
+		terminal.terminalState.SetScrollOffset(uint(buffer.Height()) - uint(buffer.ViewHeight()))
+	} else {
+		terminal.terminalState.SetScrollOffset(offset + uint(lines))
+	}
 }
 
 func (terminal *Terminal) ScrollPageDown() {
-	terminal.ActiveBuffer().ScrollPageDown()
+	terminal.ScreenScrollDown(terminal.terminalState.ViewHeight())
 }
 func (terminal *Terminal) ScrollPageUp() {
-	terminal.ActiveBuffer().ScrollPageUp()
+	terminal.ScreenScrollUp(terminal.terminalState.ViewHeight())
 }
+
 func (terminal *Terminal) ScrollToEnd() {
-	terminal.ActiveBuffer().ScrollToEnd()
+	defer terminal.SetDirty()
+	terminal.terminalState.SetScrollOffset(0)
 }
 
 func (terminal *Terminal) GetVisibleLines() []buffer.Line {

@@ -13,9 +13,9 @@ import (
 func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
 
 	if yoff > 0 {
-		gui.terminal.ScrollUp(1)
+		gui.terminal.ScreenScrollUp(1)
 	} else {
-		gui.terminal.ScrollDown(1)
+		gui.terminal.ScreenScrollDown(1)
 	}
 }
 

@@ -326,10 +326,6 @@ func (buffer *Buffer) IsDirty() bool {
 	return true
 }
 
-func (buffer *Buffer) GetScrollOffset() uint {
-	return buffer.terminalState.scrollLinesFromBottom
-}
-
 func (buffer *Buffer) HasScrollableRegion() bool {
 	return buffer.terminalState.topMargin > 0 || buffer.terminalState.bottomMargin < uint(buffer.ViewHeight())-1
 }
@@ -338,44 +334,46 @@ func (buffer *Buffer) InScrollableRegion() bool {
 	return buffer.HasScrollableRegion() && uint(buffer.terminalState.cursorY) >= buffer.terminalState.topMargin && uint(buffer.terminalState.cursorY) <= buffer.terminalState.bottomMargin
 }
 
-func (buffer *Buffer) ScrollDown(lines uint16) {
+// NOTE: bottom is exclusive
+func (buffer *Buffer) getAreaScrollRange() (top uint64, bottom uint64) {
+	top = buffer.convertViewLineToRawLine(uint16(buffer.terminalState.topMargin))
+	bottom = buffer.convertViewLineToRawLine(uint16(buffer.terminalState.bottomMargin)) + 1
+	if bottom > uint64(len(buffer.lines)) {
+		bottom = uint64(len(buffer.lines))
+	}
+	return top, bottom
+}
 
+func (buffer *Buffer) AreaScrollDown(lines uint16) {
 	defer buffer.emitDisplayChange()
 
-	if buffer.Height() < int(buffer.ViewHeight()) {
-		return
-	}
+	// NOTE: bottom is exclusive
+	top, bottom := buffer.getAreaScrollRange()
 
-	if uint(lines) > buffer.terminalState.scrollLinesFromBottom {
-		lines = uint16(buffer.terminalState.scrollLinesFromBottom)
+	for i := bottom; i > top; {
+		i--
+		if i >= top+uint64(lines) {
+			buffer.lines[i] = buffer.lines[i-uint64(lines)]
+		} else {
+			buffer.lines[i] = newLine()
+		}
 	}
-	buffer.terminalState.scrollLinesFromBottom -= uint(lines)
 }
 
-func (buffer *Buffer) ScrollUp(lines uint16) {
-
+func (buffer *Buffer) AreaScrollUp(lines uint16) {
 	defer buffer.emitDisplayChange()
 
-	if buffer.Height() < int(buffer.ViewHeight()) {
-		return
-	}
+	// NOTE: bottom is exclusive
+	top, bottom := buffer.getAreaScrollRange()
 
-	if uint(lines)+buffer.terminalState.scrollLinesFromBottom >= (uint(buffer.Height()) - uint(buffer.ViewHeight())) {
-		buffer.terminalState.scrollLinesFromBottom = uint(buffer.Height()) - uint(buffer.ViewHeight())
-	} else {
-		buffer.terminalState.scrollLinesFromBottom += uint(lines)
+	for i := top; i < bottom; i++ {
+		from := i + uint64(lines)
+		if from < bottom {
+			buffer.lines[i] = buffer.lines[from]
+		} else {
+			buffer.lines[i] = newLine()
+		}
 	}
-}
-
-func (buffer *Buffer) ScrollPageDown() {
-	buffer.ScrollDown(buffer.terminalState.viewHeight)
-}
-func (buffer *Buffer) ScrollPageUp() {
-	buffer.ScrollUp(buffer.terminalState.viewHeight)
-}
-func (buffer *Buffer) ScrollToEnd() {
-	defer buffer.emitDisplayChange()
-	buffer.terminalState.scrollLinesFromBottom = 0
 }
 
 func (buffer *Buffer) SaveCursor() {
@@ -595,15 +593,7 @@ func (buffer *Buffer) Index() {
 		if uint(buffer.terminalState.cursorY) < buffer.terminalState.bottomMargin {
 			buffer.terminalState.cursorY++
 		} else {
-
-			topIndex := buffer.convertViewLineToRawLine(uint16(buffer.terminalState.topMargin))
-			bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.terminalState.bottomMargin))
-
-			for i := topIndex; i < bottomIndex; i++ {
-				buffer.lines[i] = buffer.lines[i+1]
-			}
-
-			buffer.lines[bottomIndex] = newLine()
+			buffer.AreaScrollUp(1)
 		}
 
 		return
@@ -625,25 +615,9 @@ func (buffer *Buffer) ReverseIndex() {
 
 	defer buffer.emitDisplayChange()
 
-	if buffer.InScrollableRegion() {
-
-		if uint(buffer.terminalState.cursorY) > buffer.terminalState.topMargin {
-			buffer.terminalState.cursorY--
-		} else {
-
-			topIndex := buffer.convertViewLineToRawLine(uint16(buffer.terminalState.topMargin))
-			bottomIndex := buffer.convertViewLineToRawLine(uint16(buffer.terminalState.bottomMargin))
-
-			for i := bottomIndex; i > topIndex; i-- {
-				buffer.lines[i] = buffer.lines[i-1]
-			}
-
-			buffer.lines[topIndex] = newLine()
-		}
-		return
-	}
-
-	if buffer.terminalState.cursorY > 0 {
+	if uint(buffer.terminalState.cursorY) == buffer.terminalState.topMargin {
+		buffer.AreaScrollDown(1)
+	} else if buffer.terminalState.cursorY > 0 {
 		buffer.terminalState.cursorY--
 	}
 }

@@ -110,3 +110,15 @@ func (terminalState *TerminalState) TabReset() {
 		i += TabStep
 	}
 }
+
+func (terminalState *TerminalState) ViewHeight() uint16 {
+	return terminalState.viewHeight
+}
+
+func (terminalState *TerminalState) GetScrollOffset() uint {
+	return terminalState.scrollLinesFromBottom
+}
+
+func (terminalState *TerminalState) SetScrollOffset(offset uint) {
+	terminalState.scrollLinesFromBottom = offset
+}
