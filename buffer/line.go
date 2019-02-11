@@ -75,4 +75,8 @@ func (line *Line) CutCellsFromEnd(n int) []Cell {
 	return cut
 }
 
+func (line *Line) Append(cells ...Cell) {
+	line.cells = append(line.cells, cells...)
+}
+
 // -------------------------------------------------------
