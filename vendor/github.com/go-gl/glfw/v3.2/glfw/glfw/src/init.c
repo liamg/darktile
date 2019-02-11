@@ -130,6 +130,9 @@ GLFWAPI int glfwInit(void)
         return GLFW_FALSE;
     }
 
+#ifndef _GLFW_WIN32
+    _glfw.monitors = _glfwPlatformGetMonitors(&_glfw.monitorCount);
+#endif
     _glfwInitialized = GLFW_TRUE;
 
     _glfw.timerOffset = _glfwPlatformGetTimerValue();
