@@ -53,7 +53,8 @@
   branch = "master"
   name = "github.com/go-gl/glfw"
   packages = ["v3.2/glfw"]
-  revision = "691ee1b84c51ae625ed1aafebc915d3db3d63d66"
+  revision = "14db69009976890a990c14b47a04a91621597f9b"
+  source = "github.com/MaxRis/glfw"
 
 [[projects]]
   name = "github.com/gobuffalo/envy"
