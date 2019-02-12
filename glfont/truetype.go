@@ -64,7 +64,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale float32) (*Font, error)
 	gl.BindVertexArray(0)
 
 	//create new face to measure glyph dimensions
-	f.ttfFace = truetype.NewFace(f.ttf, &truetype.Options {
+	f.ttfFace = truetype.NewFace(f.ttf, &truetype.Options{
 		Size:    float64(f.scale),
 		DPI:     DPI,
 		Hinting: font.HintingFull,

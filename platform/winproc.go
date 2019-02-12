@@ -165,9 +165,9 @@ package platform
 import "C"
 import (
 	"errors"
+	"os"
 	"syscall"
 	"unicode/utf16"
-	"os"
 )
 
 var procsInitSucceeded = false
