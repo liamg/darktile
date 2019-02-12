@@ -20,7 +20,7 @@ func main() {
 	initialize(nil)
 }
 
-func initialize(fn callback) {
+func initialize(unitTestfunc callback) {
 	conf := getConfig()
 	logger, err := getLogger(conf)
 	if err != nil {
@@ -63,16 +63,16 @@ func initialize(fn callback) {
 		logger.Fatalf("Cannot start: %s", err)
 	}
 
-	if fn != nil {
-		go fn(terminal, g)
+	if unitTestfunc != nil {
+		go unitTestfunc(terminal, g)
+	} else {
+		go func() {
+			if err := guestProcess.Wait(); err != nil {
+				logger.Fatalf("Failed to wait for guest process: %s", err)
+			}
+			g.Close()
+		}()
 	}
-
-	go func() {
-		if err := guestProcess.Wait(); err != nil {
-			logger.Fatalf("Failed to wait for guest process: %s", err)
-		}
-		g.Close()
-	}()
 
 	if err := g.Render(); err != nil {
 		logger.Fatalf("Render error: %s", err)

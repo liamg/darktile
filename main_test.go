@@ -3,8 +3,10 @@
 package main
 
 import (
+	"flag"
 	"fmt"
 	"os"
+	"strings"
 	"testing"
 	"time"
 
@@ -13,6 +15,9 @@ import (
 
 	"github.com/carlogit/phash"
 )
+
+var termRef *terminal.Terminal
+var guiRef *gui.GUI
 
 func terminate(msg string) int {
 	defer fmt.Print(msg)
@@ -36,12 +41,13 @@ func hash(path string) string {
 	return imageHash
 }
 
-func compareImages(img1 string, img2 string) {
-	template := hash(img1)
-	screen := hash(img2)
+func compareImages(expected string, actual string) {
+	template := hash(expected)
+	screen := hash(actual)
 	distance := phash.GetDistance(template, screen)
 	if distance != 0 {
-		os.Exit(terminate(fmt.Sprintf("Screenshot doesn't match expected image. Distance of hashes difference: %d\n", distance)))
+		os.Exit(terminate(fmt.Sprintf("Screenshot \"%s\" doesn't match expected image \"%s\". Distance of hashes difference: %d\n",
+			actual, expected, distance)))
 	}
 }
 
@@ -53,50 +59,108 @@ func enter(terminal *terminal.Terminal) {
 	terminal.Write([]byte("\n"))
 }
 
-func TestMain(m *testing.M) {
-	testCursorMovement()
+func validateScreen(img string) {
+	guiRef.Screenshot(img)
+	compareImages(strings.Join([]string{"vttest/", img}, ""), img)
+
+	enter(termRef)
+	sleep()
 }
 
-func testCursorMovement() {
-	testFunc := func(term *terminal.Terminal, g *gui.GUI) {
-		sleep()
-		send(term, "vttest\n")
-		sleep()
-		send(term, "1\n")
-		sleep()
+func TestMain(m *testing.M) {
+	flag.Parse()
 
-		if term.ActiveBuffer().CompareViewLines("vttest/test-cursor-movement-1") == false {
-			os.Exit(terminate(fmt.Sprintf("ActiveBuffer doesn't match vttest template vttest/test-cursor-movement-1")))
-		}
-		g.Screenshot ("test-cursor-movement-1.png")
-		compareImages("vttest/test-cursor-movement-1.png", "test-cursor-movement-1.png")
+	go m.Run()
 
-		enter(term)
-		sleep()
-		g.Screenshot ("test-cursor-movement-2.png")
-		compareImages("vttest/test-cursor-movement-2.png", "test-cursor-movement-2.png")
-
-		enter(term)
-		sleep()
-		g.Screenshot ("test-cursor-movement-3.png")
-		compareImages("vttest/test-cursor-movement-3.png", "test-cursor-movement-3.png")
-
-		enter(term)
-		sleep()
-		g.Screenshot ("test-cursor-movement-4.png")
-		compareImages("vttest/test-cursor-movement-4.png", "test-cursor-movement-4.png")
-
-		enter(term)
-		sleep()
-		g.Screenshot ("test-cursor-movement-5.png")
-		compareImages("vttest/test-cursor-movement-5.png", "test-cursor-movement-5.png")
-
-		enter(term)
-		sleep()
-		g.Screenshot ("test-cursor-movement-6.png")
-		compareImages("vttest/test-cursor-movement-6.png", "test-cursor-movement-6.png")
-		os.Exit(0)
+	for f := range tests {
+		f()
 	}
+}
 
-	initialize(testFunc)
+var tests = make(chan func())
+
+func runMain(f func()) {
+	complete := make(chan bool, 1)
+	tests <- func() {
+		f()
+		complete <- true
+	}
+	<-complete
+}
+
+func TestCursorMovement(t *testing.T) {
+	runMain(func() {
+
+		testFunc := func(term *terminal.Terminal, g *gui.GUI) {
+			termRef = term; guiRef = g
+
+			sleep()
+			send(term, "vttest\n")
+			sleep()
+			send(term, "1\n")
+			sleep()
+
+			if term.ActiveBuffer().CompareViewLines("vttest/test-cursor-movement-1") == false {
+				os.Exit(terminate(fmt.Sprintf("ActiveBuffer doesn't match vttest template vttest/test-cursor-movement-1")))
+			}
+
+			validateScreen("test-cursor-movement-1.png")
+			validateScreen("test-cursor-movement-2.png")
+			validateScreen("test-cursor-movement-3.png")
+			validateScreen("test-cursor-movement-4.png")
+			validateScreen("test-cursor-movement-5.png")
+			validateScreen("test-cursor-movement-6.png")
+
+			g.Close()
+		}
+
+		initialize(testFunc)
+	})
+}
+
+func TestScreenFeatures(t *testing.T) {
+	runMain(func() {
+
+		testFunc := func(term *terminal.Terminal, g *gui.GUI) {
+			termRef = term; guiRef = g
+
+			sleep()
+			send(term, "vttest\n")
+			sleep()
+			send(term, "2\n")
+			sleep()
+
+			validateScreen("test-screen-features-1.png")
+			validateScreen("test-screen-features-2.png")
+			validateScreen("test-screen-features-3.png")
+			validateScreen("test-screen-features-4.png")
+			validateScreen("test-screen-features-5.png")
+			validateScreen("test-screen-features-6.png")
+			validateScreen("test-screen-features-7.png")
+			validateScreen("test-screen-features-8.png")
+			validateScreen("test-screen-features-9.png")
+			validateScreen("test-screen-features-10.png")
+
+			// 11th screen test is not passing https://github.com/liamg/aminal/issues/207
+			//g.Screenshot("vttest/test-screen-features-11.png")
+			//compareImages("vttest/test-screen-features-11.png", "vttest/test-screen-features-11.png")
+
+			enter(term)
+			sleep()
+
+			validateScreen("test-screen-features-12.png")
+			validateScreen("test-screen-features-13.png")
+			validateScreen("test-screen-features-14.png")
+			validateScreen("test-screen-features-15.png")
+
+			g.Close()
+		}
+
+		initialize(testFunc)
+	})
+}
+
+// Last Test should terminate main goroutine since it's infinity looped to execute others GUI tests in main goroutine
+func TestExit(t *testing.T) {
+	os.Exit(0)
 }

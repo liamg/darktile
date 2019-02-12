@@ -28,13 +28,15 @@ func getConfig() *config.Config {
 	debugMode := false
 	slomo := false
 
-	flag.BoolVar(&showVersion, "version", showVersion, "Output version information")
-	flag.BoolVar(&ignoreConfig, "ignore-config", ignoreConfig, "Ignore user config files and use defaults")
-	flag.StringVar(&shell, "shell", shell, "Specify the shell to use")
-	flag.BoolVar(&debugMode, "debug", debugMode, "Enable debug logging")
-	flag.BoolVar(&slomo, "slomo", slomo, "Render in slow motion (useful for debugging)")
+	if flag.Parsed() == false {
+		flag.BoolVar(&showVersion, "version", showVersion, "Output version information")
+		flag.BoolVar(&ignoreConfig, "ignore-config", ignoreConfig, "Ignore user config files and use defaults")
+		flag.StringVar(&shell, "shell", shell, "Specify the shell to use")
+		flag.BoolVar(&debugMode, "debug", debugMode, "Enable debug logging")
+		flag.BoolVar(&slomo, "slomo", slomo, "Render in slow motion (useful for debugging)")
 
-	flag.Parse()  // actual parsing and fetching flags from the command line
+		flag.Parse() // actual parsing and fetching flags from the command line
+	}
 	actuallyProvidedFlags := getActuallyProvidedFlags()
 
 	if showVersion {
