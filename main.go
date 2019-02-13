@@ -29,6 +29,11 @@ func initialize(unitTestfunc callback) {
 	}
 	defer logger.Sync()
 
+	if unitTestfunc != nil {
+		// Force the scrollbar not showing when running unit tests
+		conf.ShowVerticalScrollbar = false
+	}
+
 	logger.Infof("Allocating pty...")
 
 	pty, err := platform.NewPty(80, 25)
@@ -62,6 +67,7 @@ func initialize(unitTestfunc callback) {
 	if err != nil {
 		logger.Fatalf("Cannot start: %s", err)
 	}
+	defer g.Free()
 
 	if unitTestfunc != nil {
 		go unitTestfunc(terminal, g)

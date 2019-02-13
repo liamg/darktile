@@ -114,28 +114,29 @@ shell = "/bin/bash"         # The shell to run for the terminal session. Default
 search_url = "https://www.google.com/search?q=$QUERY" # The search engine to use for the "search selected text" action. Defaults to google. Set this to your own search url using $QUERY as the keywords to replace when searching.
 max_lines = 1000            # Maximum number of lines in the terminal buffer.
 copy_and_paste_with_mouse = true # Text selected with the mouse is copied to the clipboard on end selection, and is pasted on right mouse button click.
+show_vertical_scrollbar = true   # Whether to show the vertical scrollbar
 dpi-scale = 0.0             # Override DPI scale. Defaults to 0.0 (let Aminal determine the DPI scale itself).
 
 [colours]
   cursor        = "#e8dfd6" 
   foreground    = "#e8dfd6" 
   background    = "#021b21" 
-  black         = "#032c36" 
-  red           = "#c2454e" 
-  green         = "#7cbf9e"
-  yellow        = "#8a7a63"
-  blue          = "#065f73"
-  magenta       = "#ff5879"
-  cyan          = "#44b5b1"
-  light_grey    = "#f2f1b9"
-  dark_grey     = "#3e4360"
-  light_red     = "#ef5847"
-  light_green   = "#a2db91"
-  light_yellow  = "#beb090"
-  light_blue    = "#61778d"
-  light_magenta = "#ff99a1"
-  light_cyan    = "#9ed9d8"
-  white         = "#f6f6c9"
+  black         = "#000000" 
+  red           = "#800000" 
+  green         = "#008000"
+  yellow        = "#808000"
+  blue          = "#000080"
+  magenta       = "#800080"
+  cyan          = "#008080"
+  light_grey    = "#f2f2f2"
+  dark_grey     = "#808080"
+  light_red     = "#ff0000"
+  light_green   = "#00ff00"
+  light_yellow  = "#ffff00"
+  light_blue    = "#0000ff"
+  light_magenta = "#ff00ff"
+  light_cyan    = "#00ffff"
+  white         = "#ffffff"
   selection     = "#333366" # Mouse selection background colour
 
 [keys]

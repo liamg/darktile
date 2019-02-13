@@ -30,6 +30,7 @@ var DefaultConfig = Config{
 	SearchURL:             "https://www.google.com/search?q=$QUERY",
 	MaxLines:              1000,
 	CopyAndPasteWithMouse: true,
+	ShowVerticalScrollbar: true,
 }
 
 func init() {

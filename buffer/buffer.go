@@ -477,6 +477,15 @@ func (buffer *Buffer) convertRawLineToViewLine(rawLine uint64) uint16 {
 	return uint16(int(rawLine) - (rawHeight - int(buffer.terminalState.viewHeight)))
 }
 
+func (buffer *Buffer) GetVPosition() int {
+	result := int(uint(buffer.Height()) - uint(buffer.ViewHeight()) - buffer.terminalState.scrollLinesFromBottom)
+	if result < 0 {
+		result = 0
+	}
+
+	return result
+}
+
 // Width returns the width of the buffer in columns
 func (buffer *Buffer) Width() uint16 {
 	return buffer.terminalState.viewWidth
@@ -505,7 +514,7 @@ func (buffer *Buffer) insertLine() {
 
 	if !buffer.InScrollableRegion() {
 		pos := buffer.RawLine()
-		maxLines := buffer.getMaxLines()
+		maxLines := buffer.GetMaxLines()
 		newLineCount := uint64(len(buffer.lines) + 1)
 		if newLineCount > maxLines {
 			newLineCount = maxLines
@@ -601,7 +610,7 @@ func (buffer *Buffer) Index() {
 
 	if buffer.terminalState.cursorY >= buffer.ViewHeight()-1 {
 		buffer.lines = append(buffer.lines, newLine())
-		maxLines := buffer.getMaxLines()
+		maxLines := buffer.GetMaxLines()
 		if uint64(len(buffer.lines)) > maxLines {
 			copy(buffer.lines, buffer.lines[uint64(len(buffer.lines))-maxLines:])
 			buffer.lines = buffer.lines[:maxLines]
@@ -1069,7 +1078,7 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 	buffer.terminalState.ResetVerticalMargins()
 }
 
-func (buffer *Buffer) getMaxLines() uint64 {
+func (buffer *Buffer) GetMaxLines() uint64 {
 	result := buffer.terminalState.maxLines
 	if result < uint64(buffer.terminalState.viewHeight) {
 		result = uint64(buffer.terminalState.viewHeight)

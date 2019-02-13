@@ -24,6 +24,18 @@ import (
 	"go.uber.org/zap"
 )
 
+const (
+	DefaultWindowWidth  = 800
+	DefaultWindowHeight = 600
+)
+
+type mouseEventsHandler interface {
+	mouseMoveCallback(g *GUI, px float64, py float64)
+	mouseButtonCallback(g *GUI, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey, mouseX float64, mouseY float64)
+	cursorEnterCallback(g *GUI, enter bool)
+	isMouseInside(px float64, py float64) bool
+}
+
 type GUI struct {
 	window            *glfw.Window
 	logger            *zap.SugaredLogger
@@ -57,7 +69,14 @@ type GUI struct {
 	leftClickTime                   time.Time
 	leftClickCount                  int // number of clicks in a serie - single click, double click, or triple click
 	mouseMovedAfterSelectionStarted bool
-	internalResize                  bool
+
+	catchedMouseHandler   mouseEventsHandler
+	mouseCatchedOnButton  glfw.MouseButton
+	prevMouseEventHandler mouseEventsHandler
+
+	internalResize bool
+
+	vScrollbar *scrollbar
 }
 
 func Min(x, y int) int {
@@ -147,20 +166,29 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 	}
 
 	return &GUI{
-		config:            config,
-		logger:            logger,
-		width:             800,
-		height:            600,
-		appliedWidth:      0,
-		appliedHeight:     0,
-		dpiScale:          1,
-		terminal:          terminal,
-		fontScale:         10.0,
-		terminalAlpha:     1,
-		keyboardShortcuts: shortcuts,
-		resizeLock:        &sync.Mutex{},
-		internalResize:    false,
+		config:              config,
+		logger:              logger,
+		width:               DefaultWindowWidth,
+		height:              DefaultWindowHeight,
+		appliedWidth:        0,
+		appliedHeight:       0,
+		dpiScale:            1,
+		terminal:            terminal,
+		fontScale:           10.0,
+		terminalAlpha:       1,
+		keyboardShortcuts:   shortcuts,
+		resizeLock:          &sync.Mutex{},
+		internalResize:      false,
+		vScrollbar:          nil,
+		catchedMouseHandler: nil,
 	}, nil
+}
+
+func (gui *GUI) Free() {
+	if gui.vScrollbar != nil {
+		gui.vScrollbar.Free()
+		gui.vScrollbar = nil
+	}
 }
 
 // inspired by https://kylewbanks.com/blog/tutorial-opengl-with-golang-part-1-hello-opengl
@@ -189,15 +217,20 @@ func (gui *GUI) resizeToTerminal(newCols uint, newRows uint) {
 	gui.logger.Debugf("Initiating GUI resize to columns=%d rows=%d", newCols, newRows)
 
 	gui.logger.Debugf("Calculating size...")
-	width, height := gui.renderer.GetRectangleSize(newCols, newRows)
+	width, height := gui.renderer.ConvertCoordinates(newCols, newRows)
 
 	roundedWidth := int(math.Ceil(float64(width)))
 	roundedHeight := int(math.Ceil(float64(height)))
+
+	if gui.vScrollbar != nil {
+		roundedWidth += int(gui.vScrollbar.position.width())
+	}
 
 	gui.resizeCache = &ResizeCache{roundedWidth, roundedHeight, newCols, newRows}
 
 	gui.logger.Debugf("Resizing window to %dx%d", roundedWidth, roundedHeight)
 	gui.internalResize = true
+
 	gui.window.SetSize(roundedWidth, roundedHeight) // will trigger resize()
 	gui.internalResize = false
 }
@@ -252,14 +285,20 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	gui.width = width
 	gui.height = height
-	gui.appliedWidth = width
-	gui.appliedHeight = height
+	gui.appliedWidth = gui.width
+	gui.appliedHeight = gui.height
+
+	vScrollbarWidth := 0
+	if gui.vScrollbar != nil {
+		gui.vScrollbar.resize(gui)
+		vScrollbarWidth = int(gui.vScrollbar.position.width())
+	}
 
 	gui.logger.Debugf("Updating font resolutions...")
-	gui.loadFonts()
+	gui.loadFonts(gui.width, gui.height)
 
 	gui.logger.Debugf("Setting renderer area...")
-	gui.renderer.SetArea(0, 0, gui.width, gui.height)
+	gui.renderer.SetArea(0, 0, gui.width-vScrollbarWidth, gui.height)
 
 	if gui.resizeCache != nil && gui.resizeCache.Width == width && gui.resizeCache.Height == height {
 		gui.logger.Debugf("No need to resize internal terminal!")
@@ -301,13 +340,13 @@ func (gui *GUI) Render() error {
 	gui.logger.Debugf("Creating window...")
 	var err error
 	gui.window, err = gui.createWindow()
-	gui.SetDPIScale()
-	gui.window.SetSize(int(float32(gui.width)*gui.dpiScale),
-		int(float32(gui.height)*gui.dpiScale))
 	if err != nil {
 		return fmt.Errorf("Failed to create window: %s", err)
 	}
 	defer glfw.Terminate()
+
+	gui.SetDPIScale()
+	gui.window.SetSize(int(float32(gui.width)*gui.dpiScale), int(float32(gui.height)*gui.dpiScale))
 
 	gui.logger.Debugf("Initialising OpenGL and creating program...")
 	program, err := gui.createProgram()
@@ -318,8 +357,19 @@ func (gui *GUI) Render() error {
 	gui.colourAttr = uint32(gl.GetAttribLocation(program, gl.Str("inColour\x00")))
 	gl.BindFragDataLocation(program, 0, gl.Str("outColour\x00"))
 
+	vScrollbarWidth := 0
+	if gui.config.ShowVerticalScrollbar {
+		vScrollbar, err := newScrollbar()
+		if err != nil {
+			return err
+		}
+		gui.vScrollbar = vScrollbar
+		gui.vScrollbar.resize(gui)
+		vScrollbarWidth = int(gui.vScrollbar.position.width())
+	}
+
 	gui.logger.Debugf("Loading font...")
-	if err := gui.loadFonts(); err != nil {
+	if err := gui.loadFonts(gui.width, gui.height); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
@@ -327,14 +377,18 @@ func (gui *GUI) Render() error {
 	resizeChan := make(chan bool, 1)
 	reverseChan := make(chan bool, 1)
 
-	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width, gui.height, gui.colourAttr, program)
+	gui.renderer, err = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width-vScrollbarWidth, gui.height, gui.colourAttr, program)
+	if err != nil {
+		return err
+	}
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
 	gui.window.SetCharCallback(gui.char)
 	gui.window.SetScrollCallback(gui.glfwScrollCallback)
-	gui.window.SetMouseButtonCallback(gui.mouseButtonCallback)
-	gui.window.SetCursorPosCallback(gui.mouseMoveCallback)
+	gui.window.SetMouseButtonCallback(gui.globalMouseButtonCallback)
+	gui.window.SetCursorPosCallback(gui.globalMouseMoveCallback)
+	gui.window.SetCursorEnterCallback(gui.globalCursorEnterCallback)
 	gui.window.SetRefreshCallback(func(w *glfw.Window) {
 		gui.terminal.SetDirty()
 	})
@@ -362,6 +416,10 @@ func (gui *GUI) Render() error {
 		}
 		gui.Close()
 	}()
+
+	if gui.vScrollbar != nil {
+		gui.vScrollbar.resize(gui)
+	}
 
 	gui.logger.Debugf("Starting render...")
 
@@ -418,7 +476,7 @@ func (gui *GUI) Render() error {
 			glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
 		}
 
-		if gui.terminal.CheckDirty() || forceRedraw {
+		if gui.terminal.CheckDirty() || forceRedraw || (gui.vScrollbar != nil && gui.vScrollbar.isDirty) {
 
 			gui.redraw()
 
@@ -599,8 +657,9 @@ func (gui *GUI) redraw() {
 				gui.renderer.DrawUnderline(span, uint(x-span), uint(y), colour)
 			}
 		}
-
 	}
+
+	gui.renderScrollbar()
 	gui.renderOverlay()
 }
 
@@ -747,4 +806,14 @@ func (gui *GUI) windowPosChangeCallback(w *glfw.Window, xpos int, ypos int) {
 
 func (gui *GUI) monitorChangeCallback(monitor *glfw.Monitor, event glfw.MonitorEvent) {
 	gui.SetDPIScale()
+}
+
+func (gui *GUI) renderScrollbar() {
+	if gui.vScrollbar != nil {
+		position := gui.terminal.ActiveBuffer().GetVPosition()
+		maxPosition := int(gui.terminal.ActiveBuffer().GetMaxLines()) - int(gui.terminal.ActiveBuffer().ViewHeight())
+
+		gui.vScrollbar.setPosition(maxPosition, position)
+		gui.vScrollbar.render(gui)
+	}
 }

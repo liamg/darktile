@@ -48,7 +48,7 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale float32) (*Font, error)
 	gl.BindVertexArray(f.vao)
 	gl.BindBuffer(gl.ARRAY_BUFFER, f.vbo)
 
-	gl.BufferData(gl.ARRAY_BUFFER, 6*4*4, nil, gl.STATIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, 6*4*4, nil, gl.DYNAMIC_DRAW)
 
 	vertAttrib := uint32(gl.GetAttribLocation(f.program, gl.Str("vert\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
