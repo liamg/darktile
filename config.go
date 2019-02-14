@@ -7,6 +7,7 @@ import (
 	"os"
 	"os/user"
 	"path/filepath"
+
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/version"
 )

@@ -92,7 +92,8 @@ func TestCursorMovement(t *testing.T) {
 	runMain(func() {
 
 		testFunc := func(term *terminal.Terminal, g *gui.GUI) {
-			termRef = term; guiRef = g
+			termRef = term
+			guiRef = g
 
 			sleep()
 			send(term, "vttest\n")
@@ -122,7 +123,8 @@ func TestScreenFeatures(t *testing.T) {
 	runMain(func() {
 
 		testFunc := func(term *terminal.Terminal, g *gui.GUI) {
-			termRef = term; guiRef = g
+			termRef = term
+			guiRef = g
 
 			sleep()
 			send(term, "vttest\n")
