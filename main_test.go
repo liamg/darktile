@@ -24,8 +24,12 @@ func terminate(msg string) int {
 	return 1
 }
 
-func sleep() {
-	time.Sleep(time.Second)
+func sleep(seconds ...int) {
+	count := 1
+	if len(seconds) > 0 {
+		count = seconds[0]
+	}
+	time.Sleep(time.Duration(count) * time.Second)
 }
 
 func hash(path string) string {
@@ -160,6 +164,30 @@ func TestScreenFeatures(t *testing.T) {
 
 		initialize(testFunc)
 	})
+}
+
+func TestSixel(t *testing.T) {
+	runMain(func() {
+
+                testFunc := func(term *terminal.Terminal, g *gui.GUI) {
+                        termRef = term; guiRef = g
+
+                        sleep()
+                        send(term, "export PS1='> '\n")
+                        sleep()
+                        send(term, "clear\n")
+                        sleep()
+                        send(term, "cat example.sixel\n")
+                        sleep(4)
+
+                        guiRef.Screenshot("test-sixel.png")
+                        validateScreen("test-sixel.png")
+
+                        g.Close()
+                }
+
+                initialize(testFunc)
+        })
 }
 
 // Last Test should terminate main goroutine since it's infinity looped to execute others GUI tests in main goroutine
