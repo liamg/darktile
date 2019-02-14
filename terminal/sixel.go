@@ -125,6 +125,12 @@ func sixelHandler(pty chan rune, terminal *Terminal) error {
 		return fmt.Errorf("Failed to parse sixel data: %s", err)
 	}
 
+	isNewLineMode := terminal.terminalState.IsNewLineMode()
+	if isNewLineMode == false {
+		terminal.SetNewLineMode()
+		defer terminal.SetLineFeedMode()
+	}
+
 	drawSixel(six, terminal)
 
 	return nil
