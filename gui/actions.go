@@ -33,7 +33,7 @@ func actionPaste(gui *GUI) {
 
 func actionToggleDebug(gui *GUI) {
 	gui.showDebugInfo = !gui.showDebugInfo
-	gui.terminal.SetDirty()
+	gui.terminal.NotifyDirty()
 }
 
 func actionSearchSelection(gui *GUI) {
