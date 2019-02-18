@@ -45,12 +45,12 @@ type Terminal struct {
 	modes                     Modes
 	mouseMode                 MouseMode
 	bracketedPasteMode        bool
-	isDirty                   bool
 	charWidth                 float32
 	charHeight                float32
 	lastBuffer                uint8
 	terminalState             *buffer.TerminalState
 	platformDependentSettings platform.PlatformDependentSettings
+	dirty                     *notifier
 }
 
 type Modes struct {
@@ -80,15 +80,28 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 			ShowCursor: true,
 		},
 		platformDependentSettings: pty.GetPlatformDependentSettings(),
+		dirty: newNotifier(),
 	}
 	t.buffers = []*buffer.Buffer{
-		buffer.NewBuffer(t.terminalState),
-		buffer.NewBuffer(t.terminalState),
-		buffer.NewBuffer(t.terminalState),
+		buffer.NewBuffer(t.terminalState, t.dirty),
+		buffer.NewBuffer(t.terminalState, t.dirty),
+		buffer.NewBuffer(t.terminalState, t.dirty),
 	}
 	t.activeBuffer = t.buffers[0]
-	return t
 
+	return t
+}
+
+// Dirty returns a channel that receives an empty struct whenever the
+// terminal becomes dirty.
+func (terminal *Terminal) Dirty() <-chan struct{} {
+	return terminal.dirty.C
+}
+
+// NotifyDirty is used to signal that the terminal is dirty and the
+// screen must be redrawn.
+func (terminal *Terminal) NotifyDirty() {
+	terminal.dirty.Notify()
 }
 
 func (terminal *Terminal) SetProgram(program uint32) {
@@ -97,16 +110,6 @@ func (terminal *Terminal) SetProgram(program uint32) {
 
 func (terminal *Terminal) SetBracketedPasteMode(enabled bool) {
 	terminal.bracketedPasteMode = enabled
-}
-
-func (terminal *Terminal) CheckDirty() bool {
-	d := terminal.isDirty
-	terminal.isDirty = false
-	return d || terminal.ActiveBuffer().IsDirty()
-}
-
-func (terminal *Terminal) SetDirty() {
-	terminal.isDirty = true
 }
 
 func (terminal *Terminal) IsApplicationCursorKeysModeEnabled() bool {
@@ -158,7 +161,7 @@ func (terminal *Terminal) GetScrollOffset() uint {
 }
 
 func (terminal *Terminal) ScreenScrollDown(lines uint16) {
-	defer terminal.SetDirty()
+	defer terminal.NotifyDirty()
 	buffer := terminal.ActiveBuffer()
 
 	if buffer.Height() < int(buffer.ViewHeight()) {
@@ -186,7 +189,7 @@ func (terminal *Terminal) AreaScrollDown(lines uint16) {
 }
 
 func (terminal *Terminal) ScreenScrollUp(lines uint16) {
-	defer terminal.SetDirty()
+	defer terminal.NotifyDirty()
 	buffer := terminal.ActiveBuffer()
 
 	if buffer.Height() < int(buffer.ViewHeight()) {
@@ -210,8 +213,8 @@ func (terminal *Terminal) ScrollPageUp() {
 }
 
 func (terminal *Terminal) ScrollToEnd() {
-	defer terminal.SetDirty()
 	terminal.terminalState.SetScrollOffset(0)
+	terminal.NotifyDirty()
 }
 
 func (terminal *Terminal) GetVisibleLines() []buffer.Line {
@@ -285,6 +288,7 @@ func (terminal *Terminal) GetTitle() string {
 func (terminal *Terminal) SetTitle(title string) {
 	terminal.title = title
 	terminal.emitTitleChange()
+	terminal.NotifyDirty()
 }
 
 // Write sends data, i.e. locally typed keystrokes to the pty
@@ -360,6 +364,7 @@ func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
 	terminal.ActiveBuffer().ResizeView(terminal.size.Width, terminal.size.Height)
 
 	terminal.emitResize()
+	terminal.NotifyDirty()
 	return nil
 }
 
@@ -406,4 +411,5 @@ func (terminal *Terminal) SetScreenMode(enabled bool) {
 		buffer.ReverseVideo()
 	}
 	terminal.emitReverse(enabled)
+	terminal.NotifyDirty()
 }

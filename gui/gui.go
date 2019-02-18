@@ -24,6 +24,12 @@ import (
 	"go.uber.org/zap"
 )
 
+// wakePeriod controls how often the main loop is woken up. This has
+// significant impact on how Aminal feels to use. Adjust with care and
+// test changes on all supported platforms.
+const wakePeriod = time.Second / 120
+const halfWakePeriod = wakePeriod / 2
+
 type GUI struct {
 	window            *glfw.Window
 	logger            *zap.SugaredLogger
@@ -333,11 +339,11 @@ func (gui *GUI) Render() error {
 	gui.window.SetMouseButtonCallback(gui.mouseButtonCallback)
 	gui.window.SetCursorPosCallback(gui.mouseMoveCallback)
 	gui.window.SetRefreshCallback(func(w *glfw.Window) {
-		gui.terminal.SetDirty()
+		gui.terminal.NotifyDirty()
 	})
 	gui.window.SetFocusCallback(func(w *glfw.Window, focused bool) {
 		if focused {
-			gui.terminal.SetDirty()
+			gui.terminal.NotifyDirty()
 		}
 	})
 	gui.window.SetPosCallback(gui.windowPosChangeCallback)
@@ -390,81 +396,118 @@ func (gui *GUI) Render() error {
 		r, err := version.GetNewerRelease()
 		if err == nil && r != nil {
 			latestVersion = r.TagName
-			gui.terminal.SetDirty()
+			gui.terminal.NotifyDirty()
 		}
 	}()
 
 	startTime := time.Now()
 	showMessage := true
 
+	stop := make(chan struct{})
+	go gui.waker(stop)
+
 	for !gui.window.ShouldClose() {
+		gui.redraw()
 
-		forceRedraw := false
-
-		select {
-		case <-titleChan:
-			gui.window.SetTitle(gui.terminal.GetTitle())
-		case <-resizeChan:
-			cols, rows := gui.terminal.GetSize()
-			gui.resizeToTerminal(uint(cols), uint(rows))
-		case reverse := <-reverseChan:
-			gui.generateDefaultCell(reverse)
-			forceRedraw = true
-		default:
-			// this is more efficient than glfw.PollEvents()
-			glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
-		}
-
-		if gui.terminal.CheckDirty() || forceRedraw {
-
-			gui.redraw()
-
-			if gui.showDebugInfo {
-				gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d
+		if gui.showDebugInfo {
+			gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d
 View Size:   %d,%d
 Buffer Size: %d lines
 `,
-					gui.terminal.GetLogicalCursorX(),
-					gui.terminal.GetLogicalCursorY(),
-					gui.terminal.ActiveBuffer().ViewWidth(),
-					gui.terminal.ActiveBuffer().ViewHeight(),
-					gui.terminal.ActiveBuffer().Height(),
-				),
-					[3]float32{1, 1, 1},
-					[3]float32{0.8, 0, 0},
-				)
-			}
-
-			if showMessage {
-				if latestVersion != "" && time.Since(startTime) < time.Second*10 && gui.terminal.ActiveBuffer().RawLine() == 0 {
-					time.AfterFunc(time.Second, gui.terminal.SetDirty)
-					_, h := gui.terminal.GetSize()
-					var msg string
-					if version.Version == "" {
-						msg = "You are using a development build of Aminal."
-					} else {
-						msg = fmt.Sprintf("Version %s of Aminal is now available.", strings.Replace(latestVersion, "v", "", -1))
-					}
-					gui.textbox(
-						2,
-						uint16(h-3),
-						fmt.Sprintf("%s (%d)", msg, 10-int(time.Since(startTime).Seconds())),
-						[3]float32{1, 1, 1},
-						[3]float32{0, 0.5, 0},
-					)
-				} else {
-					showMessage = false
-				}
-			}
-
-			gui.SwapBuffers()
+				gui.terminal.GetLogicalCursorX(),
+				gui.terminal.GetLogicalCursorY(),
+				gui.terminal.ActiveBuffer().ViewWidth(),
+				gui.terminal.ActiveBuffer().ViewHeight(),
+				gui.terminal.ActiveBuffer().Height(),
+			),
+				[3]float32{1, 1, 1},
+				[3]float32{0.8, 0, 0},
+			)
 		}
 
+		if showMessage {
+			if latestVersion != "" && time.Since(startTime) < time.Second*10 && gui.terminal.ActiveBuffer().RawLine() == 0 {
+				time.AfterFunc(time.Second, gui.terminal.NotifyDirty)
+				_, h := gui.terminal.GetSize()
+				var msg string
+				if version.Version == "" {
+					msg = "You are using a development build of Aminal."
+				} else {
+					msg = fmt.Sprintf("Version %s of Aminal is now available.", strings.Replace(latestVersion, "v", "", -1))
+				}
+				gui.textbox(
+					2,
+					uint16(h-3),
+					fmt.Sprintf("%s (%d)", msg, 10-int(time.Since(startTime).Seconds())),
+					[3]float32{1, 1, 1},
+					[3]float32{0, 0.5, 0},
+				)
+			} else {
+				showMessage = false
+			}
+		}
+
+		gui.SwapBuffers()
+		glfw.WaitEvents() // Go to sleep until next event.
+
+		// Process any terminal events since the last wakeup.
+	terminalEvents:
+		for {
+			select {
+			case <-titleChan:
+				gui.window.SetTitle(gui.terminal.GetTitle())
+			case <-resizeChan:
+				cols, rows := gui.terminal.GetSize()
+				gui.resizeToTerminal(uint(cols), uint(rows))
+			case reverse := <-reverseChan:
+				gui.generateDefaultCell(reverse)
+			default:
+				break terminalEvents
+			}
+		}
 	}
+
+	close(stop) // Tell waker to end.
 
 	gui.logger.Debugf("Stopping render...")
 	return nil
 
+}
+
+// waker is a goroutine which listens to the terminal's dirty channel,
+// waking up the main thread when the GUI needs to be
+// redrawn. Limiting is applied on wakeups to avoid excessive CPU
+// usage when the terminal is being updated rapidly.
+func (gui *GUI) waker(stop <-chan struct{}) {
+	dirty := gui.terminal.Dirty()
+	var nextWake <-chan time.Time
+	var last time.Time
+	for {
+		select {
+		case <-dirty:
+			if nextWake == nil {
+				if time.Since(last) > wakePeriod {
+					// There hasn't been a wakeup recently so schedule
+					// the next one sooner.
+					nextWake = time.After(halfWakePeriod)
+				} else {
+					nextWake = time.After(wakePeriod)
+				}
+			}
+		case last = <-nextWake:
+			// TODO(mjs) - This is somewhat of a voodoo sleep but it
+			// avoid various rendering issues on Windows in some
+			// situations. Suspect that this will become unnecessary
+			// once various goroutine synchronisation issues have been
+			// resolved.
+			time.Sleep(halfWakePeriod)
+
+			glfw.PostEmptyEvent()
+			nextWake = nil
+		case <-stop:
+			return
+		}
+	}
 }
 
 func (gui *GUI) redraw() {

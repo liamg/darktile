@@ -2,12 +2,13 @@ package main
 
 import (
 	"fmt"
+	"os"
+	"runtime"
+
 	"github.com/liamg/aminal/gui"
 	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/riywo/loginshell"
-	"os"
-	"runtime"
 )
 
 type callback func(terminal *terminal.Terminal, g *gui.GUI)
