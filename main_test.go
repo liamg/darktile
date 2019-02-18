@@ -169,25 +169,26 @@ func TestScreenFeatures(t *testing.T) {
 func TestSixel(t *testing.T) {
 	runMain(func() {
 
-                testFunc := func(term *terminal.Terminal, g *gui.GUI) {
-                        termRef = term; guiRef = g
+		testFunc := func(term *terminal.Terminal, g *gui.GUI) {
+			termRef = term
+			guiRef = g
 
-                        sleep()
-                        send(term, "export PS1='> '\n")
-                        sleep()
-                        send(term, "clear\n")
-                        sleep()
-                        send(term, "cat example.sixel\n")
-                        sleep(4)
+			sleep()
+			send(term, "export PS1='> '\n")
+			sleep()
+			send(term, "clear\n")
+			sleep()
+			send(term, "cat example.sixel\n")
+			sleep(4)
 
-                        guiRef.Screenshot("test-sixel.png")
-                        validateScreen("test-sixel.png")
+			guiRef.Screenshot("test-sixel.png")
+			validateScreen("test-sixel.png")
 
-                        g.Close()
-                }
+			g.Close()
+		}
 
-                initialize(testFunc)
-        })
+		initialize(testFunc)
+	})
 }
 
 // Last Test should terminate main goroutine since it's infinity looped to execute others GUI tests in main goroutine
