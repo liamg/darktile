@@ -86,6 +86,71 @@ static GLFWbool refreshVideoModes(_GLFWmonitor* monitor)
 //////                         GLFW event API                       //////
 //////////////////////////////////////////////////////////////////////////
 
+// Notifies shared code of a monitor connection or disconnection
+//
+void _glfwInputMonitor(_GLFWmonitor* monitor, int action, int placement)
+{
+    if (action == GLFW_CONNECTED)
+    {
+        _glfw.monitorCount++;
+        _glfw.monitors =
+            realloc(_glfw.monitors, sizeof(_GLFWmonitor*) * _glfw.monitorCount);
+
+        if (placement == _GLFW_INSERT_FIRST)
+        {
+            memmove(_glfw.monitors + 1,
+                    _glfw.monitors,
+                    (_glfw.monitorCount - 1) * sizeof(_GLFWmonitor*));
+            _glfw.monitors[0] = monitor;
+        }
+        else
+            _glfw.monitors[_glfw.monitorCount - 1] = monitor;
+    }
+    else if (action == GLFW_DISCONNECTED)
+    {
+        int i;
+        _GLFWwindow* window;
+
+        for (window = _glfw.windowListHead;  window;  window = window->next)
+        {
+            if (window->monitor == monitor)
+            {
+                int width, height, xoff, yoff;
+                _glfwPlatformGetWindowSize(window, &width, &height);
+                _glfwPlatformSetWindowMonitor(window, NULL, 0, 0, width, height, 0);
+                _glfwPlatformGetWindowFrameSize(window, &xoff, &yoff, NULL, NULL);
+                _glfwPlatformSetWindowPos(window, xoff, yoff);
+            }
+        }
+
+        for (i = 0;  i < _glfw.monitorCount;  i++)
+        {
+            if (_glfw.monitors[i] == monitor)
+            {
+                _glfw.monitorCount--;
+                memmove(_glfw.monitors + i,
+                        _glfw.monitors + i + 1,
+                        (_glfw.monitorCount - i) * sizeof(_GLFWmonitor*));
+                break;
+            }
+        }
+    }
+
+    if (_glfw.callbacks.monitor)
+        _glfw.callbacks.monitor((GLFWmonitor*) monitor, action);
+
+    if (action == GLFW_DISCONNECTED)
+        _glfwFreeMonitor(monitor);
+}
+
+// Notifies shared code that a full screen window has acquired or released
+// a monitor
+//
+void _glfwInputMonitorWindow(_GLFWmonitor* monitor, _GLFWwindow* window)
+{
+    monitor->window = window;
+}
+
 void _glfwInputMonitorChange(void)
 {
     int i, j, monitorCount = _glfw.monitorCount;

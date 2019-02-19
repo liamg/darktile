@@ -29,23 +29,30 @@ script:
 - if [[ $TRAVIS_OS_NAME == 'osx' ]]; then make build-darwin-native-travis; fi
 - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then make build-linux-travis; fi
 - if [[ $TRAVIS_OS_NAME == 'linux' ]]; then make windows-cross-compile-travis; fi
+- if [[ $TRAVIS_OS_NAME == 'linux' ]]; then make check-gofmt; fi
 env:
   global:
   - secure: "pdRpTOGQSUgbC9tK37voxUYJHMWDPJEmdMhNBsljpP9VnxxbR6JEFwvOQEmUHGlsYv8jma6a17jE60ngVQk8QP12cPh48i2bdbVgym/zTUOKFawCtPAzs8i7evh0di5eZ3uoyc42kG4skc+ePuVHbXC8jDxwaPpMqSHD7QyQc1/6ckI9LLkyWUqhnJJXkVwhmI74Aa1Im6QhywAWFMeTBRRL02cwr6k7VKSYOn6yrtzJRCALFGpZ/n58lPrpDxN7W8o+HRQP89wIDy8FyNeEPdmqGFNfMHDvI3oJRN4dGC4H9EkKf/iGuNJia1Bs+MgaG9kKlMHsI6Fkh5uw9KNTvC1llx43VRQJzm26cn1CpRxxRtF4F8lqkpY4tHjxxCitV+98ddW8jdmQYyx+LeueC5wqlO9g2M5L3oXsGMqZ++mDRDa8oQoQAVUSVtimeO8ODXFuVNR8TlupP0Cthgucil63VUZfAD8EHc2zpRSFxfYByDH53uMEinn20uovL6W42fqgboC43HOnR6aVfSANPsBFDlcpZFa2BY5RkcKyYdaLkucy0DKJ946UDfhOu6FNm0GPHq5HcgWkLojNF0dEFgG6J+SGQGiPjxTlHP/zoe61qMlWu+fYRXQnKWZN5Kk0T1TbAk6pKSE6wRLG8ddxvMg+eVpGLT+gAvQdrrkMFvs="
 before_deploy:
   - export CHANGELOG=$(git log $(git describe --abbrev=0 --tags "${TRAVIS_TAG}^")..$TRAVIS_TAG --pretty=format:'<li> <a href="http://github.com/liamg/aminal/commit/%H">view commit &bull;</a> %s</li> ' --reverse | while read line; do echo -n "$line "; done)
 deploy:
-  provider: releases
-  skip_cleanup: true
-  api_key:
-    secure: "hrBxJ2N8Ctti64Vf5uT9rsbo4TNloUuZZ7heusFtRaMoVDPT/k4xZctgyxV1q/5d4HLuh6yFILdJpwYKZv9JmA3+G2f154Jr6h6T/dw7Zh1HPjqaEn4/lkxYiTNNmZyCUjXfztC4xLmRwKhGz6PA0rUT44+6E2uQFqfovryVjhEcBaNBm7UhqENQ1UnFIK+otYt7sh0ZXcQuFOiPMax++wcBruC6Z9ZDtBkfLmUTJO0fP2DtkYtNZcZRJ8fG2XBagWDde6lbFyRRlXq04BMAxt8Jz8BvPFJo14/hEDjT8tv7R2I0Gy/pBTP0Ux/RwrzIdaEGTbBR5SpqQ+e5kWhjRZlO9Tv2prWYe9Psjx+FZpO5yr968BhkQz95Na53Oyb0IR4ItalA0ehx3euDDT9cWl/i96L733I/iCZaJ+15msJU06m1Kw6JkkmTOhI2iZTrpWpihyDJDUJNcW3UmzByHtOjElsHYAoUgiMKVe2fwJepIbIytiRz55AmNhqqP71qOIKCWZ6UoxBGD55+Wm4cSKL0nflQghZwcIpZFCU5V6ObRgO0IZJpohDBrAD1oZNNcu20EEKElFknEpJm22nVfD/1O64suT9HajVLDuLwdknpxDCy7cyZa5VcV3Pjyl/beY3LAuMbN3zR/alj0J0L4ciueowzC9sXNc4tAIL8jy4="
-  name: "Aminal $TRAVIS_TAG"
-  body: ${CHANGELOG}
-  file:
-    - bin/darwin/aminal-darwin-amd64
-    - bin/linux/aminal-linux-amd64
-    - bin/windows/aminal-windows-amd64.exe
-  on:
-    repo: liamg/aminal
-    tags: true
-    condition: "$TRAVIS_GO_VERSION =~ ^1\\.11"
+  - provider: releases
+    skip_cleanup: true
+    api_key:
+      secure: "hrBxJ2N8Ctti64Vf5uT9rsbo4TNloUuZZ7heusFtRaMoVDPT/k4xZctgyxV1q/5d4HLuh6yFILdJpwYKZv9JmA3+G2f154Jr6h6T/dw7Zh1HPjqaEn4/lkxYiTNNmZyCUjXfztC4xLmRwKhGz6PA0rUT44+6E2uQFqfovryVjhEcBaNBm7UhqENQ1UnFIK+otYt7sh0ZXcQuFOiPMax++wcBruC6Z9ZDtBkfLmUTJO0fP2DtkYtNZcZRJ8fG2XBagWDde6lbFyRRlXq04BMAxt8Jz8BvPFJo14/hEDjT8tv7R2I0Gy/pBTP0Ux/RwrzIdaEGTbBR5SpqQ+e5kWhjRZlO9Tv2prWYe9Psjx+FZpO5yr968BhkQz95Na53Oyb0IR4ItalA0ehx3euDDT9cWl/i96L733I/iCZaJ+15msJU06m1Kw6JkkmTOhI2iZTrpWpihyDJDUJNcW3UmzByHtOjElsHYAoUgiMKVe2fwJepIbIytiRz55AmNhqqP71qOIKCWZ6UoxBGD55+Wm4cSKL0nflQghZwcIpZFCU5V6ObRgO0IZJpohDBrAD1oZNNcu20EEKElFknEpJm22nVfD/1O64suT9HajVLDuLwdknpxDCy7cyZa5VcV3Pjyl/beY3LAuMbN3zR/alj0J0L4ciueowzC9sXNc4tAIL8jy4="
+    name: "Aminal $TRAVIS_TAG"
+    body: ${CHANGELOG}
+    file:
+      - bin/darwin/aminal-darwin-amd64
+      - bin/linux/aminal-linux-amd64
+      - bin/windows/aminal-windows-amd64.exe
+    on:
+      repo: liamg/aminal
+      tags: true
+      condition: "$TRAVIS_GO_VERSION =~ ^1\\.11"
+  - provider: script
+    skip_cleanup: true
+    script: "./ci/push-nightly-tag.sh"
+    on:
+      all_branches: true
+      condition: "$TRAVIS_EVENT_TYPE == 'cron' && $TRAVIS_GO_VERSION =~ ^1\\.11 && $TRAVIS_OS_NAME == 'linux'"

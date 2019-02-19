@@ -11,6 +11,15 @@ test:
 	go test -v ./...
 	go vet -v
 
+.PHONY: check-gofmt
+check-gofmt:
+	$(eval files := $(shell gofmt -l `find -name '*.go' | grep -v vendor`))
+	$(if $(files),@echo "Some files not gofmt compliant: $(files)"; exit 1, @exit 0)
+
+.PHONY: gofmt
+gofmt:
+	gofmt -w -l `find -name '*.go' | grep -v vendor`
+
 .PHONY: install
 install: build
 	go install -ldflags "-X github.com/liamg/aminal/version.Version=`git describe --tags`"

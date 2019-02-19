@@ -32,6 +32,7 @@
 [[constraint]]
   branch = "master"
   name = "github.com/go-gl/glfw"
+  source = "github.com/MaxRis/glfw"
 
 [[constraint]]
   name = "github.com/gobuffalo/packr"
