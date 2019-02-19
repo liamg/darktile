@@ -52,12 +52,12 @@ func comparePositions(pos1 *Position, pos2 *Position) int {
 // NewBuffer creates a new terminal buffer
 func NewBuffer(terminalState *TerminalState) *Buffer {
 	b := &Buffer{
-		lines:                []Line{},
-		selectionStart:       nil,
-		selectionEnd:         nil,
-		selectionMode:        SelectionChar,
-		isSelectionComplete:  true,
-		terminalState:        terminalState,
+		lines:               []Line{},
+		selectionStart:      nil,
+		selectionEnd:        nil,
+		selectionMode:       SelectionChar,
+		isSelectionComplete: true,
+		terminalState:       terminalState,
 	}
 	return b
 }
@@ -167,7 +167,7 @@ func (buffer *Buffer) GetSelectedText() string {
 	}
 
 	var builder strings.Builder
-	builder.Grow( int(buffer.terminalState.viewWidth) * (end.Line - start.Line + 1)) // reserve space to minimize allocations
+	builder.Grow(int(buffer.terminalState.viewWidth) * (end.Line - start.Line + 1)) // reserve space to minimize allocations
 
 	for row := start.Line; row <= end.Line; row++ {
 		if row >= len(buffer.lines) {
@@ -206,7 +206,7 @@ func (buffer *Buffer) StartSelection(col uint16, viewRow uint16, mode SelectionM
 	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
 	buffer.selectionMode = mode
 
-	buffer.selectionStart = &Position {
+	buffer.selectionStart = &Position{
 		Col:  int(col),
 		Line: int(row),
 	}
@@ -214,7 +214,7 @@ func (buffer *Buffer) StartSelection(col uint16, viewRow uint16, mode SelectionM
 	if mode == SelectionChar {
 		buffer.selectionEnd = nil
 	} else {
-		buffer.selectionEnd = &Position {
+		buffer.selectionEnd = &Position{
 			Col:  int(col),
 			Line: int(row),
 		}
@@ -240,7 +240,7 @@ func (buffer *Buffer) ExtendSelection(col uint16, viewRow uint16, complete bool)
 
 	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
 
-	buffer.selectionEnd = &Position {
+	buffer.selectionEnd = &Position{
 		Col:  int(col),
 		Line: int(row),
 	}
@@ -263,8 +263,8 @@ func (buffer *Buffer) getActualSelection() (*Position, *Position) {
 		return nil, nil
 	}
 
-	start := &Position {}
-	end := &Position {}
+	start := &Position{}
+	end := &Position{}
 
 	if comparePositions(buffer.selectionStart, buffer.selectionEnd) >= 0 {
 		start.Col = buffer.selectionStart.Col
