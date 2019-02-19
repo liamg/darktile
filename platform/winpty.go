@@ -223,7 +223,7 @@ func NewPty(x, y int) (pty Pty, err error) {
 		innerOutPipe: outputWriteSide,
 		hcon:         uintptr(hc),
 		platformDependentSettings: PlatformDependentSettings{
-			OSCTerminators: map[rune]struct{}{0x00: {}},
+			OSCTerminators: map[rune]struct{}{0x00: {}, 0x07: {}},
 		},
 	}
 

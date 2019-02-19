@@ -196,17 +196,9 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 				gui.terminal.Write([]byte(fmt.Sprintf("\x1b[6;%s~", modStr)))
 			}
 		case glfw.KeyEscape:
-			if gui.terminal.IsApplicationCursorKeysModeEnabled() {
-				gui.terminal.Write([]byte{
-					0x1b,
-				})
-			} else {
-				gui.terminal.Write([]byte{
-					0x1b,
-					'[',
-					0x1b,
-				})
-			}
+			gui.terminal.Write([]byte{
+				0x1b,
+			})
 		case glfw.KeyTab:
 			gui.terminal.Write([]byte{
 				0x09,
