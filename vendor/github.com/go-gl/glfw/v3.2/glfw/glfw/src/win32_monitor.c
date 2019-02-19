@@ -146,6 +146,116 @@ void _glfwRestoreVideoModeWin32(_GLFWmonitor* monitor)
 //////                       GLFW platform API                      //////
 //////////////////////////////////////////////////////////////////////////
 
+// Poll for changes in the set of connected monitors
+//
+void _glfwPollMonitorsWin32(void)
+{
+    int i, disconnectedCount;
+    _GLFWmonitor** disconnected = NULL;
+    DWORD adapterIndex, displayIndex;
+    DISPLAY_DEVICEW adapter, display;
+    _GLFWmonitor* monitor;
+
+    disconnectedCount = _glfw.monitorCount;
+    if (disconnectedCount)
+    {
+        disconnected = calloc(_glfw.monitorCount, sizeof(_GLFWmonitor*));
+        memcpy(disconnected,
+               _glfw.monitors,
+               _glfw.monitorCount * sizeof(_GLFWmonitor*));
+    }
+
+    for (adapterIndex = 0;  ;  adapterIndex++)
+    {
+        int type = _GLFW_INSERT_LAST;
+
+        ZeroMemory(&adapter, sizeof(adapter));
+        adapter.cb = sizeof(adapter);
+
+        if (!EnumDisplayDevicesW(NULL, adapterIndex, &adapter, 0))
+            break;
+
+        if (!(adapter.StateFlags & DISPLAY_DEVICE_ACTIVE))
+            continue;
+
+        if (adapter.StateFlags & DISPLAY_DEVICE_PRIMARY_DEVICE)
+            type = _GLFW_INSERT_FIRST;
+
+        for (displayIndex = 0;  ;  displayIndex++)
+        {
+            ZeroMemory(&display, sizeof(display));
+            display.cb = sizeof(display);
+
+            if (!EnumDisplayDevicesW(adapter.DeviceName, displayIndex, &display, 0))
+                break;
+
+            if (!(display.StateFlags & DISPLAY_DEVICE_ACTIVE))
+                continue;
+
+            for (i = 0;  i < disconnectedCount;  i++)
+            {
+                if (disconnected[i] &&
+                    wcscmp(disconnected[i]->win32.displayName,
+                           display.DeviceName) == 0)
+                {
+                    disconnected[i] = NULL;
+                    break;
+                }
+            }
+
+            if (i < disconnectedCount)
+                continue;
+
+            monitor = createMonitor(&adapter, &display);
+            if (!monitor)
+            {
+                free(disconnected);
+                return;
+            }
+
+            _glfwInputMonitor(monitor, GLFW_CONNECTED, type);
+
+            type = _GLFW_INSERT_LAST;
+        }
+
+        // HACK: If an active adapter does not have any display devices
+        //       (as sometimes happens), add it directly as a monitor
+        if (displayIndex == 0)
+        {
+            for (i = 0;  i < disconnectedCount;  i++)
+            {
+                if (disconnected[i] &&
+                    wcscmp(disconnected[i]->win32.adapterName,
+                           adapter.DeviceName) == 0)
+                {
+                    disconnected[i] = NULL;
+                    break;
+                }
+            }
+
+            if (i < disconnectedCount)
+                continue;
+
+            monitor = createMonitor(&adapter, NULL);
+            if (!monitor)
+            {
+                free(disconnected);
+                return;
+            }
+
+            _glfwInputMonitor(monitor, GLFW_CONNECTED, type);
+        }
+    }
+
+    for (i = 0;  i < disconnectedCount;  i++)
+    {
+        if (disconnected[i])
+            _glfwInputMonitor(disconnected[i], GLFW_DISCONNECTED, 0);
+    }
+
+    free(disconnected);
+}
+
 _GLFWmonitor** _glfwPlatformGetMonitors(int* count)
 {
     int found = 0;

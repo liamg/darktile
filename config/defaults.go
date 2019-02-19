@@ -26,9 +26,9 @@ var DefaultConfig = Config{
 		White:        strToColourNoErr("#ffffff"),
 		Selection:    strToColourNoErr("#333366"),
 	},
-	KeyMapping: KeyMappingConfig(map[string]string{}),
-	SearchURL:  "https://www.google.com/search?q=$QUERY",
-	MaxLines: 1000,
+	KeyMapping:            KeyMappingConfig(map[string]string{}),
+	SearchURL:             "https://www.google.com/search?q=$QUERY",
+	MaxLines:              1000,
 	CopyAndPasteWithMouse: true,
 }
 

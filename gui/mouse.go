@@ -5,9 +5,9 @@ import (
 	"math"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/terminal"
 	"time"
-	"github.com/liamg/aminal/buffer"
 )
 
 func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
@@ -27,7 +27,7 @@ func (gui *GUI) getHandCursor() *glfw.Cursor {
 	return gui.handCursor
 }
 
-func (gui  *GUI) getArrowCursor() *glfw.Cursor {
+func (gui *GUI) getArrowCursor() *glfw.Cursor {
 	if gui.arrowCursor == nil {
 		gui.arrowCursor = glfw.CreateStandardCursor(glfw.ArrowCursor)
 	}
@@ -75,7 +75,7 @@ func (gui *GUI) updateLeftClickCount(x uint16, y uint16) int {
 		gui.prevLeftClickY = y
 	}()
 
-	if gui.prevLeftClickX == x && gui.prevLeftClickY == y && time.Since(gui.leftClickTime) < time.Millisecond * 500 {
+	if gui.prevLeftClickX == x && gui.prevLeftClickY == y && time.Since(gui.leftClickTime) < time.Millisecond*500 {
 		gui.leftClickCount++
 		if gui.leftClickCount > 3 {
 			gui.leftClickCount = 3
