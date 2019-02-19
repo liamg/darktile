@@ -624,7 +624,7 @@ func (buffer *Buffer) ReverseIndex() {
 
 // Write will write a rune to the terminal at the position of the cursor, and increment the cursor position
 func (buffer *Buffer) Write(runes ...rune) {
-
+	defer buffer.emitDisplayChange()
 	// scroll to bottom on input
 	buffer.terminalState.scrollLinesFromBottom = 0
 
