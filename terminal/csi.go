@@ -114,25 +114,16 @@ func csiHandler(pty chan rune, terminal *Terminal) error {
 func csiSendDeviceAttributesHandler(params []string, terminal *Terminal) error {
 
 	// we are VT100
-	// for DA1 we'll respond 1;2
-	// for DA2 we'll respond 0;0;0
+	// for DA1 we'll respond ?1;2
+	// for DA2 we'll respond >0;0;0
 
-	response := "1;2"
+	response := "?1;2"
 
-	if len(params) > 0 {
-		param, err := strconv.Atoi(params[0])
-
-		if err != nil {
-			return fmt.Errorf("Invalid parameter in DA request: %s", params[0])
-		}
-
-		if param > 0 {
-			// DA2
-			response = "0;0;0"
-		}
+	if len(params) > 0 && len(params[0]) > 0 && params[0][0] == '>' {
+		response = ">0;0;0"
 	}
 
-	_ = terminal.Write([]byte("\x1b[?" + response + "c"))
+	_ = terminal.Write([]byte("\x1b[" + response + "c"))
 
 	return nil
 }
