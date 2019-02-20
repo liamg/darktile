@@ -227,7 +227,7 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			if modsPressed(mods, glfw.ModAlt) {
 				gui.terminal.Write([]byte{0x17}) // ctrl-w/delete word
 			} else {
-				gui.terminal.Write([]byte{0x8})
+				gui.terminal.Write([]byte{0x7f}) //0x7f is DEL
 			}
 		case glfw.KeyUp:
 			if modStr != "" {
