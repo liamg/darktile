@@ -78,6 +78,14 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 					return
 				}
 			}
+
+			// pass through alt codes
+			if modsPressed(mods, glfw.ModAlt) {
+				if r >= 97 && r < 123 || r >= 65 && r < 91 {
+					gui.terminal.Write([]byte{0x1b, byte(r)})
+					return
+				}
+			}
 		}
 
 		modStr := getModStr(mods)
