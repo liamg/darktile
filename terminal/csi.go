@@ -25,8 +25,8 @@ var csiSequences = []csiMapping{
 	{id: 'd', handler: csiLinePositionAbsolute, expectedParams: &expectedParams{min: 0, max: 1}, description: "Line Position Absolute  [row] (default = [1,column]) (VPA)"},
 	{id: 'f', handler: csiCursorPositionHandler, description: "Horizontal and Vertical Position [row;column] (default = [1,1]) (HVP)"},
 	{id: 'g', handler: csiTabClearHandler, description: "Tab Clear (TBC)"},
-	{id: 'h', handler: csiSetModeHandler, expectedParams: &expectedParams{min: 1, max: 1}, description: "Set Mode (SM)"},
-	{id: 'l', handler: csiResetModeHandler, expectedParams: &expectedParams{min: 1, max: 1}, description: "Reset Mode (RM)"},
+	{id: 'h', handler: csiSetModeHandler, expectedParams: &expectedParams{min: 1, max: ^uint8(0)}, description: "Set Mode (SM)"},
+	{id: 'l', handler: csiResetModeHandler, expectedParams: &expectedParams{min: 1, max: ^uint8(0)}, description: "Reset Mode (RM)"},
 	{id: 'm', handler: sgrSequenceHandler, description: "Character Attributes (SGR)"},
 	{id: 'n', handler: csiDeviceStatusReportHandler, description: "Device Status Report (DSR)"},
 	{id: 'r', handler: csiSetMarginsHandler, expectedParams: &expectedParams{min: 0, max: 2}, description: "Set Scrolling Region [top;bottom] (default = full size of window) (DECSTBM), VT100"},
@@ -415,11 +415,11 @@ func csiEraseCharactersHandler(params []string, terminal *Terminal) error {
 
 func csiResetModeHandler(params []string, terminal *Terminal) error {
 	terminal.ActiveBuffer().ClearSelection()
-	return csiSetMode(strings.Join(params, ""), false, terminal)
+	return csiSetModes(params, false, terminal)
 }
 
 func csiSetModeHandler(params []string, terminal *Terminal) error {
-	return csiSetMode(strings.Join(params, ""), true, terminal)
+	return csiSetModes(params, true, terminal)
 }
 
 func csiWindowManipulation(params []string, terminal *Terminal) error {

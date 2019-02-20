@@ -1,6 +1,50 @@
 package terminal
 
-import "fmt"
+import (
+	"fmt"
+	"strings"
+)
+
+func recoverCodeFromEnabled(enabled bool) string {
+	code := ""
+	if enabled {
+		code = "h"
+	} else {
+		code = "l"
+	}
+	return code
+}
+
+func csiSetModes(modes []string, enabled bool, terminal *Terminal) error {
+	if len(modes) == 0 {
+		return fmt.Errorf("CSI %s without parameters is not allowed", recoverCodeFromEnabled(enabled))
+	}
+	if len(modes) == 1 {
+		return csiSetMode(modes[0], enabled, terminal)
+	}
+	// should we propagate DEC prefix?
+	const decPrefix = '?'
+	isDec := len(modes[0]) > 0 && modes[0][0] == decPrefix
+
+	// iterate through params, propagating DEC prefix to subsequent elements
+	errorStrings := make([]string, 0)
+	for i, v := range modes {
+		updatedMode := v
+		if i > 0 && isDec {
+			updatedMode = string(decPrefix) + v
+		}
+		err := csiSetMode(updatedMode, enabled, terminal)
+		if err != nil {
+			errorStrings = append(errorStrings, err.Error())
+		}
+	}
+
+	if len(errorStrings) > 0 {
+		return fmt.Errorf(strings.Join(errorStrings, "\n"))
+	}
+
+	return nil
+}
 
 func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 
@@ -104,13 +148,7 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 	case "?2004":
 		terminal.SetBracketedPasteMode(enabled)
 	default:
-		code := ""
-		if enabled {
-			code = "h"
-		} else {
-			code = "l"
-		}
-		return fmt.Errorf("Unsupported CSI %s%s code", modeStr, code)
+		return fmt.Errorf("Unsupported CSI %s%s code", modeStr, recoverCodeFromEnabled(enabled))
 	}
 
 	return nil
