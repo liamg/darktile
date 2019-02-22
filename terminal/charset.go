@@ -54,6 +54,10 @@ func scs1Handler(pty chan rune, terminal *Terminal) error {
 func scsHandler(pty chan rune, terminal *Terminal, which int) error {
 	b := <-pty
 
+	// Handler should lock the terminal if there will be write operations to any data read by the renderer
+	// terminal.Lock()
+	// defer terminal.Unlock()
+
 	cs, ok := charSets[b]
 	if ok {
 		terminal.logger.Debugf("Selected charset %v into G%v", string(b), which)

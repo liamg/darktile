@@ -72,6 +72,13 @@ func shiftInHandler(terminal *Terminal) error {
 	return nil
 }
 
+func (terminal *Terminal) processRuneLocked(b rune) {
+	terminal.Lock()
+	defer terminal.Unlock()
+
+	terminal.processRune(b)
+}
+
 func (terminal *Terminal) processRune(b rune) {
 	if handler, ok := runeMap[b]; ok {
 		if err := handler(terminal); err != nil {
@@ -103,6 +110,8 @@ func (terminal *Terminal) processInput(pty chan rune) {
 
 	var b rune
 
+	//	debug := ""
+
 	for {
 
 		if terminal.config.Slomo {
@@ -111,15 +120,19 @@ func (terminal *Terminal) processInput(pty chan rune) {
 
 		b = <-pty
 
+		// debug += fmt.Sprintf("0x%x ", b)
+
 		if b == 0x1b {
+			// terminal.logger.Debug(debug)
+			// debug = ""
 			//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
 			if err := ansiHandler(pty, terminal); err != nil {
 				terminal.logger.Errorf("Error handling escape sequence: %s", err)
 			}
-			terminal.isDirty = true
+			terminal.SetDirtyLocked()
 			continue
 		}
 
-		terminal.processRune(b)
+		terminal.processRuneLocked(b)
 	}
 }
