@@ -50,7 +50,7 @@ type Terminal struct {
 	lastBuffer                uint8
 	terminalState             *buffer.TerminalState
 	platformDependentSettings platform.PlatformDependentSettings
-	dirtyCh                   chan struct{}
+	dirty                     *notifier
 }
 
 type Modes struct {
@@ -80,12 +80,12 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 			ShowCursor: true,
 		},
 		platformDependentSettings: pty.GetPlatformDependentSettings(),
-		dirtyCh:                   make(chan struct{}),
+		dirty: newNotifier(),
 	}
 	t.buffers = []*buffer.Buffer{
-		buffer.NewBuffer(t.terminalState),
-		buffer.NewBuffer(t.terminalState),
-		buffer.NewBuffer(t.terminalState),
+		buffer.NewBuffer(t.terminalState, t.dirty),
+		buffer.NewBuffer(t.terminalState, t.dirty),
+		buffer.NewBuffer(t.terminalState, t.dirty),
 	}
 	t.activeBuffer = t.buffers[0]
 
@@ -95,16 +95,13 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 // Dirty returns a channel that receives an empty struct whenever the
 // terminal becomes dirty.
 func (terminal *Terminal) Dirty() <-chan struct{} {
-	return terminal.dirtyCh
+	return terminal.dirty.C
 }
 
 // NotifyDirty is used to signal that the terminal is dirty and the
 // screen must be redrawn.
 func (terminal *Terminal) NotifyDirty() {
-	select {
-	case terminal.dirtyCh <- struct{}{}:
-	default:
-	}
+	terminal.dirty.Notify()
 }
 
 func (terminal *Terminal) SetProgram(program uint32) {
