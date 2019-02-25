@@ -19,6 +19,7 @@ const (
 )
 
 type MouseMode uint
+type MouseExtMode uint
 
 const (
 	MouseModeNone MouseMode = iota
@@ -27,6 +28,9 @@ const (
 	MouseModeVT200Highlight
 	MouseModeButtonEvent
 	MouseModeAnyEvent
+	MouseExtNone MouseExtMode = iota
+	MouseExtUTF
+	MouseExtSGR
 )
 
 type Terminal struct {
@@ -44,6 +48,7 @@ type Terminal struct {
 	reverseHandlers           []chan bool
 	modes                     Modes
 	mouseMode                 MouseMode
+	mouseExtMode              MouseExtMode
 	bracketedPasteMode        bool
 	isDirty                   bool
 	charWidth                 float32
@@ -119,6 +124,14 @@ func (terminal *Terminal) SetMouseMode(mode MouseMode) {
 
 func (terminal *Terminal) GetMouseMode() MouseMode {
 	return terminal.mouseMode
+}
+
+func (terminal *Terminal) SetMouseExtMode(mode MouseExtMode) {
+	terminal.mouseExtMode = mode
+}
+
+func (terminal *Terminal) GetMouseExtMode() MouseExtMode {
+	return terminal.mouseExtMode
 }
 
 func (terminal *Terminal) IsOSCTerminator(char rune) bool {

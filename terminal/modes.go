@@ -1,6 +1,7 @@
 package terminal
 
 import (
+	"errors"
 	"fmt"
 	"strings"
 )
@@ -123,7 +124,7 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			terminal.UseMainBuffer()
 		}
-	case "?1000", "?1006;1000", "?10061000": // ?10061000 seen from htop
+	case "?1000", "?10061000": // ?10061000 seen from htop
 		// enable mouse tracking
 		// 1000 refers to ext mode for extended mouse click area - otherwise only x <= 255-31
 		if enabled {
@@ -132,6 +133,44 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			terminal.logger.Infof("Turning off VT200 mouse mode")
 			terminal.SetMouseMode(MouseModeNone)
+		}
+	case "?1002":
+		if enabled {
+			terminal.logger.Infof("Turning on Button Event mouse mode")
+			terminal.SetMouseMode(MouseModeButtonEvent)
+		} else {
+			terminal.logger.Infof("Turning off Button Event mouse mode")
+			terminal.SetMouseMode(MouseModeNone)
+		}
+	case "?1003":
+		return errors.New("Any Event mouse mode is not supported")
+		/*
+			if enabled {
+				terminal.logger.Infof("Turning on Any Event mouse mode")
+				terminal.SetMouseMode(MouseModeAnyEvent)
+			} else {
+				terminal.logger.Infof("Turning off Any Event mouse mode")
+				terminal.SetMouseMode(MouseModeNone)
+			}
+		*/
+	case "?1005":
+		return errors.New("UTF-8 ext mouse mode is not supported")
+		/*
+			if enabled {
+				terminal.logger.Infof("Turning on UTF-8 ext mouse mode")
+				terminal.SetMouseExtMode(MouseExtUTF)
+			} else {
+				terminal.logger.Infof("Turning off UTF-8 ext mouse mode")
+				terminal.SetMouseExtMode(MouseExtNone)
+			}
+		*/
+	case "?1006":
+		if enabled {
+			terminal.logger.Infof("Turning on SGR ext mouse mode")
+			terminal.SetMouseExtMode(MouseExtSGR)
+		} else {
+			terminal.logger.Infof("Turning off SGR ext mouse mode")
+			terminal.SetMouseExtMode(MouseExtNone)
 		}
 	case "?1048":
 		if enabled {

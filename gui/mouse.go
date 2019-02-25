@@ -4,10 +4,11 @@ import (
 	"fmt"
 	"math"
 
+	"time"
+
 	"github.com/go-gl/glfw/v3.2/glfw"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/terminal"
-	"time"
 )
 
 func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
@@ -40,7 +41,13 @@ func (gui *GUI) mouseMoveCallback(w *glfw.Window, px float64, py float64) {
 	x, y := gui.convertMouseCoordinates(px, py)
 
 	if gui.mouseDown {
-		gui.terminal.ActiveBuffer().ExtendSelection(x, y, false)
+		if gui.terminal.GetMouseMode() == terminal.MouseModeButtonEvent {
+			tx := int(x) + 1 // vt100 is 1 indexed
+			ty := int(y) + 1
+			gui.emitButtonEventToTerminal(tx, ty, glfw.MouseButtonLeft, nil, gui.mouseDownModifier)
+		} else {
+			gui.terminal.ActiveBuffer().ExtendSelection(x, y, false)
+		}
 	} else {
 
 		hint := gui.terminal.ActiveBuffer().GetHintAtPosition(x, y)
@@ -87,6 +94,34 @@ func (gui *GUI) updateLeftClickCount(x uint16, y uint16) int {
 	return gui.leftClickCount
 }
 
+func btnCode(button glfw.MouseButton, release bool, mod glfw.ModifierKey) (b byte, ok bool) {
+	if release {
+		b = 3
+	} else {
+		switch button {
+		case glfw.MouseButton1:
+			b = 0
+		case glfw.MouseButton2:
+			b = 1
+		case glfw.MouseButton3:
+			b = 2
+		default:
+			return 0, false
+		}
+	}
+
+	if mod&glfw.ModShift > 0 {
+		b |= 4
+	}
+	if mod&glfw.ModSuper > 0 {
+		b |= 8
+	}
+	if mod&glfw.ModControl > 0 {
+		b |= 16
+	}
+	return b, true
+}
+
 func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
 
 	if gui.overlay != nil {
@@ -101,56 +136,28 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 	tx := int(x) + 1 // vt100 is 1 indexed
 	ty := int(y) + 1
 
-	activeBuffer := gui.terminal.ActiveBuffer()
-
 	switch button {
 	case glfw.MouseButtonLeft:
 		if action == glfw.Press {
+			gui.mouseDownModifier = mod
 			gui.mouseDown = true
 
-			clickCount := gui.updateLeftClickCount(x, y)
-			switch clickCount {
-			case 1:
-				activeBuffer.StartSelection(x, y, buffer.SelectionChar)
-			case 2:
-				activeBuffer.StartSelection(x, y, buffer.SelectionWord)
-			case 3:
-				activeBuffer.StartSelection(x, y, buffer.SelectionLine)
+			if gui.terminal.GetMouseMode() != terminal.MouseModeButtonEvent {
+				gui.handleSelectionButtonPress(x, y)
 			}
-			gui.mouseMovedAfterSelectionStarted = false
-
 		} else if action == glfw.Release {
 			gui.mouseDown = false
 
-			if x != gui.prevLeftClickX || y != gui.prevLeftClickY {
-				gui.mouseMovedAfterSelectionStarted = true
-			}
-
-			if gui.leftClickCount != 1 || gui.mouseMovedAfterSelectionStarted {
-				activeBuffer.ExtendSelection(x, y, true)
-			}
-
-			// Do copy to clipboard *or* open URL, but not both.
-			handled := false
-			if gui.config.CopyAndPasteWithMouse {
-				selectedText := activeBuffer.GetSelectedText()
-				if selectedText != "" {
-					gui.window.SetClipboardString(selectedText)
-					handled = true
-				}
-			}
-
-			if !handled {
-				if url := activeBuffer.GetURLAtPosition(x, y); url != "" {
-					go gui.launchTarget(url)
-				}
+			if gui.terminal.GetMouseMode() != terminal.MouseModeButtonEvent {
+				gui.handleSelectionButtonRelease(x, y)
 			}
 		}
 
 	case glfw.MouseButtonRight:
-		if gui.config.CopyAndPasteWithMouse && action == glfw.Press {
+		if gui.config.CopyAndPasteWithMouse && action == glfw.Press && gui.terminal.GetMouseMode() == terminal.MouseModeNone {
 			str, err := gui.window.GetClipboardString()
 			if err == nil {
+				activeBuffer := gui.terminal.ActiveBuffer()
 				activeBuffer.ClearSelection()
 				_ = gui.terminal.Paste([]byte(str))
 			}
@@ -214,36 +221,7 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 
 			Wheel mice may return buttons 4 and 5. Those buttons are represented by the same event codes as buttons 1 and 2 respectively, except that 64 is added to the event code. Release events for the wheel buttons are not reported.
 		*/
-		var b byte
-		if action == glfw.Press {
-			switch button {
-			case glfw.MouseButton1:
-				b = 0
-			case glfw.MouseButton2:
-				b = 1
-			case glfw.MouseButton3:
-				b = 2
-			default:
-				return
-			}
-		} else if action == glfw.Release {
-			b = 3
-		} else {
-			return
-		}
-		if mod&glfw.ModShift > 0 {
-			b |= 4
-		}
-		if mod&glfw.ModSuper > 0 {
-			b |= 8
-		}
-		if mod&glfw.ModControl > 0 {
-			b |= 16
-		}
-
-		packet := fmt.Sprintf("\x1b[M%c%c%c", (rune(b + 32)), (rune(tx + 32)), (rune(ty + 32)))
-		gui.logger.Infof("Sending mouse packet: '%v'", packet)
-		gui.terminal.Write([]byte(packet))
+		gui.emitButtonEventToTerminal(tx, ty, button, &action, mod)
 
 	case terminal.MouseModeVT200Highlight:
 		/*
@@ -253,9 +231,15 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 
 	case terminal.MouseModeButtonEvent:
 		/*
-		   Button-event tracking is essentially the same as normal tracking, but xterm also reports button-motion events. Motion events are reported only if the mouse pointer has moved to a different character cell. It is enabled by specifying parameter 1002 to DECSET. On button press or release, xterm sends the same codes used by normal tracking mode. On button-motion events, xterm adds 32 to the event code (the third character, C b ). The other bits of the event code specify button and modifier keys as in normal mode. For example, motion into cell x,y with button 1 down is reported as CSI M @ C x C y . ( @ = 32 + 0 (button 1) + 32 (motion indicator) ). Similarly, motion with button 3 down is reported as CSI M B C x C y . ( B = 32 + 2 (button 3) + 32 (motion indicator) ).
+		   Button-event tracking is essentially the same as normal tracking, but xterm also reports button-motion events.
+		   Motion events are reported only if the mouse pointer has moved to a different character cell. It is enabled by specifying parameter 1002 to DECSET.
+		   On button press or release, xterm sends the same codes used by normal tracking mode.
+		   On button-motion events, xterm adds 32 to the event code (the third character, C b ).
+		   The other bits of the event code specify button and modifier keys as in normal mode.
+		   For example, motion into cell x,y with button 1 down is reported as CSI M @ C x C y . ( @ = 32 + 0 (button 1) + 32 (motion indicator) ).
+		   Similarly, motion with button 3 down is reported as CSI M B C x C y . ( B = 32 + 2 (button 3) + 32 (motion indicator) ).
 		*/
-		panic("Mouse button event mode not supported")
+		gui.emitButtonEventToTerminal(tx, ty, button, &action, mod)
 
 	case terminal.MouseModeAnyEvent:
 		/*
@@ -269,4 +253,94 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 		panic("Unsupported mouse mode")
 	}
 
+}
+
+func (gui *GUI) handleSelectionButtonPress(x uint16, y uint16) {
+	activeBuffer := gui.terminal.ActiveBuffer()
+	clickCount := gui.updateLeftClickCount(x, y)
+	switch clickCount {
+	case 1:
+		activeBuffer.StartSelection(x, y, buffer.SelectionChar)
+	case 2:
+		activeBuffer.StartSelection(x, y, buffer.SelectionWord)
+	case 3:
+		activeBuffer.StartSelection(x, y, buffer.SelectionLine)
+	}
+	gui.mouseMovedAfterSelectionStarted = false
+}
+
+func (gui *GUI) handleSelectionButtonRelease(x uint16, y uint16) {
+	activeBuffer := gui.terminal.ActiveBuffer()
+	if x != gui.prevLeftClickX || y != gui.prevLeftClickY {
+		gui.mouseMovedAfterSelectionStarted = true
+	}
+
+	if gui.leftClickCount != 1 || gui.mouseMovedAfterSelectionStarted {
+		activeBuffer.ExtendSelection(x, y, true)
+	}
+
+	// Do copy to clipboard *or* open URL, but not both.
+	handled := false
+	if gui.config.CopyAndPasteWithMouse {
+		selectedText := activeBuffer.GetSelectedText()
+		if selectedText != "" {
+			gui.window.SetClipboardString(selectedText)
+			handled = true
+		}
+	}
+
+	if !handled {
+		if url := activeBuffer.GetURLAtPosition(x, y); url != "" {
+			go gui.launchTarget(url)
+		}
+	}
+}
+
+func (gui *GUI) emitButtonEventToTerminal(tx int, ty int, button glfw.MouseButton, action *glfw.Action, mod glfw.ModifierKey) {
+	motion := action == nil
+
+	release := false
+	if !motion {
+		if *action == glfw.Release {
+			release = true
+		} else if *action != glfw.Press {
+			return
+		}
+	}
+
+	ext := gui.terminal.GetMouseExtMode()
+
+	// For SGR, normal button encoding (as for Press event)
+	b, ok := btnCode(button, release && ext != terminal.MouseExtSGR, mod)
+
+	if !ok {
+		return // unknown button
+	}
+
+	// @todo check limits for non-SGR encoding
+
+	if motion {
+		b |= 32
+
+		// after applying limits we can check the final values
+		if tx == gui.prevMotionTX && ty == gui.prevMotionTY {
+			return
+		}
+	}
+
+	gui.prevMotionTX = tx
+	gui.prevMotionTY = ty
+
+	var packet string
+	if ext == terminal.MouseExtSGR {
+		final := 'M'
+		if release {
+			final = 'm'
+		}
+		packet = fmt.Sprintf("\x1b[<%d;%d;%d%c", b, tx, ty, final)
+	} else {
+		packet = fmt.Sprintf("\x1b[M%c%c%c", (rune(b + 32)), (rune(tx + 32)), (rune(ty + 32)))
+	}
+	gui.logger.Infof("Sending mouse packet: '%v'", packet)
+	gui.terminal.Write([]byte(packet))
 }
