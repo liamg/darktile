@@ -250,13 +250,37 @@ func (terminal *Terminal) get8BitSGRColour(colNum uint8) [3]float32 {
 
 	if colNum < 232 {
 
-		index := int(colNum - 16) // 0-216
-		rgb := (index * 0xffffff) / 216
-		r := float32((rgb&0xff0000)>>16) / 0xff
-		g := float32((rgb&0xff00)>>8) / 0xff
-		b := float32(rgb&0xff) / 0xff
+		r := 0
+		g := 0
+		b := 0
 
-		return [3]float32{r, g, b}
+		index := int(colNum - 16) // 0-216
+
+		for i := 0; i < index; i++ {
+			if b == 0 {
+				b = 95
+			} else if b < 255 {
+				b += 40
+			} else {
+				b = 0
+				if g == 0 {
+					g = 95
+				} else if g < 255 {
+					g += 40
+				} else {
+					g = 0
+					if r == 0 {
+						r = 95
+					} else if r < 255 {
+						r += 40
+					} else {
+						break
+					}
+				}
+			}
+		}
+
+		return [3]float32{float32(r) / 0xff, float32(g) / 0xff, float32(b) / 0xff}
 	}
 
 	c := float32(colNum-232) / 0x18
