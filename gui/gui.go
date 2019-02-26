@@ -40,6 +40,7 @@ type GUI struct {
 	renderer          *OpenGLRenderer
 	colourAttr        uint32
 	mouseDown         bool
+	mouseDownModifier glfw.ModifierKey
 	overlay           overlay
 	terminalAlpha     float32
 	showDebugInfo     bool
@@ -51,6 +52,8 @@ type GUI struct {
 
 	prevLeftClickX                  uint16
 	prevLeftClickY                  uint16
+	prevMotionTX                    int
+	prevMotionTY                    int
 	leftClickTime                   time.Time
 	leftClickCount                  int // number of clicks in a serie - single click, double click, or triple click
 	mouseMovedAfterSelectionStarted bool
