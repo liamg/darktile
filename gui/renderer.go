@@ -2,11 +2,13 @@ package gui
 
 import (
 	"image"
+	"fmt"
 	"math"
 
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/dbg"
 	"github.com/liamg/aminal/glfont"
 )
 
@@ -254,6 +256,8 @@ func (r *OpenGLRenderer) DrawCellText(text string, col uint, row uint, alpha flo
 
 	x := float32(r.areaX) + float32(col)*r.cellWidth
 	y := float32(r.areaY) + (float32(row+1) * r.cellHeight) + f.MinY()
+
+	dbg.D(fmt.Sprintf("%f %f: %v %f %s", x, y, colour, alpha, text))
 
 	f.Print(x, y, text)
 }

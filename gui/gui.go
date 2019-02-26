@@ -18,6 +18,7 @@ import (
 	"github.com/kbinani/screenshot"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/dbg"
 	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
@@ -236,7 +237,6 @@ func (gui *GUI) getCursorFg(cell *buffer.Cell) (fg [3]float32) {
 
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
-
 	if gui.window.GetAttrib(glfw.Iconified) != 0 {
 		return
 	}
@@ -365,6 +365,8 @@ func (gui *GUI) Render() error {
 		gui.Close()
 	}()
 
+	dbg.RunDumper()
+
 	gui.logger.Debugf("Starting render...")
 
 	gl.UseProgram(program)
@@ -406,7 +408,9 @@ func (gui *GUI) Render() error {
 	go gui.waker(stop)
 
 	for !gui.window.ShouldClose() {
+		dbg.D("redraw")
 		gui.redraw()
+		dbg.D("redraw done")
 
 		if gui.showDebugInfo {
 			gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d
@@ -446,8 +450,12 @@ Buffer Size: %d lines
 			}
 		}
 
+		dbg.D("swap buffers")
 		gui.SwapBuffers()
+
+		dbg.D("waitevents")
 		glfw.WaitEvents() // Go to sleep until next event.
+		dbg.D("woke")
 
 		// Process any terminal events since the last wakeup.
 	terminalEvents:
@@ -485,8 +493,12 @@ func (gui *GUI) waker(stop <-chan struct{}) {
 		case <-dirty:
 			if nextWakeup == nil {
 				nextWakeup = time.After(wakeupPeriod)
+				dbg.D("dirty: set next wakeup")
+			} else {
+				dbg.D("dirty: wakeup already set")
 			}
 		case <-nextWakeup:
+			dbg.D("wakeup")
 			glfw.PostEmptyEvent()
 			nextWakeup = nil
 		case <-stop:
@@ -498,6 +510,13 @@ func (gui *GUI) waker(stop <-chan struct{}) {
 func (gui *GUI) redraw() {
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
 	lines := gui.terminal.GetVisibleLines()
+
+	for _, line := range lines {
+		if strings.Contains(line.String(), "password:") {
+			dbg.D("password prompt found")
+		}
+	}
+		
 	lineCount := int(gui.terminal.ActiveBuffer().ViewHeight())
 	colCount := int(gui.terminal.ActiveBuffer().ViewWidth())
 	cx := uint(gui.terminal.GetLogicalCursorX())

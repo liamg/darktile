@@ -2,7 +2,7 @@ package terminal
 
 func newNotifier() *notifier {
 	return &notifier{
-		C: make(chan struct{}, 1),
+		C: make(chan struct{}),
 	}
 }
 

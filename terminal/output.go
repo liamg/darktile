@@ -1,7 +1,10 @@
 package terminal
 
 import (
+	"fmt"
 	"time"
+
+	"github.com/liamg/aminal/dbg"
 )
 
 // Wish list here: http://invisible-island.net/xterm/ctlseqs/ctlseqs.html
@@ -83,6 +86,7 @@ func (terminal *Terminal) processRune(b rune) {
 	}
 	//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
 	terminal.ActiveBuffer().Write(terminal.translateRune(b))
+	dbg.D(fmt.Sprintf("wrote rune: %s 0x%0x", string(b), b))
 }
 
 func (terminal *Terminal) translateRune(b rune) rune {
