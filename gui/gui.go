@@ -21,6 +21,7 @@ import (
 	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/liamg/aminal/version"
+	"go.uber.org/atomic"
 	"go.uber.org/zap"
 )
 
@@ -69,6 +70,9 @@ type GUI struct {
 	leftClickTime                   time.Time
 	leftClickCount                  int // number of clicks in a serie - single click, double click, or triple click
 	mouseMovedAfterSelectionStarted bool
+
+	isAutoScrollStartedFlag atomic.Bool
+	stopAutoScrollChan      chan struct{}
 
 	catchedMouseHandler   mouseEventsHandler
 	mouseCatchedOnButton  glfw.MouseButton
@@ -181,6 +185,8 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		internalResize:      false,
 		vScrollbar:          nil,
 		catchedMouseHandler: nil,
+
+		stopAutoScrollChan: make(chan struct{}),
 	}, nil
 }
 

@@ -11,6 +11,8 @@ import (
 	"github.com/liamg/aminal/terminal"
 )
 
+const autoScrollMilliSeconds = 200
+
 func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
 
 	if yoff > 0 {
@@ -115,6 +117,59 @@ func (gui *GUI) isMouseInside(px float64, py float64) bool {
 		py >= float64(gui.renderer.areaY) && py < float64(gui.renderer.areaY+gui.renderer.areaHeight)
 }
 
+func (gui *GUI) doAutoScroll(up bool) bool {
+	result := false
+	x, y := gui.convertMouseCoordinates(gui.window.GetCursorPos())
+	if up {
+		if y <= 0 {
+			gui.terminal.ScreenScrollUp(1)
+			gui.terminal.ActiveBuffer().ExtendSelection(x, y, false)
+			result = true
+		}
+	} else {
+		if y >= uint16(gui.renderer.termRows-1) {
+			gui.terminal.ScreenScrollDown(1)
+			gui.terminal.ActiveBuffer().ExtendSelection(x, y, false)
+			result = true
+		}
+	}
+
+	return result
+}
+
+func (gui *GUI) startAutoScroll(up bool) {
+	if gui.isAutoScrollStartedFlag.Load() == true {
+		return // already started - don't start again
+	}
+
+	go func() {
+		gui.isAutoScrollStartedFlag.Store(true)
+		gui.doAutoScroll(up)
+		var autoScrollTimer = time.After(time.Millisecond * autoScrollMilliSeconds)
+
+	forLoop:
+		for {
+			select {
+			case <-autoScrollTimer:
+				if gui.doAutoScroll(up) {
+					autoScrollTimer = time.After(time.Millisecond * autoScrollMilliSeconds)
+				} else {
+					break forLoop
+				}
+			case <-gui.stopAutoScrollChan:
+				break forLoop
+			}
+		}
+		gui.isAutoScrollStartedFlag.Store(false)
+	}()
+}
+
+func (gui *GUI) stopAutoScroll() {
+	if gui.isAutoScrollStartedFlag.Load() {
+		gui.stopAutoScrollChan <- struct{}{}
+	}
+}
+
 func (gui *GUI) mouseMoveCallback(g *GUI, px float64, py float64) {
 
 	x, y := gui.convertMouseCoordinates(px, py)
@@ -125,7 +180,13 @@ func (gui *GUI) mouseMoveCallback(g *GUI, px float64, py float64) {
 			ty := int(y) + 1
 			gui.emitButtonEventToTerminal(tx, ty, glfw.MouseButtonLeft, nil, gui.mouseDownModifier)
 		} else {
-			gui.terminal.ActiveBuffer().ExtendSelection(x, y, false)
+			if y <= 0 {
+				gui.startAutoScroll(true)
+			} else if y >= uint16(gui.renderer.termRows-1) {
+				gui.startAutoScroll(false)
+			} else {
+				gui.terminal.ActiveBuffer().ExtendSelection(x, y, false)
+			}
 		}
 	} else {
 
@@ -145,10 +206,21 @@ func (gui *GUI) mouseMoveCallback(g *GUI, px float64, py float64) {
 }
 
 func (gui *GUI) convertMouseCoordinates(px float64, py float64) (uint16, uint16) {
-	x := uint16(math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth())))
-	y := uint16(math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight())))
+	x := math.Floor((px - float64(gui.renderer.areaX)) / float64(gui.renderer.CellWidth()))
+	if x < 0 {
+		x = 0
+	} else if x >= float64(gui.renderer.termCols) {
+		x = float64(gui.renderer.termCols - 1)
+	}
 
-	return x, y
+	y := math.Floor((py - float64(gui.renderer.areaY)) / float64(gui.renderer.CellHeight()))
+	if y < 0 {
+		y = 0
+	} else if y >= float64(gui.renderer.termRows) {
+		y = float64(gui.renderer.termRows - 1)
+	}
+
+	return uint16(x), uint16(y)
 }
 
 func (gui *GUI) updateLeftClickCount(x uint16, y uint16) int {
@@ -217,12 +289,14 @@ func (gui *GUI) mouseButtonCallback(g *GUI, button glfw.MouseButton, action glfw
 		if action == glfw.Press {
 			gui.mouseDownModifier = mod
 			gui.mouseDown = true
+			gui.stopAutoScroll()
 
 			if gui.terminal.GetMouseMode() != terminal.MouseModeButtonEvent {
 				gui.handleSelectionButtonPress(x, y)
 			}
 		} else if action == glfw.Release {
 			gui.mouseDown = false
+			gui.stopAutoScroll()
 
 			if gui.terminal.GetMouseMode() != terminal.MouseModeButtonEvent {
 				gui.handleSelectionButtonRelease(x, y)
@@ -230,7 +304,7 @@ func (gui *GUI) mouseButtonCallback(g *GUI, button glfw.MouseButton, action glfw
 		}
 
 	case glfw.MouseButtonRight:
-		if gui.config.CopyAndPasteWithMouse && action == glfw.Press && gui.terminal.GetMouseMode() == terminal.MouseModeNone {
+		if !gui.mouseDown && gui.config.CopyAndPasteWithMouse && action == glfw.Press && gui.terminal.GetMouseMode() == terminal.MouseModeNone {
 			str, err := gui.window.GetClipboardString()
 			if err == nil {
 				activeBuffer := gui.terminal.ActiveBuffer()
