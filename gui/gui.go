@@ -58,6 +58,7 @@ type GUI struct {
 	leftClickCount                  int // number of clicks in a serie - single click, double click, or triple click
 	mouseMovedAfterSelectionStarted bool
 	internalResize                  bool
+	selectionRegionMode             buffer.SelectionRegionMode
 }
 
 func Min(x, y int) int {
@@ -488,7 +489,7 @@ func (gui *GUI) redraw() {
 					cursor = cx == uint(x) && cy == uint(y)
 				}
 
-				if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
+				if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y), gui.selectionRegionMode) {
 					colour = &gui.config.ColourScheme.Selection
 				} else {
 					colour = nil
