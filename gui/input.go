@@ -57,10 +57,6 @@ func (gui *GUI) updateSelectionMode(mods glfw.ModifierKey) {
 }
 
 func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-	if action == glfw.Press || action == glfw.Release {
-		gui.updateSelectionMode(mods)
-	}
-
 	if action == glfw.Repeat || action == glfw.Press {
 
 		if gui.overlay != nil {
