@@ -2,4 +2,4 @@ aminal
 aminal.exe
 *.syso
 .idea
-tmp/
+generated-src/
