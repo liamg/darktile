@@ -8,7 +8,7 @@ if [ -z "$MY_TAG" ] ; then
   git config --global user.email "travis@travis-ci.org"
   git config --global user.name "Travis CI"
 
-  NEW_TAG="Nightly-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
+  NEW_TAG="Nightly-$TRAVIS_BRANCH-$(date +%Y-%m-%d)-$(git rev-parse --short HEAD)"
   git tag -a $NEW_TAG -m "Nightly Build Tag $NEW_TAG"
 
   echo "New generated nightly build tag: $NEW_TAG"
