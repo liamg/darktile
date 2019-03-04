@@ -66,17 +66,22 @@ launcher-windows: build-windows
 	powershell -Command "(gc ${GEN_SRC_DIR}\launcher\versioninfo.json) -creplace 'YEAR', (Get-Date -UFormat '%Y') | Out-File -Encoding default ${GEN_SRC_DIR}\launcher\versioninfo.json"
 	copy aminal.ico "${GEN_SRC_DIR}\launcher" /Y
 	go generate "${GEN_SRC_DIR}\launcher"
-	if exist "bin\windows\launcher" rmdir /S /Q "bin\windows\launcher"
-	mkdir "bin\windows\launcher\Versions\${VERSION}"
-	go build -o "bin\windows\launcher\${BINARY}.exe" -ldflags "-H windowsgui" "${GEN_SRC_DIR}\launcher"
-	copy ${BINARY}-windows-amd64.exe "bin\windows\launcher\Versions\${VERSION}\${BINARY}.exe" /Y
+	if exist "bin\windows\Aminal" rmdir /S /Q "bin\windows\Aminal"
+	mkdir "bin\windows\Aminal\Versions\${VERSION}"
+	go build -o "bin\windows\Aminal\${BINARY}.exe" -ldflags "-H windowsgui" "${GEN_SRC_DIR}\launcher"
+	copy ${BINARY}-windows-amd64.exe "bin\windows\Aminal\Versions\${VERSION}\${BINARY}.exe" /Y
+
+.PHONY: uninstaller-windows
+uninstaller-windows: launcher-windows
+	makensis "/XOutFile bin/windows/UninstallerSetup.exe" /NOCD windows\Uninstaller.nsi
+	cmd /c "bin\windows\UninstallerSetup.exe /S /D=%cd%\bin\windows\Aminal"
 
 .PHONY: installer-windows
-installer-windows:
+installer-windows: uninstaller-windows
 	if exist "${GEN_SRC_DIR}\installer" rmdir /S /Q "${GEN_SRC_DIR}\installer"
 	xcopy "windows\installer\*.*" "${GEN_SRC_DIR}\installer" /K /H /Y /Q /I
 	powershell -Command "(gc ${GEN_SRC_DIR}\installer\installer.go) -creplace 'VERSION', '${VERSION}' | Out-File -Encoding default ${GEN_SRC_DIR}\installer\installer.go"
-	go-bindata -prefix "bin\windows\launcher" -o "${GEN_SRC_DIR}/installer/data/data.go" "./bin/windows/launcher/..."
+	go-bindata -prefix "bin\windows\Aminal" -o "${GEN_SRC_DIR}/installer/data/data.go" "./bin/windows/Aminal/..."
 	powershell -Command "(gc ${GEN_SRC_DIR}\installer\data\data.go) -creplace 'package main', 'package data' | Out-File -Encoding default ${GEN_SRC_DIR}\installer\data\data.go"
 	go build -o bin/windows/AminalSetup.exe -ldflags "-H windowsgui" "${GEN_SRC_DIR}/installer/installer.go"
 	rem If an .exe name contains "installer", "setup" etc., then at least Windows 10 automatically
