@@ -192,6 +192,10 @@ func (pty *winConPty) GetPlatformDependentSettings() PlatformDependentSettings {
 	return pty.platformDependentSettings
 }
 
+func (pty *winConPty) Clear() {
+// @todo
+}
+
 // NewPty creates a new instance of a Pty implementation for Windows on a newly allocated ConPTY
 func NewPty(x, y int) (pty Pty, err error) {
 	if !ptyInitSucceeded {

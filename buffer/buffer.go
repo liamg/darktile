@@ -883,6 +883,13 @@ func (buffer *Buffer) Clear() {
 	buffer.SetPosition(0, 0) // do we need to set position?
 }
 
+func (buffer *Buffer) ReallyClear() {
+	defer buffer.emitDisplayChange()
+	buffer.lines = []Line{}
+	buffer.terminalState.SetScrollOffset(0)
+	buffer.SetPosition(0, 0)
+}
+
 // creates if necessary
 func (buffer *Buffer) getCurrentLine() *Line {
 	return buffer.getViewLine(buffer.terminalState.cursorY)

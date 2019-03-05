@@ -350,6 +350,11 @@ func (terminal *Terminal) Clear() {
 	terminal.ActiveBuffer().Clear()
 }
 
+func (terminal *Terminal) ReallyClear() {
+	terminal.pty.Clear()
+	terminal.ActiveBuffer().ReallyClear()
+}
+
 func (terminal *Terminal) GetSize() (int, int) {
 	return int(terminal.size.Width), int(terminal.size.Height)
 }
