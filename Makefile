@@ -70,11 +70,19 @@ launcher-windows: build-windows
 	mkdir "bin\windows\Aminal\Versions\${VERSION}"
 	go build -o "bin\windows\Aminal\${BINARY}.exe" -ldflags "-H windowsgui" "${GEN_SRC_DIR}\launcher"
 	copy ${BINARY}-windows-amd64.exe "bin\windows\Aminal\Versions\${VERSION}\${BINARY}.exe" /Y
+	IF "${WINDOWS_CODESIGNING_CERT_PW}"=="" ECHO Environment variable WINDOWS_CODESIGNING_CERT_PW is not defined. & exit 1
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp bin\windows\Aminal\${BINARY}.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /fd sha256 /td sha256 bin\windows\Aminal\${BINARY}.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp bin\windows\Aminal\Versions\${VERSION}\${BINARY}.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /fd sha256 /td sha256 bin\windows\Aminal\Versions\${VERSION}\${BINARY}.exe
 
 .PHONY: uninstaller-windows
 uninstaller-windows: launcher-windows
 	makensis "/XOutFile bin/windows/UninstallerSetup.exe" /NOCD windows\Uninstaller.nsi
 	cmd /c "bin\windows\UninstallerSetup.exe /S /D=%cd%\bin\windows\Aminal"
+	IF "${WINDOWS_CODESIGNING_CERT_PW}"=="" ECHO Environment variable WINDOWS_CODESIGNING_CERT_PW is not defined. & exit 1
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp bin\windows\Aminal\uninstall.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /fd sha256 /td sha256 bin\windows\Aminal\uninstall.exe
 
 .PHONY: installer-windows
 installer-windows: uninstaller-windows
@@ -87,6 +95,9 @@ installer-windows: uninstaller-windows
 	rem If an .exe name contains "installer", "setup" etc., then at least Windows 10 automatically
 	rem opens a UAC prompt upon opening it. To avoid this, we add a compatibility manifest to the .exe.
 	mt -manifest windows\installer\AminalSetup.exe.manifest -outputresource:bin\windows\AminalSetup.exe;1
+	IF "${WINDOWS_CODESIGNING_CERT_PW}"=="" ECHO Environment variable WINDOWS_CODESIGNING_CERT_PW is not defined. & exit 1
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp bin\windows\AminalSetup.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /fd sha256 /td sha256 bin\windows\AminalSetup.exe
 
 .PHONY:	build-darwin-native-travis
 build-darwin-native-travis:
