@@ -1,9 +1,7 @@
 !include MUI2.nsh
 
 ;--------------------------------
-;Perform Machine-level install, if possible
-
-!define MULTIUSER_EXECUTIONLEVEL Highest
+!define MULTIUSER_EXECUTIONLEVEL Standard
 ;Add support for command-line args that let uninstaller know whether to
 ;uninstall machine- or user installation:
 !define MULTIUSER_INSTALLMODE_COMMANDLINE
