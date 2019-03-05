@@ -659,7 +659,7 @@ func TestSelectingChars(t *testing.T) {
 	b.StartSelection(2, 0, SelectionChar)
 	b.ExtendSelection(4, 1, true)
 
-	assert.Equal(t, "e quick brown\nfox j", b.GetSelectedText())
+	assert.Equal(t, "e quick brown\nfox j", b.GetSelectedText(SelectionRegionNormal))
 }
 
 func TestSelectingWordsDown(t *testing.T) {
@@ -668,7 +668,7 @@ func TestSelectingWordsDown(t *testing.T) {
 	b.StartSelection(6, 1, SelectionWord)
 	b.ExtendSelection(5, 2, true)
 
-	assert.Equal(t, "jumps over\nthe lazy", b.GetSelectedText())
+	assert.Equal(t, "jumps over\nthe lazy", b.GetSelectedText(SelectionRegionNormal))
 }
 
 func TestSelectingWordsUp(t *testing.T) {
@@ -677,7 +677,7 @@ func TestSelectingWordsUp(t *testing.T) {
 	b.StartSelection(5, 2, SelectionWord)
 	b.ExtendSelection(6, 1, true)
 
-	assert.Equal(t, "jumps over\nthe lazy", b.GetSelectedText())
+	assert.Equal(t, "jumps over\nthe lazy", b.GetSelectedText(SelectionRegionNormal))
 }
 
 func TestSelectingLinesDown(t *testing.T) {
@@ -686,7 +686,7 @@ func TestSelectingLinesDown(t *testing.T) {
 	b.StartSelection(6, 1, SelectionLine)
 	b.ExtendSelection(4, 2, true)
 
-	assert.Equal(t, "fox jumps over\nthe lazy dog", b.GetSelectedText())
+	assert.Equal(t, "fox jumps over\nthe lazy dog", b.GetSelectedText(SelectionRegionNormal))
 }
 
 func TestSelectingLineUp(t *testing.T) {
@@ -695,7 +695,7 @@ func TestSelectingLineUp(t *testing.T) {
 	b.StartSelection(8, 2, SelectionLine)
 	b.ExtendSelection(3, 1, true)
 
-	assert.Equal(t, "fox jumps over\nthe lazy dog", b.GetSelectedText())
+	assert.Equal(t, "fox jumps over\nthe lazy dog", b.GetSelectedText(SelectionRegionNormal))
 }
 
 func TestSelectingAfterText(t *testing.T) {
@@ -704,7 +704,7 @@ func TestSelectingAfterText(t *testing.T) {
 	b.StartSelection(6, 3, SelectionChar)
 	b.ExtendSelection(6, 3, true)
 
-	start, end := b.getActualSelection()
+	start, end := b.getActualSelection(SelectionRegionNormal)
 
 	assert.Equal(t, start.Col, 0)
 	assert.Equal(t, start.Line, 3)
