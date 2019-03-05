@@ -33,7 +33,7 @@ func main() {
 		createRegistryKeysForUninstaller(installDir, isUserInstall)
 		updateVersionInRegistry(isUserInstall)
 		createStartMenuShortcut(installDir, isUserInstall)
-		launchFman(installDir)
+		launchAminal(installDir)
 	} else if *doUpdatePtr {
 		installDir = getInstallDirWhenManagedByOmaha()
 		extractAssets(installDir)
@@ -48,7 +48,7 @@ func main() {
 		extractAssets(installDir)
 		createRegistryKeysForUninstaller(installDir, isUserInstall)
 		createStartMenuShortcut(installDir, isUserInstall)
-		launchFman(installDir)
+		launchAminal(installDir)
 	}
 }
 
@@ -180,12 +180,12 @@ WScript.Quit 0`)
 	check(cmd.Run())
 }
 
-func launchFman(installDir string) {
-	cmd := exec.Command(getFmanExePath(installDir))
+func launchAminal(installDir string) {
+	cmd := exec.Command(getAminalExePath(installDir))
 	check(cmd.Start())
 }
 
-func getFmanExePath(installDir string) string {
+func getAminalExePath(installDir string) string {
 	return filepath.Join(installDir, "Aminal.exe")
 }
 
