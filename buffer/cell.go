@@ -5,9 +5,10 @@ import (
 )
 
 type Cell struct {
-	r     rune
-	attr  CellAttributes
-	image *image.RGBA
+	r         rune
+	attr      CellAttributes
+	image     *image.RGBA
+	hyperlink *Hyperlink
 }
 
 type CellAttributes struct {

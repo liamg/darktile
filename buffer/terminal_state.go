@@ -18,6 +18,7 @@ type TerminalState struct {
 	tabStops              map[uint16]struct{}
 	Charsets              []*map[rune]rune // array of 2 charsets, nil means ASCII (no conversion)
 	CurrentCharset        int              // active charset index in Charsets array, valid values are 0 or 1
+	CurrentHyperlink      *Hyperlink
 }
 
 // NewTerminalMode creates a new terminal state

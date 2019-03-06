@@ -3,6 +3,8 @@ package terminal
 import (
 	"fmt"
 	"strings"
+
+	"github.com/liamg/aminal/buffer"
 )
 
 func oscHandler(pty chan rune, terminal *Terminal) error {
@@ -39,6 +41,12 @@ func oscHandler(pty chan rune, terminal *Terminal) error {
 	switch pS[0] {
 	case "0", "2":
 		terminal.SetTitle(pT)
+	case "8": // hyperlink
+		if len(pS) > 2 {
+			terminal.terminalState.CurrentHyperlink = &buffer.Hyperlink{Uri: pS[2]}
+		} else {
+			terminal.terminalState.CurrentHyperlink = nil
+		}
 	case "10": // get/set foreground colour
 		if len(pS) > 1 {
 			if pS[1] == "?" {
