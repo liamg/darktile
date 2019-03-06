@@ -5,6 +5,7 @@ import (
 	"strings"
 
 	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/liamg/aminal/buffer"
 )
 
 // send typed runes straight through to the pty
@@ -44,8 +45,18 @@ func getModStr(mods glfw.ModifierKey) string {
 	return ""
 }
 
-func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
+func (gui *GUI) updateSelectionMode(mods glfw.ModifierKey) {
+	mode := buffer.SelectionRegionNormal
+	if modsPressed(mods, glfw.ModAlt) {
+		mode = buffer.SelectionRegionRectangular
+	}
+	if gui.selectionRegionMode != mode {
+		gui.selectionRegionMode = mode
+		gui.terminal.SetDirty()
+	}
+}
 
+func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
 	if action == glfw.Repeat || action == glfw.Press {
 
 		if gui.overlay != nil {

@@ -219,7 +219,7 @@ func (gui *GUI) mouseButtonCallback(g *GUI, button glfw.MouseButton, action glfw
 			gui.mouseDown = true
 
 			if gui.terminal.GetMouseMode() != terminal.MouseModeButtonEvent {
-				gui.handleSelectionButtonPress(x, y)
+				gui.handleSelectionButtonPress(x, y, mod)
 			}
 		} else if action == glfw.Release {
 			gui.mouseDown = false
@@ -334,9 +334,10 @@ func (gui *GUI) cursorEnterCallback(g *GUI, entered bool) {
 	// empty, just to conform to the mouseEventsHandler interface
 }
 
-func (gui *GUI) handleSelectionButtonPress(x uint16, y uint16) {
+func (gui *GUI) handleSelectionButtonPress(x uint16, y uint16, mod glfw.ModifierKey) {
 	activeBuffer := gui.terminal.ActiveBuffer()
 	clickCount := gui.updateLeftClickCount(x, y)
+	gui.updateSelectionMode(mod)
 	switch clickCount {
 	case 1:
 		activeBuffer.StartSelection(x, y, buffer.SelectionChar)
@@ -361,7 +362,7 @@ func (gui *GUI) handleSelectionButtonRelease(x uint16, y uint16) {
 	// Do copy to clipboard *or* open URL, but not both.
 	handled := false
 	if gui.config.CopyAndPasteWithMouse {
-		selectedText := activeBuffer.GetSelectedText()
+		selectedText := activeBuffer.GetSelectedText(gui.selectionRegionMode)
 		if selectedText != "" {
 			gui.window.SetClipboardString(selectedText)
 			handled = true
