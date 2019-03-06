@@ -134,7 +134,8 @@ func (terminal *Terminal) GetMouseExtMode() MouseExtMode {
 	return terminal.mouseExtMode
 }
 
-func (terminal *Terminal) IsOSCTerminator(char rune) bool {
+func (terminal *Terminal) IsOSCTerminator(char rune, isEscaped bool) bool {
+	// @todo handle isEscaped flag
 	_, ok := terminal.platformDependentSettings.OSCTerminators[char]
 	return ok
 }

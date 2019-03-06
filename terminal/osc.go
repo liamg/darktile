@@ -12,18 +12,28 @@ func oscHandler(pty chan rune, terminal *Terminal) error {
 	params := []string{}
 	param := ""
 
-	for {
-		b := <-pty
-		if terminal.IsOSCTerminator(b) {
-			params = append(params, param)
-			break
+	{
+		isEscaped := false // flag if the previous character was escape
+
+		for {
+			b := <-pty
+			if terminal.IsOSCTerminator(b, isEscaped) {
+				params = append(params, param)
+				break
+			}
+			if isEscaped {
+				isEscaped = false
+			} else if b == 0x1b {
+				isEscaped = true
+				continue
+			}
+			if b == ';' {
+				params = append(params, param)
+				param = ""
+				continue
+			}
+			param = fmt.Sprintf("%s%c", param, b)
 		}
-		if b == ';' {
-			params = append(params, param)
-			param = ""
-			continue
-		}
-		param = fmt.Sprintf("%s%c", param, b)
 	}
 
 	if len(params) == 0 {
@@ -42,8 +52,8 @@ func oscHandler(pty chan rune, terminal *Terminal) error {
 	case "0", "2":
 		terminal.SetTitle(pT)
 	case "8": // hyperlink
-		if len(pS) > 2 {
-			terminal.terminalState.CurrentHyperlink = &buffer.Hyperlink{Uri: pS[2]}
+		if len(params) > 2 && len(params[2]) > 0 {
+			terminal.terminalState.CurrentHyperlink = &buffer.Hyperlink{Uri: params[2]}
 		} else {
 			terminal.terminalState.CurrentHyperlink = nil
 		}
