@@ -74,8 +74,8 @@ type GUI struct {
 	mouseCatchedOnButton  glfw.MouseButton
 	prevMouseEventHandler mouseEventsHandler
 
-	internalResize bool
-	selectionRegionMode             buffer.SelectionRegionMode
+	internalResize      bool
+	selectionRegionMode buffer.SelectionRegionMode
 
 	vScrollbar *scrollbar
 }

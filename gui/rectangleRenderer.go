@@ -143,8 +143,8 @@ func (rr *rectangleRenderer) render(left float32, top float32, width float32, he
 	}
 
 	/*
-	gl.NamedBufferSubData(rr.vbo, 0, len(vertices)*4, gl.Ptr(&vertices[0]))
-	/*/
+		gl.NamedBufferSubData(rr.vbo, 0, len(vertices)*4, gl.Ptr(&vertices[0]))
+		/*/
 	gl.BindBuffer(gl.ARRAY_BUFFER, rr.vbo)
 	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(&vertices[0]))
 	//*/
