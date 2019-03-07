@@ -19,6 +19,7 @@ const (
 )
 
 type MouseMode uint
+type MouseExtMode uint
 
 const (
 	MouseModeNone MouseMode = iota
@@ -27,6 +28,9 @@ const (
 	MouseModeVT200Highlight
 	MouseModeButtonEvent
 	MouseModeAnyEvent
+	MouseExtNone MouseExtMode = iota
+	MouseExtUTF
+	MouseExtSGR
 )
 
 type Terminal struct {
@@ -44,6 +48,7 @@ type Terminal struct {
 	reverseHandlers           []chan bool
 	modes                     Modes
 	mouseMode                 MouseMode
+	mouseExtMode              MouseExtMode
 	bracketedPasteMode        bool
 	charWidth                 float32
 	charHeight                float32
@@ -122,6 +127,14 @@ func (terminal *Terminal) SetMouseMode(mode MouseMode) {
 
 func (terminal *Terminal) GetMouseMode() MouseMode {
 	return terminal.mouseMode
+}
+
+func (terminal *Terminal) SetMouseExtMode(mode MouseExtMode) {
+	terminal.mouseExtMode = mode
+}
+
+func (terminal *Terminal) GetMouseExtMode() MouseExtMode {
+	return terminal.mouseExtMode
 }
 
 func (terminal *Terminal) IsOSCTerminator(char rune) bool {
@@ -341,14 +354,16 @@ func (terminal *Terminal) Clear() {
 	terminal.ActiveBuffer().Clear()
 }
 
+func (terminal *Terminal) ReallyClear() {
+	terminal.pty.Clear()
+	terminal.ActiveBuffer().ReallyClear()
+}
+
 func (terminal *Terminal) GetSize() (int, int) {
 	return int(terminal.size.Width), int(terminal.size.Height)
 }
 
 func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
-	terminal.lock.Lock()
-	defer terminal.lock.Unlock()
-
 	if terminal.size.Width == uint16(newCols) && terminal.size.Height == uint16(newLines) {
 		return nil
 	}
@@ -412,4 +427,21 @@ func (terminal *Terminal) SetScreenMode(enabled bool) {
 	}
 	terminal.emitReverse(enabled)
 	terminal.NotifyDirty()
+}
+
+func (terminal *Terminal) Lock() {
+	terminal.lock.Lock()
+}
+
+func (terminal *Terminal) Unlock() {
+	terminal.lock.Unlock()
+}
+
+// SetDirtyLocked sets dirty flag locking the terminal to prevent data race warnings
+// @todo remove when switching to event-driven architecture
+func (terminal *Terminal) SetDirtyLocked() {
+	terminal.Lock()
+	defer terminal.Unlock()
+
+	terminal.SetDirty()
 }

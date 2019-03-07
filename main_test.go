@@ -105,7 +105,11 @@ func TestCursorMovement(t *testing.T) {
 			send(term, "1\n")
 			sleep()
 
-			if term.ActiveBuffer().CompareViewLines("vttest/test-cursor-movement-1") == false {
+			term.Lock()
+			compareResult := term.ActiveBuffer().CompareViewLines("vttest/test-cursor-movement-1")
+			term.Unlock()
+
+			if compareResult == false {
 				os.Exit(terminate(fmt.Sprintf("ActiveBuffer doesn't match vttest template vttest/test-cursor-movement-1")))
 			}
 
@@ -146,14 +150,7 @@ func TestScreenFeatures(t *testing.T) {
 			validateScreen("test-screen-features-8.png")
 			validateScreen("test-screen-features-9.png")
 			validateScreen("test-screen-features-10.png")
-
-			// 11th screen test is not passing https://github.com/liamg/aminal/issues/207
-			//g.Screenshot("vttest/test-screen-features-11.png")
-			//compareImages("vttest/test-screen-features-11.png", "vttest/test-screen-features-11.png")
-
-			enter(term)
-			sleep()
-
+			validateScreen("test-screen-features-11.png")
 			validateScreen("test-screen-features-12.png")
 			validateScreen("test-screen-features-13.png")
 			validateScreen("test-screen-features-14.png")

@@ -1,6 +1,51 @@
 package terminal
 
-import "fmt"
+import (
+	"errors"
+	"fmt"
+	"strings"
+)
+
+func recoverCodeFromEnabled(enabled bool) string {
+	code := ""
+	if enabled {
+		code = "h"
+	} else {
+		code = "l"
+	}
+	return code
+}
+
+func csiSetModes(modes []string, enabled bool, terminal *Terminal) error {
+	if len(modes) == 0 {
+		return fmt.Errorf("CSI %s without parameters is not allowed", recoverCodeFromEnabled(enabled))
+	}
+	if len(modes) == 1 {
+		return csiSetMode(modes[0], enabled, terminal)
+	}
+	// should we propagate DEC prefix?
+	const decPrefix = '?'
+	isDec := len(modes[0]) > 0 && modes[0][0] == decPrefix
+
+	// iterate through params, propagating DEC prefix to subsequent elements
+	errorStrings := make([]string, 0)
+	for i, v := range modes {
+		updatedMode := v
+		if i > 0 && isDec {
+			updatedMode = string(decPrefix) + v
+		}
+		err := csiSetMode(updatedMode, enabled, terminal)
+		if err != nil {
+			errorStrings = append(errorStrings, err.Error())
+		}
+	}
+
+	if len(errorStrings) > 0 {
+		return fmt.Errorf(strings.Join(errorStrings, "\n"))
+	}
+
+	return nil
+}
 
 func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 
@@ -79,7 +124,7 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			terminal.UseMainBuffer()
 		}
-	case "?1000", "?1006;1000", "?10061000": // ?10061000 seen from htop
+	case "?1000", "?10061000": // ?10061000 seen from htop
 		// enable mouse tracking
 		// 1000 refers to ext mode for extended mouse click area - otherwise only x <= 255-31
 		if enabled {
@@ -88,6 +133,44 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		} else {
 			terminal.logger.Infof("Turning off VT200 mouse mode")
 			terminal.SetMouseMode(MouseModeNone)
+		}
+	case "?1002":
+		if enabled {
+			terminal.logger.Infof("Turning on Button Event mouse mode")
+			terminal.SetMouseMode(MouseModeButtonEvent)
+		} else {
+			terminal.logger.Infof("Turning off Button Event mouse mode")
+			terminal.SetMouseMode(MouseModeNone)
+		}
+	case "?1003":
+		return errors.New("Any Event mouse mode is not supported")
+		/*
+			if enabled {
+				terminal.logger.Infof("Turning on Any Event mouse mode")
+				terminal.SetMouseMode(MouseModeAnyEvent)
+			} else {
+				terminal.logger.Infof("Turning off Any Event mouse mode")
+				terminal.SetMouseMode(MouseModeNone)
+			}
+		*/
+	case "?1005":
+		return errors.New("UTF-8 ext mouse mode is not supported")
+		/*
+			if enabled {
+				terminal.logger.Infof("Turning on UTF-8 ext mouse mode")
+				terminal.SetMouseExtMode(MouseExtUTF)
+			} else {
+				terminal.logger.Infof("Turning off UTF-8 ext mouse mode")
+				terminal.SetMouseExtMode(MouseExtNone)
+			}
+		*/
+	case "?1006":
+		if enabled {
+			terminal.logger.Infof("Turning on SGR ext mouse mode")
+			terminal.SetMouseExtMode(MouseExtSGR)
+		} else {
+			terminal.logger.Infof("Turning off SGR ext mouse mode")
+			terminal.SetMouseExtMode(MouseExtNone)
 		}
 	case "?1048":
 		if enabled {
@@ -104,13 +187,7 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 	case "?2004":
 		terminal.SetBracketedPasteMode(enabled)
 	default:
-		code := ""
-		if enabled {
-			code = "h"
-		} else {
-			code = "l"
-		}
-		return fmt.Errorf("Unsupported CSI %s%s code", modeStr, code)
+		return fmt.Errorf("Unsupported CSI %s%s code", modeStr, recoverCodeFromEnabled(enabled))
 	}
 
 	return nil

@@ -35,26 +35,42 @@ func swallowHandler(n int) func(pty chan rune, terminal *Terminal) error {
 }
 
 func risHandler(pty chan rune, terminal *Terminal) error {
+	terminal.Lock()
+	defer terminal.Unlock()
+
 	terminal.ActiveBuffer().Clear()
 	return nil
 }
 
 func indexHandler(pty chan rune, terminal *Terminal) error {
+	terminal.Lock()
+	defer terminal.Unlock()
+
 	terminal.ActiveBuffer().Index()
 	return nil
 }
 
 func reverseIndexHandler(pty chan rune, terminal *Terminal) error {
+	terminal.Lock()
+	defer terminal.Unlock()
+
 	terminal.ActiveBuffer().ReverseIndex()
 	return nil
 }
 
 func saveCursorHandler(pty chan rune, terminal *Terminal) error {
+	// Handler should lock the terminal if there will be write operations to any data read by the renderer
+	// terminal.Lock()
+	// defer terminal.Unlock()
+
 	terminal.ActiveBuffer().SaveCursor()
 	return nil
 }
 
 func restoreCursorHandler(pty chan rune, terminal *Terminal) error {
+	terminal.Lock()
+	defer terminal.Unlock()
+
 	terminal.ActiveBuffer().RestoreCursor()
 	return nil
 }
@@ -73,11 +89,18 @@ func ansiHandler(pty chan rune, terminal *Terminal) error {
 }
 
 func nextLineHandler(pty chan rune, terminal *Terminal) error {
+	terminal.Lock()
+	defer terminal.Unlock()
+
 	terminal.ActiveBuffer().NewLineEx(true)
 	return nil
 }
 
 func tabSetHandler(pty chan rune, terminal *Terminal) error {
+	// Handler should lock the terminal if there will be write operations to any data read by the renderer
+	// terminal.Lock()
+	// defer terminal.Unlock()
+
 	terminal.terminalState.TabSetAtCursor()
 	return nil
 }

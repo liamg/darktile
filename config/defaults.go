@@ -39,6 +39,7 @@ func init() {
 	DefaultConfig.KeyMapping[string(ActionToggleDebug)] = addMod("d")
 	DefaultConfig.KeyMapping[string(ActionToggleSlomo)] = addMod(";")
 	DefaultConfig.KeyMapping[string(ActionReportBug)] = addMod("r")
+	DefaultConfig.KeyMapping[string(ActionBufferClear)] = addMod("k")
 }
 
 func addMod(keys string) string {

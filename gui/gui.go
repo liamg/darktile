@@ -46,6 +46,7 @@ type GUI struct {
 	renderer          *OpenGLRenderer
 	colourAttr        uint32
 	mouseDown         bool
+	mouseDownModifier glfw.ModifierKey
 	overlay           overlay
 	terminalAlpha     float32
 	showDebugInfo     bool
@@ -57,10 +58,13 @@ type GUI struct {
 
 	prevLeftClickX                  uint16
 	prevLeftClickY                  uint16
+	prevMotionTX                    int
+	prevMotionTY                    int
 	leftClickTime                   time.Time
 	leftClickCount                  int // number of clicks in a serie - single click, double click, or triple click
 	mouseMovedAfterSelectionStarted bool
 	internalResize                  bool
+	selectionRegionMode             buffer.SelectionRegionMode
 }
 
 func Min(x, y int) int {
@@ -175,15 +179,23 @@ func (gui *GUI) scale() float32 {
 }
 
 // can only be called on OS thread
-func (gui *GUI) resizeToTerminal(newCols uint, newRows uint) {
+func (gui *GUI) resizeToTerminal() {
 
 	if gui.window.GetAttrib(glfw.Iconified) != 0 {
 		return
 	}
 
+	// Order of locking:
+	// 1. resizeLock
+	// 2. terminal's lock
 	gui.resizeLock.Lock()
 	defer gui.resizeLock.Unlock()
+	gui.terminal.Lock()
+	defer gui.terminal.Unlock()
 
+	termCols, termRows := gui.terminal.GetSize()
+	newCols := uint(termCols)
+	newRows := uint(termRows)
 	cols, rows := gui.renderer.GetTermSize()
 	if cols == newCols && rows == newRows {
 		return
@@ -246,9 +258,16 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 		return
 	}
 
+	// Order of locking:
+	// 1. resizeLock
+	// 2. terminal's lock
+	terminalAlreadyLocked := false
 	if gui.internalResize == false {
 		gui.resizeLock.Lock()
 		defer gui.resizeLock.Unlock()
+		// No need to lock the terminal right away, we can lock it later
+	} else {
+		terminalAlreadyLocked = true
 	}
 
 	gui.logger.Debugf("Initiating GUI resize to %dx%d", width, height)
@@ -270,6 +289,11 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 		gui.logger.Debugf("Calculating size in cols/rows...")
 		cols, rows := gui.renderer.GetTermSize()
 		gui.logger.Debugf("Resizing internal terminal...")
+		if !terminalAlreadyLocked {
+			gui.terminal.Lock()
+			defer gui.terminal.Unlock()
+			terminalAlreadyLocked = true
+		}
 		if err := gui.terminal.SetSize(cols, rows); err != nil {
 			gui.logger.Errorf("Failed to resize terminal to %d cols, %d rows: %s", cols, rows, err)
 		}
@@ -280,11 +304,16 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	gui.logger.Debugf("Setting viewport size...")
 	gl.Viewport(0, 0, int32(gui.width), int32(gui.height))
 
+	if !terminalAlreadyLocked {
+		gui.terminal.Lock()
+		defer gui.terminal.Unlock()
+		terminalAlreadyLocked = true
+	}
 	gui.terminal.SetCharSize(gui.renderer.cellWidth, gui.renderer.cellHeight)
 
 	gui.logger.Debugf("Resize complete!")
 
-	gui.redraw()
+	gui.redraw(!terminalAlreadyLocked)
 	gui.window.SwapBuffers()
 }
 
@@ -356,6 +385,10 @@ func (gui *GUI) Render() error {
 		gui.resize(gui.window, w, h)
 	}
 
+	gui.terminal.AttachTitleChangeHandler(titleChan)
+	gui.terminal.AttachResizeHandler(resizeChan)
+	gui.terminal.AttachReverseHandler(reverseChan)
+
 	gui.logger.Debugf("Starting pty read handling...")
 
 	go func() {
@@ -373,10 +406,6 @@ func (gui *GUI) Render() error {
 	// stop smoothing fonts
 	gl.Disable(gl.DEPTH_TEST)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-
-	gui.terminal.AttachTitleChangeHandler(titleChan)
-	gui.terminal.AttachResizeHandler(resizeChan)
-	gui.terminal.AttachReverseHandler(reverseChan)
 
 	ticker := time.NewTicker(time.Second)
 	defer ticker.Stop()
@@ -457,8 +486,7 @@ Buffer Size: %d lines
 			case <-titleChan:
 				gui.window.SetTitle(gui.terminal.GetTitle())
 			case <-resizeChan:
-				cols, rows := gui.terminal.GetSize()
-				gui.resizeToTerminal(uint(cols), uint(rows))
+				gui.resizeToTerminal()
 			case reverse := <-reverseChan:
 				gui.generateDefaultCell(reverse)
 			default:
@@ -510,8 +538,11 @@ func (gui *GUI) waker(stop <-chan struct{}) {
 	}
 }
 
-func (gui *GUI) redraw() {
-	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
+func (gui *GUI) renderTerminalData(shouldLock bool) {
+	if shouldLock {
+		gui.terminal.Lock()
+		defer gui.terminal.Unlock()
+	}
 	lines := gui.terminal.GetVisibleLines()
 	lineCount := int(gui.terminal.ActiveBuffer().ViewHeight())
 	colCount := int(gui.terminal.ActiveBuffer().ViewWidth())
@@ -528,7 +559,7 @@ func (gui *GUI) redraw() {
 					cursor = cx == uint(x) && cy == uint(y)
 				}
 
-				if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
+				if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y), gui.selectionRegionMode) {
 					colour = &gui.config.ColourScheme.Selection
 				} else {
 					colour = nil
@@ -641,6 +672,11 @@ func (gui *GUI) redraw() {
 		}
 
 	}
+}
+
+func (gui *GUI) redraw(shouldLock bool) {
+	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
+	gui.renderTerminalData(shouldLock)
 	gui.renderOverlay()
 }
 

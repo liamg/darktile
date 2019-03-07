@@ -7,6 +7,8 @@ import (
 	"syscall"
 	"time"
 
+	"fmt"
+
 	"github.com/MaxRis/w32"
 )
 
@@ -97,6 +99,7 @@ type winConPty struct {
 	innerInPipe               syscall.Handle
 	innerOutPipe              syscall.Handle
 	hcon                      uintptr
+	processID                 uint32 // required to obtain old-style console handle (for standard console functions)
 	platformDependentSettings PlatformDependentSettings
 }
 
@@ -135,15 +138,22 @@ func (pty *winConPty) Close() error {
 
 func (pty *winConPty) CreateGuestProcess(imagePath string) (Process, error) {
 	process, err := createPtyChildProcess(imagePath, pty.hcon)
+	if err != nil {
+		return nil, err
+	}
 
-	if err == nil {
-		setupChildConsole(C.DWORD(process.processID), C.STD_OUTPUT_HANDLE, C.ENABLE_PROCESSED_OUTPUT|C.ENABLE_WRAP_AT_EOL_OUTPUT)
+	pty.processID = process.processID
+
+	err = setupChildConsole(C.DWORD(process.processID), C.STD_OUTPUT_HANDLE, C.ENABLE_PROCESSED_OUTPUT|C.ENABLE_WRAP_AT_EOL_OUTPUT)
+	if err != nil {
+		process.Close()
+		return nil, err
 	}
 
 	return process, err
 }
 
-func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) bool {
+func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) error {
 	C.FreeConsole()
 	defer C.AttachConsole(^C.DWORD(0)) // attach to parent process console
 
@@ -158,7 +168,7 @@ func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) bool {
 		}
 		lastError := C.GetLastError()
 		if lastError != C.ERROR_GEN_FAILURE || count <= 0 {
-			return false
+			return fmt.Errorf("Was not able to attach to the child prosess' console")
 		}
 
 		time.Sleep(time.Millisecond * time.Duration(waitStepMilliSeconds))
@@ -169,7 +179,7 @@ func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) bool {
 	C.SetConsoleMode(h, C.DWORD(mode))
 	C.FreeConsole()
 
-	return true
+	return nil
 }
 
 func (pty *winConPty) Resize(x, y int) error {
@@ -184,6 +194,50 @@ func (pty *winConPty) Resize(x, y int) error {
 
 func (pty *winConPty) GetPlatformDependentSettings() PlatformDependentSettings {
 	return pty.platformDependentSettings
+}
+
+func (pty *winConPty) Clear() {
+	C.FreeConsole()
+	defer C.AttachConsole(^C.DWORD(0)) // attach to parent process console
+
+	if C.AttachConsole(C.DWORD(pty.processID)) == 0 {
+		return
+	}
+	defer C.FreeConsole()
+	hConsole := C.GetStdHandle(C.STD_OUTPUT_HANDLE)
+
+	var coordScreen C.COORD
+	coordScreen.X = 0
+	coordScreen.Y = 0
+	var cCharsWritten C.DWORD
+	var csbi C.CONSOLE_SCREEN_BUFFER_INFO
+
+	// Get the number of character cells in the current buffer.
+	if C.GetConsoleScreenBufferInfo(hConsole, &csbi) != C.BOOL(0) {
+
+		dwConSize := C.DWORD(csbi.dwSize.X * csbi.dwSize.Y)
+
+		// Fill the entire screen with blanks.
+		C.FillConsoleOutputCharacterA(hConsole, // Handle to console screen buffer
+			' ',            // Character to write to the buffer
+			dwConSize,      // Number of cells to write
+			coordScreen,    // Coordinates of first cell
+			&cCharsWritten) // Receive number of characters written
+
+		// Get the current text attribute.
+		if C.GetConsoleScreenBufferInfo(hConsole, &csbi) != C.BOOL(0) {
+			// Set the buffer's attributes accordingly.
+
+			C.FillConsoleOutputAttribute(hConsole, // Handle to console screen buffer
+				csbi.wAttributes, // Character attributes to use
+				dwConSize,        // Number of cells to set attribute
+				coordScreen,      // Coordinates of first cell
+				&cCharsWritten)   // Receive number of characters written
+		}
+	}
+
+	// Put the cursor at its home coordinates.
+	C.SetConsoleCursorPosition(hConsole, coordScreen)
 }
 
 // NewPty creates a new instance of a Pty implementation for Windows on a newly allocated ConPTY

@@ -7,8 +7,6 @@ import (
 )
 
 type Config struct {
-	DebugMode             bool             `toml:"debug"`
-	Slomo                 bool             `toml:"slomo"`
 	ColourScheme          ColourScheme     `toml:"colours"`
 	DPIScale              float32          `toml:"dpi-scale"`
 	Shell                 string           `toml:"shell"`
@@ -16,6 +14,11 @@ type Config struct {
 	SearchURL             string           `toml:"search_url"`
 	MaxLines              uint64           `toml:"max_lines"`
 	CopyAndPasteWithMouse bool             `toml:"copy_and_paste_with_mouse"`
+
+	// Developer options.
+	DebugMode  bool   `toml:"debug"`
+	Slomo      bool   `toml:"slomo"`
+	CPUProfile string `toml:"cpu_profile"`
 }
 
 type KeyMappingConfig map[string]string

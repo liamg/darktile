@@ -28,6 +28,7 @@ func getConfig() *config.Config {
 	shell := ""
 	debugMode := false
 	slomo := false
+	cpuProfile := ""
 
 	if flag.Parsed() == false {
 		flag.BoolVar(&showVersion, "version", showVersion, "Output version information")
@@ -35,6 +36,7 @@ func getConfig() *config.Config {
 		flag.StringVar(&shell, "shell", shell, "Specify the shell to use")
 		flag.BoolVar(&debugMode, "debug", debugMode, "Enable debug logging")
 		flag.BoolVar(&slomo, "slomo", slomo, "Render in slow motion (useful for debugging)")
+		flag.StringVar(&cpuProfile, "cpuprofile", cpuProfile, "Write a CPU profile to this file")
 
 		flag.Parse() // actual parsing and fetching flags from the command line
 	}
@@ -67,6 +69,10 @@ func getConfig() *config.Config {
 
 	if actuallyProvidedFlags["slomo"] {
 		conf.Slomo = slomo
+	}
+
+	if actuallyProvidedFlags["cpuprofile"] {
+		conf.CPUProfile = cpuProfile
 	}
 
 	return conf

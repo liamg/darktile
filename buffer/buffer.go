@@ -10,11 +10,15 @@ import (
 )
 
 type SelectionMode int
+type SelectionRegionMode int
 
 const (
 	SelectionChar SelectionMode = iota // char-by-char selection
 	SelectionWord SelectionMode = iota // by word selection
 	SelectionLine SelectionMode = iota // whole line selection
+
+	SelectionRegionNormal SelectionRegionMode = iota
+	SelectionRegionRectangular
 )
 
 type Notifier interface {
@@ -165,10 +169,36 @@ func isRuneURLSelectionMarker(r rune) bool {
 	return false
 }
 
-func (buffer *Buffer) GetSelectedText() string {
-	start, end := buffer.getActualSelection()
+func (buffer *Buffer) getRectangleText(start *Position, end *Position) string {
+	var builder strings.Builder
+	builder.Grow((end.Col - start.Col + 2) * (end.Line - start.Line + 1)) // reserve space to minimize allocations
+
+	for row := start.Line; row <= end.Line; row++ {
+		for col := start.Col; col <= end.Col; col++ {
+			if row < len(buffer.lines) && col < len(buffer.lines[row].cells) {
+				r := buffer.lines[row].cells[col].Rune()
+				if r == 0x00 {
+					r = ' '
+				}
+				builder.WriteRune(r)
+			} else {
+				builder.WriteRune(' ')
+			}
+		}
+		builder.WriteString("\n")
+	}
+
+	return builder.String()
+}
+
+func (buffer *Buffer) GetSelectedText(selectionRegionMode SelectionRegionMode) string {
+	start, end := buffer.getActualSelection(selectionRegionMode)
 	if start == nil || end == nil {
 		return ""
+	}
+
+	if selectionRegionMode == SelectionRegionRectangular {
+		return buffer.getRectangleText(start, end)
 	}
 
 	var builder strings.Builder
@@ -261,7 +291,7 @@ func (buffer *Buffer) ClearSelection() {
 	buffer.dirty.Notify()
 }
 
-func (buffer *Buffer) getActualSelection() (*Position, *Position) {
+func (buffer *Buffer) getActualSelection(selectionRegionMode SelectionRegionMode) (*Position, *Position) {
 	if buffer.selectionStart == nil || buffer.selectionEnd == nil {
 		return nil, nil
 	}
@@ -269,7 +299,23 @@ func (buffer *Buffer) getActualSelection() (*Position, *Position) {
 	start := &Position{}
 	end := &Position{}
 
-	if comparePositions(buffer.selectionStart, buffer.selectionEnd) >= 0 {
+	if selectionRegionMode == SelectionRegionRectangular {
+		if buffer.selectionStart.Col > buffer.selectionEnd.Col {
+			start.Col = buffer.selectionEnd.Col
+			end.Col = buffer.selectionStart.Col
+		} else {
+			start.Col = buffer.selectionStart.Col
+			end.Col = buffer.selectionEnd.Col
+		}
+		if buffer.selectionStart.Line > buffer.selectionEnd.Line {
+			start.Line = buffer.selectionEnd.Line
+			end.Line = buffer.selectionStart.Line
+		} else {
+			start.Line = buffer.selectionStart.Line
+			end.Line = buffer.selectionEnd.Line
+		}
+		return start, end
+	} else if comparePositions(buffer.selectionStart, buffer.selectionEnd) >= 0 {
 		start.Col = buffer.selectionStart.Col
 		start.Line = buffer.selectionStart.Line
 
@@ -309,13 +355,17 @@ func (buffer *Buffer) getActualSelection() (*Position, *Position) {
 	return start, end
 }
 
-func (buffer *Buffer) InSelection(col uint16, row uint16) bool {
-	start, end := buffer.getActualSelection()
+func (buffer *Buffer) InSelection(col uint16, row uint16, selectionRegionMode SelectionRegionMode) bool {
+	start, end := buffer.getActualSelection(selectionRegionMode)
 	if start == nil || end == nil {
 		return false
 	}
 
 	rawY := int(buffer.convertViewLineToRawLine(row) - uint64(buffer.terminalState.scrollLinesFromBottom))
+
+	if selectionRegionMode == SelectionRegionRectangular {
+		return rawY >= start.Line && rawY <= end.Line && int(col) >= start.Col && int(col) <= end.Col
+	}
 
 	return (rawY > start.Line || (rawY == start.Line && int(col) >= start.Col)) &&
 		(rawY < end.Line || (rawY == end.Line && int(col) <= end.Col))
@@ -821,6 +871,13 @@ func (buffer *Buffer) Clear() {
 		buffer.lines = append(buffer.lines, newLine())
 	}
 	buffer.SetPosition(0, 0) // do we need to set position?
+}
+
+func (buffer *Buffer) ReallyClear() {
+	defer buffer.emitDisplayChange()
+	buffer.lines = []Line{}
+	buffer.terminalState.SetScrollOffset(0)
+	buffer.SetPosition(0, 0)
 }
 
 // creates if necessary

@@ -131,6 +131,9 @@ func sixelHandler(pty chan rune, terminal *Terminal) error {
 		defer terminal.SetLineFeedMode()
 	}
 
+	terminal.Lock()
+	defer terminal.Unlock()
+
 	drawSixel(six, terminal)
 
 	return nil

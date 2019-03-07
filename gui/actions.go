@@ -15,10 +15,11 @@ var actionMap = map[config.UserAction]func(gui *GUI){
 	config.ActionSearch:      actionSearchSelection,
 	config.ActionToggleSlomo: actionToggleSlomo,
 	config.ActionReportBug:   actionReportBug,
+	config.ActionBufferClear: actionBufferClear,
 }
 
 func actionCopy(gui *GUI) {
-	selectedText := gui.terminal.ActiveBuffer().GetSelectedText()
+	selectedText := gui.terminal.ActiveBuffer().GetSelectedText(gui.selectionRegionMode)
 
 	if selectedText != "" {
 		gui.window.SetClipboardString(selectedText)
@@ -37,7 +38,7 @@ func actionToggleDebug(gui *GUI) {
 }
 
 func actionSearchSelection(gui *GUI) {
-	keywords := gui.terminal.ActiveBuffer().GetSelectedText()
+	keywords := gui.terminal.ActiveBuffer().GetSelectedText(gui.selectionRegionMode)
 	if keywords != "" && gui.config.SearchURL != "" && strings.Contains(gui.config.SearchURL, "$QUERY") {
 		gui.launchTarget(fmt.Sprintf(strings.Replace(gui.config.SearchURL, "$QUERY", "%s", 1), url.QueryEscape(keywords)))
 	}
@@ -49,4 +50,8 @@ func actionToggleSlomo(gui *GUI) {
 
 func actionReportBug(gui *GUI) {
 	gui.launchTarget("https://github.com/liamg/aminal/issues/new/choose")
+}
+
+func actionBufferClear(gui *GUI) {
+	gui.terminal.ReallyClear()
 }
