@@ -1,6 +1,11 @@
 SHELL := /bin/bash
 BINARY := aminal
 FONTPATH := ./gui/packed-fonts
+GEN_SRC_DIR := ./generated-src
+VERSION_MAJOR := 0
+VERSION_MINOR := 9
+VERSION_PATCH := 0
+VERSION := ${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}
 
 .PHONY: build
 build: 
@@ -58,6 +63,50 @@ windows-cross-compile-travis:
 build-windows:
 	windres -o aminal.syso aminal.rc
 	go build -o ${BINARY}-windows-amd64.exe
+
+.PHONY: launcher-windows
+launcher-windows: build-windows
+	if exist "${GEN_SRC_DIR}\launcher" rmdir /S /Q "${GEN_SRC_DIR}\launcher"
+	xcopy "windows\launcher\*.*" "${GEN_SRC_DIR}\launcher" /K /H /Y /Q /I
+	powershell -Command "(gc ${GEN_SRC_DIR}\launcher\versioninfo.json) -creplace 'VERSION_MAJOR', '${VERSION_MAJOR}' | Out-File -Encoding default ${GEN_SRC_DIR}\launcher\versioninfo.json"
+	powershell -Command "(gc ${GEN_SRC_DIR}\launcher\versioninfo.json) -creplace 'VERSION_MINOR', '${VERSION_MINOR}' | Out-File -Encoding default ${GEN_SRC_DIR}\launcher\versioninfo.json"
+	powershell -Command "(gc ${GEN_SRC_DIR}\launcher\versioninfo.json) -creplace 'VERSION_PATCH', '${VERSION_PATCH}' | Out-File -Encoding default ${GEN_SRC_DIR}\launcher\versioninfo.json"
+	powershell -Command "(gc ${GEN_SRC_DIR}\launcher\versioninfo.json) -creplace 'VERSION', '${VERSION}' | Out-File -Encoding default ${GEN_SRC_DIR}\launcher\versioninfo.json"
+	powershell -Command "(gc ${GEN_SRC_DIR}\launcher\versioninfo.json) -creplace 'YEAR', (Get-Date -UFormat '%Y') | Out-File -Encoding default ${GEN_SRC_DIR}\launcher\versioninfo.json"
+	copy aminal.ico "${GEN_SRC_DIR}\launcher" /Y
+	go generate "${GEN_SRC_DIR}\launcher"
+	if exist "bin\windows\Aminal" rmdir /S /Q "bin\windows\Aminal"
+	mkdir "bin\windows\Aminal\Versions\${VERSION}"
+	go build -o "bin\windows\Aminal\${BINARY}.exe" -ldflags "-H windowsgui" "${GEN_SRC_DIR}\launcher"
+	copy ${BINARY}-windows-amd64.exe "bin\windows\Aminal\Versions\${VERSION}\${BINARY}.exe" /Y
+	IF "${WINDOWS_CODESIGNING_CERT_PW}"=="" ECHO Environment variable WINDOWS_CODESIGNING_CERT_PW is not defined. & exit 1
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp bin\windows\Aminal\${BINARY}.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /fd sha256 /td sha256 bin\windows\Aminal\${BINARY}.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp bin\windows\Aminal\Versions\${VERSION}\${BINARY}.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /fd sha256 /td sha256 bin\windows\Aminal\Versions\${VERSION}\${BINARY}.exe
+
+.PHONY: uninstaller-windows
+uninstaller-windows: launcher-windows
+	makensis "/XOutFile bin/windows/UninstallerSetup.exe" /NOCD windows\Uninstaller.nsi
+	cmd /c "bin\windows\UninstallerSetup.exe /S /D=%cd%\bin\windows\Aminal"
+	IF "${WINDOWS_CODESIGNING_CERT_PW}"=="" ECHO Environment variable WINDOWS_CODESIGNING_CERT_PW is not defined. & exit 1
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp bin\windows\Aminal\uninstall.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /fd sha256 /td sha256 bin\windows\Aminal\uninstall.exe
+
+.PHONY: installer-windows
+installer-windows: uninstaller-windows
+	if exist "${GEN_SRC_DIR}\installer" rmdir /S /Q "${GEN_SRC_DIR}\installer"
+	xcopy "windows\installer\*.*" "${GEN_SRC_DIR}\installer" /K /H /Y /Q /I
+	powershell -Command "(gc ${GEN_SRC_DIR}\installer\installer.go) -creplace 'VERSION', '${VERSION}' | Out-File -Encoding default ${GEN_SRC_DIR}\installer\installer.go"
+	go-bindata -prefix "bin\windows\Aminal" -o "${GEN_SRC_DIR}/installer/data/data.go" "./bin/windows/Aminal/..."
+	powershell -Command "(gc ${GEN_SRC_DIR}\installer\data\data.go) -creplace 'package main', 'package data' | Out-File -Encoding default ${GEN_SRC_DIR}\installer\data\data.go"
+	go build -o bin/windows/AminalSetup.exe -ldflags "-H windowsgui" "${GEN_SRC_DIR}/installer/installer.go"
+	rem If an .exe name contains "installer", "setup" etc., then at least Windows 10 automatically
+	rem opens a UAC prompt upon opening it. To avoid this, we add a compatibility manifest to the .exe.
+	mt -manifest windows\installer\AminalSetup.exe.manifest -outputresource:bin\windows\AminalSetup.exe;1
+	IF "${WINDOWS_CODESIGNING_CERT_PW}"=="" ECHO Environment variable WINDOWS_CODESIGNING_CERT_PW is not defined. & exit 1
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp bin\windows\AminalSetup.exe
+	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /fd sha256 /td sha256 bin\windows\AminalSetup.exe
 
 .PHONY:	build-darwin-native-travis
 build-darwin-native-travis:
