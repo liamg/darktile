@@ -105,7 +105,11 @@ func TestCursorMovement(t *testing.T) {
 			send(term, "1\n")
 			sleep()
 
-			if term.ActiveBuffer().CompareViewLines("vttest/test-cursor-movement-1") == false {
+			term.Lock()
+			compareResult := term.ActiveBuffer().CompareViewLines("vttest/test-cursor-movement-1")
+			term.Unlock()
+
+			if compareResult == false {
 				os.Exit(terminate(fmt.Sprintf("ActiveBuffer doesn't match vttest template vttest/test-cursor-movement-1")))
 			}
 

@@ -5,7 +5,7 @@ type overlay interface {
 }
 
 func (gui *GUI) setOverlay(m overlay) {
-	defer gui.terminal.SetDirty()
+	defer gui.terminal.SetDirtyLocked()
 	gui.overlay = m
 }
 

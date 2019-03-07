@@ -89,6 +89,9 @@ func splitParams(paramString string) []string {
 func csiHandler(pty chan rune, terminal *Terminal) error {
 	final, param, intermediate := loadCSI(pty)
 
+	terminal.Lock()
+	defer terminal.Unlock()
+
 	// process intermediate control codes before the CSI
 	for _, b := range intermediate {
 		terminal.processRune(b)

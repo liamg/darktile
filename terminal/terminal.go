@@ -105,6 +105,9 @@ func (terminal *Terminal) SetBracketedPasteMode(enabled bool) {
 }
 
 func (terminal *Terminal) CheckDirty() bool {
+	terminal.Lock()
+	defer terminal.Unlock()
+
 	d := terminal.isDirty
 	terminal.isDirty = false
 	return d || terminal.ActiveBuffer().IsDirty()
@@ -355,9 +358,6 @@ func (terminal *Terminal) GetSize() (int, int) {
 }
 
 func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
-	terminal.lock.Lock()
-	defer terminal.lock.Unlock()
-
 	if terminal.size.Width == uint16(newCols) && terminal.size.Height == uint16(newLines) {
 		return nil
 	}
@@ -419,4 +419,21 @@ func (terminal *Terminal) SetScreenMode(enabled bool) {
 		buffer.ReverseVideo()
 	}
 	terminal.emitReverse(enabled)
+}
+
+func (terminal *Terminal) Lock() {
+	terminal.lock.Lock()
+}
+
+func (terminal *Terminal) Unlock() {
+	terminal.lock.Unlock()
+}
+
+// SetDirtyLocked sets dirty flag locking the terminal to prevent data race warnings
+// @todo remove when switching to event-driven architecture
+func (terminal *Terminal) SetDirtyLocked() {
+	terminal.Lock()
+	defer terminal.Unlock()
+
+	terminal.SetDirty()
 }
