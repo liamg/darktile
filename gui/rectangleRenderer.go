@@ -71,8 +71,6 @@ func newRectangleRenderer() (*rectangleRenderer, error) {
 	gl.GenVertexArrays(1, &vao)
 	gl.GenBuffers(1, &ibo)
 
-	vertices := [12]float32{}
-
 	indices := [...]uint32{
 		0, 1, 2,
 		2, 3, 0,
@@ -81,7 +79,7 @@ func newRectangleRenderer() (*rectangleRenderer, error) {
 	gl.BindVertexArray(vao)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, len(vertices)*4, gl.Ptr(&vertices[0]), gl.DYNAMIC_DRAW)
+	gl.BufferData(gl.ARRAY_BUFFER, 8*4, nil, gl.DYNAMIC_DRAW) // just reserve data for the buffer
 
 	gl.BindBuffer(gl.ELEMENT_ARRAY_BUFFER, ibo)
 	gl.BufferData(gl.ELEMENT_ARRAY_BUFFER, len(indices)*4, gl.Ptr(&indices[0]), gl.DYNAMIC_DRAW)
@@ -144,7 +142,13 @@ func (rr *rectangleRenderer) render(left float32, top float32, width float32, he
 		left, top + height,
 	}
 
+	/*
 	gl.NamedBufferSubData(rr.vbo, 0, len(vertices)*4, gl.Ptr(&vertices[0]))
+	/*/
+	gl.BindBuffer(gl.ARRAY_BUFFER, rr.vbo)
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(&vertices[0]))
+	//*/
+
 	gl.BindVertexArray(rr.vao)
 
 	gl.DrawElements(gl.TRIANGLES, 6, gl.UNSIGNED_INT, gl.PtrOffset(0))
