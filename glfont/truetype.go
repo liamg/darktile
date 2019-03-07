@@ -53,12 +53,10 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale float32) (*Font, error)
 	vertAttrib := uint32(gl.GetAttribLocation(f.program, gl.Str("vert\x00")))
 	gl.EnableVertexAttribArray(vertAttrib)
 	gl.VertexAttribPointer(vertAttrib, 2, gl.FLOAT, false, 4*4, gl.PtrOffset(0))
-	defer gl.DisableVertexAttribArray(vertAttrib)
 
 	texCoordAttrib := uint32(gl.GetAttribLocation(f.program, gl.Str("vertTexCoord\x00")))
 	gl.EnableVertexAttribArray(texCoordAttrib)
 	gl.VertexAttribPointer(texCoordAttrib, 2, gl.FLOAT, false, 4*4, gl.PtrOffset(2*4))
-	defer gl.DisableVertexAttribArray(texCoordAttrib)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, 0)
 	gl.BindVertexArray(0)
