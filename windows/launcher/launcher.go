@@ -1,3 +1,4 @@
+// +build windows
 //go:generate goversioninfo -icon=aminal.ico
 
 /*
