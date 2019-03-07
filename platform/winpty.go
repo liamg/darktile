@@ -8,6 +8,7 @@ import (
 	"time"
 
 	"fmt"
+
 	"github.com/MaxRis/w32"
 )
 
@@ -98,6 +99,7 @@ type winConPty struct {
 	innerInPipe               syscall.Handle
 	innerOutPipe              syscall.Handle
 	hcon                      uintptr
+	processID                 uint32 // required to obtain old-style console handle (for standard console functions)
 	platformDependentSettings PlatformDependentSettings
 }
 
@@ -139,6 +141,8 @@ func (pty *winConPty) CreateGuestProcess(imagePath string) (Process, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	pty.processID = process.processID
 
 	err = setupChildConsole(C.DWORD(process.processID), C.STD_OUTPUT_HANDLE, C.ENABLE_PROCESSED_OUTPUT|C.ENABLE_WRAP_AT_EOL_OUTPUT)
 	if err != nil {
@@ -190,6 +194,50 @@ func (pty *winConPty) Resize(x, y int) error {
 
 func (pty *winConPty) GetPlatformDependentSettings() PlatformDependentSettings {
 	return pty.platformDependentSettings
+}
+
+func (pty *winConPty) Clear() {
+	C.FreeConsole()
+	defer C.AttachConsole(^C.DWORD(0)) // attach to parent process console
+
+	if C.AttachConsole(C.DWORD(pty.processID)) == 0 {
+		return
+	}
+	defer C.FreeConsole()
+	hConsole := C.GetStdHandle(C.STD_OUTPUT_HANDLE)
+
+	var coordScreen C.COORD
+	coordScreen.X = 0
+	coordScreen.Y = 0
+	var cCharsWritten C.DWORD
+	var csbi C.CONSOLE_SCREEN_BUFFER_INFO
+
+	// Get the number of character cells in the current buffer.
+	if C.GetConsoleScreenBufferInfo(hConsole, &csbi) != C.BOOL(0) {
+
+		dwConSize := C.DWORD(csbi.dwSize.X * csbi.dwSize.Y)
+
+		// Fill the entire screen with blanks.
+		C.FillConsoleOutputCharacterA(hConsole, // Handle to console screen buffer
+			' ',            // Character to write to the buffer
+			dwConSize,      // Number of cells to write
+			coordScreen,    // Coordinates of first cell
+			&cCharsWritten) // Receive number of characters written
+
+		// Get the current text attribute.
+		if C.GetConsoleScreenBufferInfo(hConsole, &csbi) != C.BOOL(0) {
+			// Set the buffer's attributes accordingly.
+
+			C.FillConsoleOutputAttribute(hConsole, // Handle to console screen buffer
+				csbi.wAttributes, // Character attributes to use
+				dwConSize,        // Number of cells to set attribute
+				coordScreen,      // Coordinates of first cell
+				&cCharsWritten)   // Receive number of characters written
+		}
+	}
+
+	// Put the cursor at its home coordinates.
+	C.SetConsoleCursorPosition(hConsole, coordScreen)
 }
 
 // NewPty creates a new instance of a Pty implementation for Windows on a newly allocated ConPTY

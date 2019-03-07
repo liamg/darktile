@@ -15,6 +15,7 @@ var actionMap = map[config.UserAction]func(gui *GUI){
 	config.ActionSearch:      actionSearchSelection,
 	config.ActionToggleSlomo: actionToggleSlomo,
 	config.ActionReportBug:   actionReportBug,
+	config.ActionBufferClear: actionBufferClear,
 }
 
 func actionCopy(gui *GUI) {
@@ -49,4 +50,8 @@ func actionToggleSlomo(gui *GUI) {
 
 func actionReportBug(gui *GUI) {
 	gui.launchTarget("https://github.com/liamg/aminal/issues/new/choose")
+}
+
+func actionBufferClear(gui *GUI) {
+	gui.terminal.ReallyClear()
 }
