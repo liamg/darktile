@@ -75,6 +75,7 @@ type GUI struct {
 	prevMouseEventHandler mouseEventsHandler
 
 	internalResize bool
+	selectionRegionMode             buffer.SelectionRegionMode
 
 	vScrollbar *scrollbar
 }
@@ -546,7 +547,7 @@ func (gui *GUI) redraw() {
 					cursor = cx == uint(x) && cy == uint(y)
 				}
 
-				if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y)) {
+				if gui.terminal.ActiveBuffer().InSelection(uint16(x), uint16(y), gui.selectionRegionMode) {
 					colour = &gui.config.ColourScheme.Selection
 				} else {
 					colour = nil

@@ -7,6 +7,7 @@ import (
 	"syscall"
 	"time"
 
+	"fmt"
 	"github.com/MaxRis/w32"
 )
 
@@ -135,15 +136,20 @@ func (pty *winConPty) Close() error {
 
 func (pty *winConPty) CreateGuestProcess(imagePath string) (Process, error) {
 	process, err := createPtyChildProcess(imagePath, pty.hcon)
+	if err != nil {
+		return nil, err
+	}
 
-	if err == nil {
-		setupChildConsole(C.DWORD(process.processID), C.STD_OUTPUT_HANDLE, C.ENABLE_PROCESSED_OUTPUT|C.ENABLE_WRAP_AT_EOL_OUTPUT)
+	err = setupChildConsole(C.DWORD(process.processID), C.STD_OUTPUT_HANDLE, C.ENABLE_PROCESSED_OUTPUT|C.ENABLE_WRAP_AT_EOL_OUTPUT)
+	if err != nil {
+		process.Close()
+		return nil, err
 	}
 
 	return process, err
 }
 
-func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) bool {
+func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) error {
 	C.FreeConsole()
 	defer C.AttachConsole(^C.DWORD(0)) // attach to parent process console
 
@@ -158,7 +164,7 @@ func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) bool {
 		}
 		lastError := C.GetLastError()
 		if lastError != C.ERROR_GEN_FAILURE || count <= 0 {
-			return false
+			return fmt.Errorf("Was not able to attach to the child prosess' console")
 		}
 
 		time.Sleep(time.Millisecond * time.Duration(waitStepMilliSeconds))
@@ -169,7 +175,7 @@ func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) bool {
 	C.SetConsoleMode(h, C.DWORD(mode))
 	C.FreeConsole()
 
-	return true
+	return nil
 }
 
 func (pty *winConPty) Resize(x, y int) error {
