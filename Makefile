@@ -78,7 +78,8 @@ launcher-windows: build-windows
 	if exist "bin\windows\Aminal" rmdir /S /Q "bin\windows\Aminal"
 	mkdir "bin\windows\Aminal\Versions\${VERSION}"
 	go build -o "bin\windows\Aminal\${BINARY}.exe" -ldflags "-H windowsgui" "${GEN_SRC_DIR}\launcher"
-	copy ${BINARY}-windows-amd64.exe "bin\windows\Aminal\Versions\${VERSION}\${BINARY}.exe" /Y
+	windres -o aminal.syso aminal.rc
+	go build -o "bin\windows\Aminal\Versions\${VERSION}\${BINARY}.exe" -ldflags "-H windowsgui"
 	IF "${WINDOWS_CODESIGNING_CERT_PW}"=="" ECHO Environment variable WINDOWS_CODESIGNING_CERT_PW is not defined. & exit 1
 	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp bin\windows\Aminal\${BINARY}.exe
 	signtool sign /f windows\codesigning_certificate.pfx /p "${WINDOWS_CODESIGNING_CERT_PW}" /tr http://sha256timestamp.ws.symantec.com/sha256/timestamp /as /fd sha256 /td sha256 bin\windows\Aminal\${BINARY}.exe

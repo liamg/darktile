@@ -22,11 +22,13 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"os/user"
 	"path/filepath"
 	"sort"
 	"strconv"
 	"strings"
 	"github.com/liamg/aminal/windows/winutil"
+	"syscall"
 )
 
 type Version struct {
@@ -42,8 +44,23 @@ func main() {
 	versionsDir := filepath.Join(executableDir, "Versions")
 	latestVersion, err := getLatestVersion(versionsDir)
 	check(err)
-	target := filepath.Join(versionsDir, latestVersion, executableName)
-	cmd := exec.Command(target, os.Args[1:]...)
+	usr, err := user.Current()
+	check(err)
+	cmd := exec.Command("C:\\Windows\\System32\\cmd.exe", "/C", "start", "Aminal", "/B", executableName)
+	cmd.Dir = usr.HomeDir
+	latestVersionDir := filepath.Join(versionsDir, latestVersion)
+	path, pathSet := os.LookupEnv("PATH")
+	if (pathSet) {
+		path += ";" + latestVersionDir
+	} else {
+		path = latestVersionDir
+	}
+	cmd.Env = append(os.Environ(), "PATH=" + path)
+	const CREATE_NO_WINDOW = 0x08000000
+	cmd.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+		CreationFlags: CREATE_NO_WINDOW,
+	}
 	check(cmd.Start())
 }
 
