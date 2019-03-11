@@ -436,7 +436,7 @@ func (gui *GUI) Render() error {
 	go gui.waker(stop)
 
 	for !gui.window.ShouldClose() {
-		gui.redraw()
+		gui.redraw(true)
 
 		if gui.showDebugInfo {
 			gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d

@@ -436,12 +436,3 @@ func (terminal *Terminal) Lock() {
 func (terminal *Terminal) Unlock() {
 	terminal.lock.Unlock()
 }
-
-// SetDirtyLocked sets dirty flag locking the terminal to prevent data race warnings
-// @todo remove when switching to event-driven architecture
-func (terminal *Terminal) SetDirtyLocked() {
-	terminal.Lock()
-	defer terminal.Unlock()
-
-	terminal.SetDirty()
-}
