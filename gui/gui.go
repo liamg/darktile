@@ -326,6 +326,7 @@ func (gui *GUI) getTermSize() (uint, uint) {
 
 func (gui *GUI) Close() {
 	gui.window.SetShouldClose(true)
+	glfw.PostEmptyEvent() // wake up main loop so it notices close request
 }
 
 func (gui *GUI) Render() error {
