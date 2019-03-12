@@ -24,12 +24,12 @@ type Config struct {
 type KeyMappingConfig map[string]string
 
 func Parse(data []byte) (*Config, error) {
-	c := DefaultConfig
-	err := toml.Unmarshal(data, &c)
+	c := DefaultConfig()
+	err := toml.Unmarshal(data, c)
 	if c.KeyMapping == nil {
 		c.KeyMapping = KeyMappingConfig(map[string]string{})
 	}
-	return &c, err
+	return c, err
 }
 
 func (c *Config) Encode() ([]byte, error) {

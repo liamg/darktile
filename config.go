@@ -53,7 +53,7 @@ func getConfig() *config.Config {
 
 	var conf *config.Config
 	if ignoreConfig {
-		conf = &config.DefaultConfig
+		conf = config.DefaultConfig()
 	} else {
 		conf = loadConfigFile()
 	}
@@ -83,12 +83,12 @@ func loadConfigFile() *config.Config {
 	usr, err := user.Current()
 	if err != nil {
 		fmt.Printf("Failed to get current user information: %s\n", err)
-		return &config.DefaultConfig
+		return config.DefaultConfig()
 	}
 
 	home := usr.HomeDir
 	if home == "" {
-		return &config.DefaultConfig
+		return config.DefaultConfig()
 	}
 
 	places := []string{}
@@ -111,7 +111,7 @@ func loadConfigFile() *config.Config {
 		}
 	}
 
-	if b, err := config.DefaultConfig.Encode(); err != nil {
+	if b, err := config.DefaultConfig().Encode(); err != nil {
 		fmt.Printf("Failed to encode config file: %s\n", err)
 	} else {
 		err = os.MkdirAll(filepath.Dir(places[0]), 0744)
@@ -124,5 +124,5 @@ func loadConfigFile() *config.Config {
 		}
 	}
 
-	return &config.DefaultConfig
+	return config.DefaultConfig()
 }
