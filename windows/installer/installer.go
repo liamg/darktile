@@ -5,18 +5,18 @@ package main
 import (
 	"bufio"
 	"errors"
-	"golang.org/x/sys/windows/registry"
-	"os"
-	"os/user"
-	"strings"
-	"path/filepath"
-	"github.com/liamg/aminal/windows/winutil"
-	"github.com/liamg/aminal/generated-src/installer/data"
-	"text/template"
-	"io/ioutil"
-	"os/exec"
-	"syscall"
 	"flag"
+	"github.com/liamg/aminal/generated-src/installer/data"
+	"github.com/liamg/aminal/windows/winutil"
+	"golang.org/x/sys/windows/registry"
+	"io/ioutil"
+	"os"
+	"os/exec"
+	"os/user"
+	"path/filepath"
+	"strings"
+	"syscall"
+	"text/template"
 )
 
 const Version = "VERSION"
@@ -116,7 +116,7 @@ func createRegistryKeysForUninstaller(installDir string, isUserInstall bool) {
 func updateVersionInRegistry(isUserInstall bool) {
 	regRoot := getRegistryRoot(isUserInstall)
 	updateKey := `Software\Aminal\Update\Clients\` + ProductId
-	writeRegStr(regRoot, updateKey, "pv", Version + ".0")
+	writeRegStr(regRoot, updateKey, "pv", Version+".0")
 	writeRegStr(regRoot, updateKey, "name", "Aminal")
 }
 
@@ -128,7 +128,7 @@ func getRegistryRoot(isUserInstall bool) registry.Key {
 }
 
 func writeRegStr(regRoot registry.Key, keyPath string, valueName string, value string) {
-	const mode = registry.WRITE|registry.WOW64_32KEY
+	const mode = registry.WRITE | registry.WOW64_32KEY
 	key, _, err := registry.CreateKey(regRoot, keyPath, mode)
 	check(err)
 	defer key.Close()
@@ -154,7 +154,7 @@ func getStartMenuDir(isUserInstall bool) string {
 
 func createShortcut(linkPath, targetPath string) {
 	type Shortcut struct {
-		LinkPath string
+		LinkPath   string
 		TargetPath string
 	}
 	tmpl := template.New("createLnk.vbs")

@@ -85,7 +85,7 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 			ShowCursor: true,
 		},
 		platformDependentSettings: pty.GetPlatformDependentSettings(),
-		dirty: newNotifier(),
+		dirty:                     newNotifier(),
 	}
 	t.buffers = []*buffer.Buffer{
 		buffer.NewBuffer(t.terminalState, t.dirty),
@@ -435,13 +435,4 @@ func (terminal *Terminal) Lock() {
 
 func (terminal *Terminal) Unlock() {
 	terminal.lock.Unlock()
-}
-
-// SetDirtyLocked sets dirty flag locking the terminal to prevent data race warnings
-// @todo remove when switching to event-driven architecture
-func (terminal *Terminal) SetDirtyLocked() {
-	terminal.Lock()
-	defer terminal.Unlock()
-
-	terminal.SetDirty()
 }

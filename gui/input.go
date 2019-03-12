@@ -52,7 +52,7 @@ func (gui *GUI) updateSelectionMode(mods glfw.ModifierKey) {
 	}
 	if gui.selectionRegionMode != mode {
 		gui.selectionRegionMode = mode
-		gui.terminal.SetDirty()
+		gui.terminal.NotifyDirty()
 	}
 }
 

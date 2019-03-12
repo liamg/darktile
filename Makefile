@@ -13,7 +13,7 @@ build:
 
 .PHONY: test
 test:
-	go test -v ./...
+	go test -v -timeout=8m ./...
 	go vet -v
 
 .PHONY: check-gofmt

@@ -874,7 +874,7 @@ func (buffer *Buffer) Clear() {
 }
 
 func (buffer *Buffer) ReallyClear() {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 	buffer.lines = []Line{}
 	buffer.terminalState.SetScrollOffset(0)
 	buffer.SetPosition(0, 0)
