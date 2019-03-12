@@ -85,7 +85,7 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 			ShowCursor: true,
 		},
 		platformDependentSettings: pty.GetPlatformDependentSettings(),
-		dirty: newNotifier(),
+		dirty:                     newNotifier(),
 	}
 	t.buffers = []*buffer.Buffer{
 		buffer.NewBuffer(t.terminalState, t.dirty),
