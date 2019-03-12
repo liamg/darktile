@@ -22,6 +22,13 @@ func getActuallyProvidedFlags() map[string]bool {
 	return result
 }
 
+func maybeGetConfig(override *config.Config) *config.Config {
+	if override != nil {
+		return override
+	}
+	return getConfig()
+}
+
 func getConfig() *config.Config {
 	showVersion := false
 	ignoreConfig := false
