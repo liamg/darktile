@@ -39,17 +39,12 @@ type WindowManipulationInterface interface {
 	MoveWindow(term *Terminal, pixelX int, pixelY int) error
 	ResizeWindowByPixels(term *Terminal, pixelsHeight int, pixelsWidth int) error
 	BringWindowToFront(term *Terminal) error
-	//SendWindowToBack(term *Terminal) error
-	//RefreshWindow(term *Terminal) error
 	ResizeWindowByChars(term *Terminal, charsHeight int, charsWidth int) error
 	MaximizeWindow(term *Terminal) error
 	ReportWindowState(term *Terminal) error
 	ReportWindowPosition(term *Terminal) error
 	ReportWindowSizeInPixels(term *Terminal) error
 	ReportWindowSizeInChars(term *Terminal) error
-	//ReportScreenSizeInChars(term *Terminal) error)
-	//ReportIconLabel(term *Terminal) error)
-	//ReportWindowTitle(term *Terminal) error
 }
 
 type Terminal struct {
