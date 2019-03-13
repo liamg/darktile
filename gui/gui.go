@@ -65,6 +65,8 @@ type GUI struct {
 	mouseMovedAfterSelectionStarted bool
 	internalResize                  bool
 	selectionRegionMode             buffer.SelectionRegionMode
+
+	mainThreadFunc chan func()
 }
 
 func Min(x, y int) int {
@@ -167,6 +169,8 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 		keyboardShortcuts: shortcuts,
 		resizeLock:        &sync.Mutex{},
 		internalResize:    false,
+
+		mainThreadFunc: make(chan func()),
 	}, nil
 }
 
@@ -490,6 +494,8 @@ Buffer Size: %d lines
 				gui.resizeToTerminal()
 			case reverse := <-reverseChan:
 				gui.generateDefaultCell(reverse)
+			case funcForMainThread := <-gui.mainThreadFunc:
+				funcForMainThread()
 			default:
 				break terminalEvents
 			}
@@ -824,4 +830,15 @@ func (gui *GUI) windowPosChangeCallback(w *glfw.Window, xpos int, ypos int) {
 
 func (gui *GUI) monitorChangeCallback(monitor *glfw.Monitor, event glfw.MonitorEvent) {
 	gui.SetDPIScale()
+}
+
+// Synchronously executes the argument function in the main thread.
+// Does not return until f() executed!
+func (gui *GUI) executeInMainThread(f func() error) error {
+	resultChan := make(chan error, 1)
+	gui.mainThreadFunc <- func() {
+		resultChan <- f()
+	}
+	gui.terminal.NotifyDirty() // wake up the main thread to allow processing
+	return <-resultChan
 }

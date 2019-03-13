@@ -425,10 +425,6 @@ func csiSetModeHandler(params []string, terminal *Terminal) error {
 	return csiSetModes(params, true, terminal)
 }
 
-func csiWindowManipulation(params []string, terminal *Terminal) error {
-	return fmt.Errorf("Window manipulation is not yet supported")
-}
-
 func csiLinePositionAbsolute(params []string, terminal *Terminal) error {
 	row := 1
 	if len(params) > 0 {

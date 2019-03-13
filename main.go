@@ -71,6 +71,8 @@ func initialize(unitTestfunc callback) {
 		logger.Fatalf("Cannot start: %s", err)
 	}
 
+	terminal.WindowManipulation = g
+
 	if unitTestfunc != nil {
 		go unitTestfunc(terminal, g)
 	} else {
