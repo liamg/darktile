@@ -602,6 +602,36 @@ func (gui *GUI) redraw() {
 		}
 
 	}
+	// hyperlinks
+	for y := 0; y < lineCount; y++ {
+
+		if y < len(lines) {
+
+			span := 0
+			colour := [3]float32{0, 0, 0}
+			cells := lines[y].Cells()
+
+			var x int
+
+			for x = 0; x < colCount && x < len(cells); x++ {
+				cell := cells[x]
+				if span > 0 && (!cell.IsHyperlink() || colour != cell.Fg()) {
+					gui.renderer.DrawLinkLine(span, uint(x-span), uint(y), colour)
+					span = 0
+				}
+
+				colour = cell.Fg()
+				if cell.IsHyperlink() {
+					span++
+				}
+			}
+			if span > 0 {
+				gui.renderer.DrawLinkLine(span, uint(x-span), uint(y), colour)
+			}
+		}
+
+	}
+
 	gui.renderOverlay()
 }
 

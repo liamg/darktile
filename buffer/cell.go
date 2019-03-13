@@ -36,6 +36,10 @@ func (cell *Cell) Attr() CellAttributes {
 	return cell.attr
 }
 
+func (cell *Cell) IsHyperlink() bool {
+	return cell.hyperlink != nil
+}
+
 func (cell *Cell) Rune() rune {
 	return cell.r
 }

@@ -38,6 +38,16 @@ type rectangle struct {
 	prog       uint32
 }
 
+type line struct {
+	vao        uint32
+	vbo        uint32
+	cv         uint32
+	colourAttr uint32
+	colour     [3]float32
+	points     []float32
+	prog       uint32
+}
+
 func (r *OpenGLRenderer) CellWidth() float32 {
 	return r.cellWidth
 }
@@ -134,6 +144,111 @@ func (rect *rectangle) Free() {
 	rect.cv = 0
 }
 
+func (r *OpenGLRenderer) newLine(x1 float32, y1 float32, x2 float32, y2 float32, dash float32, colourAttr uint32) *line {
+
+	l := &line{}
+
+	halfAreaWidth := float32(r.areaWidth / 2)
+	halfAreaHeight := float32(r.areaHeight / 2)
+
+	x1 = (x1 - halfAreaWidth) / halfAreaWidth
+	y1 = -(y1 - (halfAreaHeight)) / halfAreaHeight
+	x2 = (x2 - halfAreaWidth) / halfAreaWidth
+	y2 = -(y2 - (halfAreaHeight)) / halfAreaHeight
+
+	var xgap float32
+	var tan float32
+	if x2-x1 != 0 {
+		tan = (y2 - y1) / (x2 - x1)
+		xgap = dash / float32(math.Cos(math.Atan(float64(tan)))) / halfAreaWidth
+	}
+
+	l.points = []float32{
+		x1, y1, 0,
+	}
+
+	if xgap == 0 {
+		l.points = append(l.points, x2, y2, 0)
+	} else {
+		end := x1 + xgap
+		for {
+			var y float32
+			if end >= x2 {
+				end = x2
+				y = y2
+			} else {
+				y = y1 + tan*(end-x1)
+			}
+			l.points = append(l.points, end, y, 0)
+			start := end + xgap
+			if start >= x2 {
+				break
+			}
+			y = y1 + tan*(start-x1)
+			l.points = append(l.points, start, y, 0)
+			end = start + xgap
+		}
+	}
+
+	l.colourAttr = colourAttr
+	l.prog = r.program
+
+	// SHAPE
+	gl.GenBuffers(1, &l.vbo)
+	gl.BindBuffer(gl.ARRAY_BUFFER, l.vbo)
+	gl.BufferData(gl.ARRAY_BUFFER, 4*len(l.points), gl.Ptr(&l.points[0]), gl.STATIC_DRAW)
+
+	gl.GenVertexArrays(1, &l.vao)
+	gl.BindVertexArray(l.vao)
+	gl.EnableVertexAttribArray(0)
+
+	gl.BindBuffer(gl.ARRAY_BUFFER, l.vbo)
+	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
+
+	// colour
+	gl.GenBuffers(1, &l.cv)
+
+	return l
+}
+
+func (l *line) Draw() {
+	gl.UseProgram(l.prog)
+	gl.BindVertexArray(l.vao)
+	gl.DrawArrays(gl.LINES, 0, int32(len(l.points)/3))
+}
+
+func (l *line) setColour(colour [3]float32) {
+	if l.colour == colour {
+		return
+	}
+
+	c := make([]float32, len(l.points))
+
+	for i := 0; i < len(c); i += 3 {
+		c[i] = colour[0]
+		c[i+1] = colour[1]
+		c[i+2] = colour[2]
+	}
+
+	gl.UseProgram(l.prog)
+	gl.BindBuffer(gl.ARRAY_BUFFER, l.cv)
+	gl.BufferData(gl.ARRAY_BUFFER, len(c)*4, gl.Ptr(c), gl.STATIC_DRAW)
+	gl.EnableVertexAttribArray(l.colourAttr)
+	gl.VertexAttribPointer(l.colourAttr, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
+
+	l.colour = colour
+}
+
+func (l *line) Free() {
+	gl.DeleteVertexArrays(1, &l.vao)
+	gl.DeleteBuffers(1, &l.vbo)
+	gl.DeleteBuffers(1, &l.cv)
+
+	l.vao = 0
+	l.vbo = 0
+	l.cv = 0
+}
+
 func NewOpenGLRenderer(config *config.Config, fontMap *FontMap, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
 	r := &OpenGLRenderer{
 		areaWidth:     areaWidth,
@@ -223,22 +338,39 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, colour
 
 }
 
+func (r *OpenGLRenderer) getUndelineThickness() float32 {
+	thickness := r.cellHeight / 16
+	if thickness < 1 {
+		thickness = 1
+	}
+	return thickness
+}
+
 // DrawUnderline draws a line under 'span' characters starting at (col, row)
 func (r *OpenGLRenderer) DrawUnderline(span int, col uint, row uint, colour [3]float32) {
 	//calculate coordinates
 	x := float32(float32(col) * r.cellWidth)
 	y := (float32(row+1))*r.cellHeight + r.fontMap.DefaultFont().MinY()*0.25
 
-	thickness := r.cellHeight / 16
-	if thickness < 1 {
-		thickness = 1
-	}
+	thickness := r.getUndelineThickness()
 	rect := r.newRectangleEx(x, y, r.cellWidth*float32(span), thickness, r.colourAttr)
 
 	rect.setColour(colour)
 	rect.Draw()
 
 	rect.Free()
+}
+
+func (r *OpenGLRenderer) DrawLinkLine(span int, col uint, row uint, colour [3]float32) {
+	//calculate coordinates
+	x := float32(float32(col) * r.cellWidth)
+	y := (float32(row+1))*r.cellHeight + r.fontMap.DefaultFont().MinY()*0.5
+	line := r.newLine(x, y, x+r.cellWidth*float32(span), y, r.cellWidth/4, r.colourAttr)
+
+	line.setColour(colour)
+	line.Draw()
+
+	line.Free()
 }
 
 func (r *OpenGLRenderer) DrawCellText(text string, col uint, row uint, alpha float32, colour [3]float32, bold bool) {
