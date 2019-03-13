@@ -7,6 +7,7 @@ import (
 	"runtime"
 	"runtime/pprof"
 
+	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/gui"
 	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
@@ -20,11 +21,12 @@ func init() {
 }
 
 func main() {
-	initialize(nil)
+	initialize(nil, nil)
 }
 
-func initialize(unitTestfunc callback) {
-	conf := getConfig()
+func initialize(unitTestfunc callback, configOverride *config.Config) {
+	conf := maybeGetConfig(configOverride)
+
 	logger, err := getLogger(conf)
 	if err != nil {
 		fmt.Printf("Failed to create logger: %s\n", err)
