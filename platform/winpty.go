@@ -4,12 +4,8 @@ package platform
 
 import (
 	"errors"
-	"syscall"
-	"time"
-
-	"fmt"
-
 	"github.com/MaxRis/w32"
+	"syscall"
 )
 
 // #include "windows.h"
@@ -144,42 +140,7 @@ func (pty *winConPty) CreateGuestProcess(imagePath string) (Process, error) {
 
 	pty.processID = process.processID
 
-	err = setupChildConsole(C.DWORD(process.processID), C.STD_OUTPUT_HANDLE, C.ENABLE_PROCESSED_OUTPUT|C.ENABLE_WRAP_AT_EOL_OUTPUT)
-	if err != nil {
-		process.Close()
-		return nil, err
-	}
-
-	return process, err
-}
-
-func setupChildConsole(processID C.DWORD, nStdHandle C.DWORD, mode uint) error {
-	C.FreeConsole()
-	defer C.AttachConsole(^C.DWORD(0)) // attach to parent process console
-
-	// process may not be ready so we'll do retries
-	const maxWaitMilliSeconds = 5000
-	const waitStepMilliSeconds = 200
-	count := maxWaitMilliSeconds / waitStepMilliSeconds
-
-	for {
-		if r := C.AttachConsole(processID); r != 0 {
-			break // success
-		}
-		lastError := C.GetLastError()
-		if lastError != C.ERROR_GEN_FAILURE || count <= 0 {
-			return fmt.Errorf("Was not able to attach to the child prosess' console")
-		}
-
-		time.Sleep(time.Millisecond * time.Duration(waitStepMilliSeconds))
-		count--
-	}
-
-	h := C.GetStdHandle(nStdHandle)
-	C.SetConsoleMode(h, C.DWORD(mode))
-	C.FreeConsole()
-
-	return nil
+	return process, nil
 }
 
 func (pty *winConPty) Resize(x, y int) error {
