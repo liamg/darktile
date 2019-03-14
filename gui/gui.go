@@ -67,6 +67,7 @@ type GUI struct {
 	selectionRegionMode             buffer.SelectionRegionMode
 
 	mainThreadFunc chan func()
+	wakerEnded     chan bool
 }
 
 func Min(x, y int) int {
@@ -412,16 +413,6 @@ func (gui *GUI) Render() error {
 	gl.Disable(gl.DEPTH_TEST)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
 
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	go func() {
-		for {
-			<-ticker.C
-			gui.logger.Sync()
-		}
-	}()
-
 	gui.terminal.SetProgram(program)
 
 	latestVersion := ""
@@ -502,9 +493,13 @@ Buffer Size: %d lines
 		}
 	}
 
-	close(stop) // Tell waker to end.
+	gui.logger.Debug("Stopping render...")
 
-	gui.logger.Debugf("Stopping render...")
+	close(stop)      // Tell waker to end...
+	<-gui.wakerEnded // ...and wait it to end
+
+	gui.logger.Debug("Render stopped")
+
 	return nil
 
 }
@@ -514,9 +509,11 @@ Buffer Size: %d lines
 // redrawn. Limiting is applied on wakeups to avoid excessive CPU
 // usage when the terminal is being updated rapidly.
 func (gui *GUI) waker(stop <-chan struct{}) {
+	gui.wakerEnded = make(chan bool)
 	dirty := gui.terminal.Dirty()
 	var nextWake <-chan time.Time
 	var last time.Time
+forLoop:
 	for {
 		select {
 		case <-dirty:
@@ -540,9 +537,10 @@ func (gui *GUI) waker(stop <-chan struct{}) {
 			glfw.PostEmptyEvent()
 			nextWake = nil
 		case <-stop:
-			return
+			break forLoop
 		}
 	}
+	gui.wakerEnded <- true
 }
 
 func (gui *GUI) renderTerminalData(shouldLock bool) {
@@ -819,9 +817,15 @@ func (gui *GUI) Screenshot(path string) {
 	if err != nil {
 		panic(err)
 	}
-	file, _ := os.Create(path)
+	file, err := os.Create(path)
+	if err != nil {
+		panic(err)
+	}
 	defer file.Close()
-	png.Encode(file, img)
+	err = png.Encode(file, img)
+	if err != nil {
+		panic(err)
+	}
 }
 
 func (gui *GUI) windowPosChangeCallback(w *glfw.Window, xpos int, ypos int) {

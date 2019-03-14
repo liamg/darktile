@@ -12,6 +12,7 @@ import (
 	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/riywo/loginshell"
+	"time"
 )
 
 type callback func(terminal *terminal.Terminal, g *gui.GUI)
@@ -32,7 +33,17 @@ func initialize(unitTestfunc callback, configOverride *config.Config) {
 		fmt.Printf("Failed to create logger: %s\n", err)
 		os.Exit(1)
 	}
-	defer logger.Sync()
+	ticker := time.NewTicker(time.Second)
+	go func() {
+		for {
+			<-ticker.C
+			logger.Sync()
+		}
+	}()
+	defer func() {
+		ticker.Stop()
+		logger.Sync()
+	}()
 
 	if conf.CPUProfile != "" {
 		logger.Infof("Starting CPU profiling...")
@@ -61,7 +72,7 @@ func initialize(unitTestfunc callback, configOverride *config.Config) {
 	guestProcess, err := pty.CreateGuestProcess(shellStr)
 	if err != nil {
 		pty.Close()
-		logger.Fatalf("Failed to start your shell: %s", err)
+		logger.Fatalf("Failed to start your shell \"%s\": %s", shellStr, err)
 	}
 	defer guestProcess.Close()
 
