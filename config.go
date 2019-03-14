@@ -22,12 +22,20 @@ func getActuallyProvidedFlags() map[string]bool {
 	return result
 }
 
+func maybeGetConfig(override *config.Config) *config.Config {
+	if override != nil {
+		return override
+	}
+	return getConfig()
+}
+
 func getConfig() *config.Config {
 	showVersion := false
 	ignoreConfig := false
 	shell := ""
 	debugMode := false
 	slomo := false
+	cpuProfile := ""
 
 	if flag.Parsed() == false {
 		flag.BoolVar(&showVersion, "version", showVersion, "Output version information")
@@ -35,6 +43,7 @@ func getConfig() *config.Config {
 		flag.StringVar(&shell, "shell", shell, "Specify the shell to use")
 		flag.BoolVar(&debugMode, "debug", debugMode, "Enable debug logging")
 		flag.BoolVar(&slomo, "slomo", slomo, "Render in slow motion (useful for debugging)")
+		flag.StringVar(&cpuProfile, "cpuprofile", cpuProfile, "Write a CPU profile to this file")
 
 		flag.Parse() // actual parsing and fetching flags from the command line
 	}
@@ -51,7 +60,7 @@ func getConfig() *config.Config {
 
 	var conf *config.Config
 	if ignoreConfig {
-		conf = &config.DefaultConfig
+		conf = config.DefaultConfig()
 	} else {
 		conf = loadConfigFile()
 	}
@@ -69,6 +78,10 @@ func getConfig() *config.Config {
 		conf.Slomo = slomo
 	}
 
+	if actuallyProvidedFlags["cpuprofile"] {
+		conf.CPUProfile = cpuProfile
+	}
+
 	return conf
 }
 
@@ -77,12 +90,12 @@ func loadConfigFile() *config.Config {
 	usr, err := user.Current()
 	if err != nil {
 		fmt.Printf("Failed to get current user information: %s\n", err)
-		return &config.DefaultConfig
+		return config.DefaultConfig()
 	}
 
 	home := usr.HomeDir
 	if home == "" {
-		return &config.DefaultConfig
+		return config.DefaultConfig()
 	}
 
 	places := []string{}
@@ -105,7 +118,7 @@ func loadConfigFile() *config.Config {
 		}
 	}
 
-	if b, err := config.DefaultConfig.Encode(); err != nil {
+	if b, err := config.DefaultConfig().Encode(); err != nil {
 		fmt.Printf("Failed to encode config file: %s\n", err)
 	} else {
 		err = os.MkdirAll(filepath.Dir(places[0]), 0744)
@@ -118,5 +131,5 @@ func loadConfigFile() *config.Config {
 		}
 	}
 
-	return &config.DefaultConfig
+	return config.DefaultConfig()
 }

@@ -89,6 +89,9 @@ func splitParams(paramString string) []string {
 func csiHandler(pty chan rune, terminal *Terminal) error {
 	final, param, intermediate := loadCSI(pty)
 
+	terminal.Lock()
+	defer terminal.Unlock()
+
 	// process intermediate control codes before the CSI
 	for _, b := range intermediate {
 		terminal.processRune(b)
@@ -420,10 +423,6 @@ func csiResetModeHandler(params []string, terminal *Terminal) error {
 
 func csiSetModeHandler(params []string, terminal *Terminal) error {
 	return csiSetModes(params, true, terminal)
-}
-
-func csiWindowManipulation(params []string, terminal *Terminal) error {
-	return fmt.Errorf("Window manipulation is not yet supported")
 }
 
 func csiLinePositionAbsolute(params []string, terminal *Terminal) error {

@@ -28,25 +28,25 @@ var runeMap = map[rune]runeHandler{
 
 func newLineHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().NewLine()
-	terminal.isDirty = true
+	terminal.NotifyDirty()
 	return nil
 }
 
 func tabHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().Tab()
-	terminal.isDirty = true
+	terminal.NotifyDirty()
 	return nil
 }
 
 func carriageReturnHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().CarriageReturn()
-	terminal.isDirty = true
+	terminal.NotifyDirty()
 	return nil
 }
 
 func backspaceHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().Backspace()
-	terminal.isDirty = true
+	terminal.NotifyDirty()
 	return nil
 }
 
@@ -72,17 +72,24 @@ func shiftInHandler(terminal *Terminal) error {
 	return nil
 }
 
+func (terminal *Terminal) processRuneLocked(b rune) {
+	terminal.Lock()
+	defer terminal.Unlock()
+
+	terminal.processRune(b)
+}
+
 func (terminal *Terminal) processRune(b rune) {
+	defer terminal.NotifyDirty()
+
 	if handler, ok := runeMap[b]; ok {
 		if err := handler(terminal); err != nil {
 			terminal.logger.Errorf("Error handling control code: %s", err)
 		}
-		terminal.isDirty = true
 		return
 	}
 	//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
 	terminal.ActiveBuffer().Write(terminal.translateRune(b))
-	terminal.isDirty = true
 }
 
 func (terminal *Terminal) translateRune(b rune) rune {
@@ -103,6 +110,8 @@ func (terminal *Terminal) processInput(pty chan rune) {
 
 	var b rune
 
+	//	debug := ""
+
 	for {
 
 		if terminal.config.Slomo {
@@ -111,15 +120,19 @@ func (terminal *Terminal) processInput(pty chan rune) {
 
 		b = <-pty
 
+		// debug += fmt.Sprintf("0x%x ", b)
+
 		if b == 0x1b {
+			// terminal.logger.Debug(debug)
+			// debug = ""
 			//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
 			if err := ansiHandler(pty, terminal); err != nil {
 				terminal.logger.Errorf("Error handling escape sequence: %s", err)
 			}
-			terminal.isDirty = true
+			terminal.NotifyDirty()
 			continue
 		}
 
-		terminal.processRune(b)
+		terminal.processRuneLocked(b)
 	}
 }

@@ -26,8 +26,7 @@ const (
 			outColor = inColor;
 		}` + "\x00"
 
-	BorderVertexValuesCount = 16
-	ArrowsVertexValuesCount = 24
+	NumberOfVertexValues = 100
 )
 
 var (
@@ -84,8 +83,6 @@ type scrollbar struct {
 	vao                       uint32
 	uniformLocationResolution int32
 	uniformLocationInColor    int32
-
-	isDirty bool
 
 	position            ScreenRectangle // relative to the window's top left corner, in pixels
 	positionUpperArrow  ScreenRectangle // relative to the control's top left corner
@@ -152,7 +149,7 @@ func newScrollbar() (*scrollbar, error) {
 	gl.BindVertexArray(vao)
 
 	gl.BindBuffer(gl.ARRAY_BUFFER, vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, (BorderVertexValuesCount+ArrowsVertexValuesCount)*4, nil, gl.DYNAMIC_DRAW) // only reserve data
+	gl.BufferData(gl.ARRAY_BUFFER, NumberOfVertexValues*4, nil, gl.DYNAMIC_DRAW) // only reserve the space
 
 	gl.VertexAttribPointer(0, 2, gl.FLOAT, false, 2*4, nil)
 	gl.EnableVertexAttribArray(0)
@@ -166,8 +163,6 @@ func newScrollbar() (*scrollbar, error) {
 		vao:                       vao,
 		uniformLocationResolution: gl.GetUniformLocation(prog, gl.Str("resolution\x00")),
 		uniformLocationInColor:    gl.GetUniformLocation(prog, gl.Str("inColor\x00")),
-
-		isDirty: false,
 
 		position: ScreenRectangle{
 			right:  0,
@@ -245,7 +240,7 @@ func (sb *scrollbar) resize(gui *GUI) {
 	sb.position.bottom = float32(gui.height - 1)
 
 	sb.recalcElementPositions()
-	sb.isDirty = true
+	gui.terminal.NotifyDirty()
 }
 
 func (sb *scrollbar) render(gui *GUI) {
@@ -256,7 +251,11 @@ func (sb *scrollbar) render(gui *GUI) {
 	gl.UseProgram(sb.program)
 	gl.Uniform2f(sb.uniformLocationResolution, float32(gui.width), float32(gui.height))
 	gl.BindVertexArray(sb.vao)
-	defer gl.BindVertexArray(0)
+	gl.BindBuffer(gl.ARRAY_BUFFER, sb.vbo)
+	defer func() {
+		gl.BindBuffer(gl.ARRAY_BUFFER, 0)
+		gl.BindVertexArray(0)
+	}()
 
 	// Draw background
 	gl.Uniform4f(sb.uniformLocationInColor, scrollbarColor_Bg[0], scrollbarColor_Bg[1], scrollbarColor_Bg[2], 1.0)
@@ -269,7 +268,7 @@ func (sb *scrollbar) render(gui *GUI) {
 		sb.position.left, sb.position.bottom,
 		sb.position.left, sb.position.top,
 	}
-	gl.NamedBufferSubData(sb.vbo, 0, len(borderVertices)*4, gl.Ptr(&borderVertices[0]))
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(borderVertices)*4, gl.Ptr(&borderVertices[0]))
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(borderVertices)/2))
 
 	// Draw upper arrow
@@ -284,7 +283,7 @@ func (sb *scrollbar) render(gui *GUI) {
 		sb.position.left + sb.positionUpperArrow.left, sb.position.top + sb.positionUpperArrow.bottom,
 		sb.position.left + sb.positionUpperArrow.left, sb.position.top + sb.positionUpperArrow.top,
 	}
-	gl.NamedBufferSubData(sb.vbo, 0, len(upperArrowBgVertices)*4, gl.Ptr(&upperArrowBgVertices[0]))
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(upperArrowBgVertices)*4, gl.Ptr(&upperArrowBgVertices[0]))
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(upperArrowBgVertices)/2))
 
 	// Upper arrow foreground
@@ -294,7 +293,7 @@ func (sb *scrollbar) render(gui *GUI) {
 		sb.position.left + sb.positionUpperArrow.left + sb.positionUpperArrow.width()*2.0/3.0, sb.position.top + sb.positionUpperArrow.top + sb.positionUpperArrow.height()/2.0,
 		sb.position.left + sb.positionUpperArrow.left + sb.positionUpperArrow.width()/3.0, sb.position.top + sb.positionUpperArrow.top + sb.positionUpperArrow.height()/2.0,
 	}
-	gl.NamedBufferSubData(sb.vbo, 0, len(upperArrowFgVertices)*4, gl.Ptr(&upperArrowFgVertices[0]))
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(upperArrowFgVertices)*4, gl.Ptr(&upperArrowFgVertices[0]))
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(upperArrowFgVertices)/2))
 
 	// Draw bottom arrow
@@ -309,7 +308,7 @@ func (sb *scrollbar) render(gui *GUI) {
 		sb.position.left + sb.positionBottomArrow.left, sb.position.top + sb.positionBottomArrow.bottom,
 		sb.position.left + sb.positionBottomArrow.left, sb.position.top + sb.positionBottomArrow.top,
 	}
-	gl.NamedBufferSubData(sb.vbo, 0, len(bottomArrowBgVertices)*4, gl.Ptr(&bottomArrowBgVertices[0]))
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(bottomArrowBgVertices)*4, gl.Ptr(&bottomArrowBgVertices[0]))
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(bottomArrowBgVertices)/2))
 
 	// Bottom arrow foreground
@@ -319,7 +318,7 @@ func (sb *scrollbar) render(gui *GUI) {
 		sb.position.left + sb.positionBottomArrow.left + sb.positionBottomArrow.width()*2.0/3.0, sb.position.top + sb.positionBottomArrow.top + sb.positionBottomArrow.height()/2.0,
 		sb.position.left + sb.positionBottomArrow.left + sb.positionBottomArrow.width()/2.0, sb.position.top + sb.positionBottomArrow.top + sb.positionBottomArrow.height()*2.0/3.0,
 	}
-	gl.NamedBufferSubData(sb.vbo, 0, len(bottomArrowFgVertices)*4, gl.Ptr(&bottomArrowFgVertices[0]))
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(bottomArrowFgVertices)*4, gl.Ptr(&bottomArrowFgVertices[0]))
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(bottomArrowFgVertices)/2))
 
 	// Draw thumb
@@ -333,10 +332,10 @@ func (sb *scrollbar) render(gui *GUI) {
 		sb.position.left + sb.positionThumb.left, sb.position.top + sb.positionThumb.bottom,
 		sb.position.left + sb.positionThumb.left, sb.position.top + sb.positionThumb.top,
 	}
-	gl.NamedBufferSubData(sb.vbo, 0, len(thumbVertices)*4, gl.Ptr(&thumbVertices[0]))
+	gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(thumbVertices)*4, gl.Ptr(&thumbVertices[0]))
 	gl.DrawArrays(gl.TRIANGLES, 0, int32(len(thumbVertices)/2))
 
-	sb.isDirty = false
+	gui.terminal.NotifyDirty()
 }
 
 func (sb *scrollbar) setPosition(max int, position int) {
@@ -352,7 +351,6 @@ func (sb *scrollbar) setPosition(max int, position int) {
 	sb.scrollPosition = position
 
 	sb.recalcElementPositions()
-	sb.isDirty = true
 }
 
 func (sb *scrollbar) mouseHitTest(px float64, py float64) scrollbarPart {
@@ -435,7 +433,7 @@ func (sb *scrollbar) mouseButtonCallback(g *GUI, button glfw.MouseButton, action
 			}
 		}
 
-		sb.isDirty = true
+		g.terminal.NotifyDirty()
 	}
 
 	sb.resetElementColors(mouseX, mouseY)
@@ -470,7 +468,7 @@ func (sb *scrollbar) mouseMoveCallback(g *GUI, px float64, py float64) {
 		g.logger.Debugf("new thumbTop: %f, fact thumbTop: %f, position: %d", newThumbTop, sb.positionThumb.top, sb.scrollPosition)
 	}
 
-	sb.isDirty = true
+	g.terminal.NotifyDirty()
 }
 
 func (sb *scrollbar) resetElementColors(mouseX float64, mouseY float64) {
@@ -516,6 +514,6 @@ func (sb *scrollbar) resetElementColors(mouseX float64, mouseY float64) {
 func (sb *scrollbar) cursorEnterCallback(g *GUI, entered bool) {
 	if !entered {
 		sb.resetElementColors(-1, -1) // (-1, -1) ensures that no part is hovered by the mouse
-		sb.isDirty = true
+		g.terminal.NotifyDirty()
 	}
 }

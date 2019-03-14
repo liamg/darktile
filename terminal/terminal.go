@@ -33,6 +33,20 @@ const (
 	MouseExtSGR
 )
 
+type WindowManipulationInterface interface {
+	RestoreWindow(term *Terminal) error
+	IconifyWindow(term *Terminal) error
+	MoveWindow(term *Terminal, pixelX int, pixelY int) error
+	ResizeWindowByPixels(term *Terminal, pixelsHeight int, pixelsWidth int) error
+	BringWindowToFront(term *Terminal) error
+	ResizeWindowByChars(term *Terminal, charsHeight int, charsWidth int) error
+	MaximizeWindow(term *Terminal) error
+	ReportWindowState(term *Terminal) error
+	ReportWindowPosition(term *Terminal) error
+	ReportWindowSizeInPixels(term *Terminal) error
+	ReportWindowSizeInChars(term *Terminal) error
+}
+
 type Terminal struct {
 	program                   uint32
 	buffers                   []*buffer.Buffer
@@ -50,12 +64,14 @@ type Terminal struct {
 	mouseMode                 MouseMode
 	mouseExtMode              MouseExtMode
 	bracketedPasteMode        bool
-	isDirty                   bool
 	charWidth                 float32
 	charHeight                float32
 	lastBuffer                uint8
 	terminalState             *buffer.TerminalState
 	platformDependentSettings platform.PlatformDependentSettings
+	dirty                     *notifier
+
+	WindowManipulation WindowManipulationInterface
 }
 
 type Modes struct {
@@ -85,15 +101,28 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 			ShowCursor: true,
 		},
 		platformDependentSettings: pty.GetPlatformDependentSettings(),
+		dirty:                     newNotifier(),
 	}
 	t.buffers = []*buffer.Buffer{
-		buffer.NewBuffer(t.terminalState),
-		buffer.NewBuffer(t.terminalState),
-		buffer.NewBuffer(t.terminalState),
+		buffer.NewBuffer(t.terminalState, t.dirty),
+		buffer.NewBuffer(t.terminalState, t.dirty),
+		buffer.NewBuffer(t.terminalState, t.dirty),
 	}
 	t.activeBuffer = t.buffers[0]
-	return t
 
+	return t
+}
+
+// Dirty returns a channel that receives an empty struct whenever the
+// terminal becomes dirty.
+func (terminal *Terminal) Dirty() <-chan struct{} {
+	return terminal.dirty.C
+}
+
+// NotifyDirty is used to signal that the terminal is dirty and the
+// screen must be redrawn.
+func (terminal *Terminal) NotifyDirty() {
+	terminal.dirty.Notify()
 }
 
 func (terminal *Terminal) SetProgram(program uint32) {
@@ -102,16 +131,6 @@ func (terminal *Terminal) SetProgram(program uint32) {
 
 func (terminal *Terminal) SetBracketedPasteMode(enabled bool) {
 	terminal.bracketedPasteMode = enabled
-}
-
-func (terminal *Terminal) CheckDirty() bool {
-	d := terminal.isDirty
-	terminal.isDirty = false
-	return d || terminal.ActiveBuffer().IsDirty()
-}
-
-func (terminal *Terminal) SetDirty() {
-	terminal.isDirty = true
 }
 
 func (terminal *Terminal) IsApplicationCursorKeysModeEnabled() bool {
@@ -171,7 +190,7 @@ func (terminal *Terminal) GetScrollOffset() uint {
 }
 
 func (terminal *Terminal) ScreenScrollDown(lines uint16) {
-	defer terminal.SetDirty()
+	defer terminal.NotifyDirty()
 	buffer := terminal.ActiveBuffer()
 
 	if buffer.Height() < int(buffer.ViewHeight()) {
@@ -199,7 +218,7 @@ func (terminal *Terminal) AreaScrollDown(lines uint16) {
 }
 
 func (terminal *Terminal) ScreenScrollUp(lines uint16) {
-	defer terminal.SetDirty()
+	defer terminal.NotifyDirty()
 	buffer := terminal.ActiveBuffer()
 
 	if buffer.Height() < int(buffer.ViewHeight()) {
@@ -223,8 +242,8 @@ func (terminal *Terminal) ScrollPageUp() {
 }
 
 func (terminal *Terminal) ScrollToEnd() {
-	defer terminal.SetDirty()
 	terminal.terminalState.SetScrollOffset(0)
+	terminal.NotifyDirty()
 }
 
 func (terminal *Terminal) GetVisibleLines() []buffer.Line {
@@ -298,6 +317,7 @@ func (terminal *Terminal) GetTitle() string {
 func (terminal *Terminal) SetTitle(title string) {
 	terminal.title = title
 	terminal.emitTitleChange()
+	terminal.NotifyDirty()
 }
 
 // Write sends data, i.e. locally typed keystrokes to the pty
@@ -350,14 +370,16 @@ func (terminal *Terminal) Clear() {
 	terminal.ActiveBuffer().Clear()
 }
 
+func (terminal *Terminal) ReallyClear() {
+	terminal.pty.Clear()
+	terminal.ActiveBuffer().ReallyClear()
+}
+
 func (terminal *Terminal) GetSize() (int, int) {
 	return int(terminal.size.Width), int(terminal.size.Height)
 }
 
 func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
-	terminal.lock.Lock()
-	defer terminal.lock.Unlock()
-
 	if terminal.size.Width == uint16(newCols) && terminal.size.Height == uint16(newLines) {
 		return nil
 	}
@@ -373,6 +395,7 @@ func (terminal *Terminal) SetSize(newCols uint, newLines uint) error {
 	terminal.ActiveBuffer().ResizeView(terminal.size.Width, terminal.size.Height)
 
 	terminal.emitResize()
+	terminal.NotifyDirty()
 	return nil
 }
 
@@ -419,4 +442,13 @@ func (terminal *Terminal) SetScreenMode(enabled bool) {
 		buffer.ReverseVideo()
 	}
 	terminal.emitReverse(enabled)
+	terminal.NotifyDirty()
+}
+
+func (terminal *Terminal) Lock() {
+	terminal.lock.Lock()
+}
+
+func (terminal *Terminal) Unlock() {
+	terminal.lock.Unlock()
 }

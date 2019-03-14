@@ -21,13 +21,17 @@ const (
 	SelectionRegionRectangular
 )
 
+type Notifier interface {
+	Notify()
+}
+
 type Buffer struct {
 	lines                 []Line
 	displayChangeHandlers []chan bool
 	savedX                uint16
 	savedY                uint16
 	savedCursorAttr       *CellAttributes
-	dirty                 bool
+	dirty                 Notifier
 	selectionStart        *Position
 	selectionEnd          *Position
 	selectionMode         SelectionMode
@@ -54,7 +58,7 @@ func comparePositions(pos1 *Position, pos2 *Position) int {
 }
 
 // NewBuffer creates a new terminal buffer
-func NewBuffer(terminalState *TerminalState) *Buffer {
+func NewBuffer(terminalState *TerminalState, dirty Notifier) *Buffer {
 	b := &Buffer{
 		lines:               []Line{},
 		selectionStart:      nil,
@@ -62,6 +66,7 @@ func NewBuffer(terminalState *TerminalState) *Buffer {
 		selectionMode:       SelectionChar,
 		isSelectionComplete: true,
 		terminalState:       terminalState,
+		dirty:               dirty,
 	}
 	return b
 }
@@ -251,17 +256,15 @@ func (buffer *Buffer) StartSelection(col uint16, viewRow uint16, mode SelectionM
 	}
 
 	buffer.isSelectionComplete = false
-
-	buffer.emitDisplayChange()
+	buffer.dirty.Notify()
 }
 
 func (buffer *Buffer) ExtendSelection(col uint16, viewRow uint16, complete bool) {
-
 	if buffer.isSelectionComplete {
 		return
 	}
 
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	if buffer.selectionStart == nil {
 		buffer.selectionEnd = nil
@@ -285,7 +288,7 @@ func (buffer *Buffer) ClearSelection() {
 	buffer.selectionEnd = nil
 	buffer.isSelectionComplete = true
 
-	buffer.emitDisplayChange()
+	buffer.dirty.Notify()
 }
 
 func (buffer *Buffer) getActualSelection(selectionRegionMode SelectionRegionMode) (*Position, *Position) {
@@ -368,14 +371,6 @@ func (buffer *Buffer) InSelection(col uint16, row uint16, selectionRegionMode Se
 		(rawY < end.Line || (rawY == end.Line && int(col) <= end.Col))
 }
 
-func (buffer *Buffer) IsDirty() bool {
-	if !buffer.dirty {
-		return false
-	}
-	buffer.dirty = false
-	return true
-}
-
 func (buffer *Buffer) HasScrollableRegion() bool {
 	return buffer.terminalState.topMargin > 0 || buffer.terminalState.bottomMargin < uint(buffer.ViewHeight())-1
 }
@@ -395,7 +390,7 @@ func (buffer *Buffer) getAreaScrollRange() (top uint64, bottom uint64) {
 }
 
 func (buffer *Buffer) AreaScrollDown(lines uint16) {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	// NOTE: bottom is exclusive
 	top, bottom := buffer.getAreaScrollRange()
@@ -411,7 +406,7 @@ func (buffer *Buffer) AreaScrollDown(lines uint16) {
 }
 
 func (buffer *Buffer) AreaScrollUp(lines uint16) {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	// NOTE: bottom is exclusive
 	top, bottom := buffer.getAreaScrollRange()
@@ -469,10 +464,6 @@ func (buffer *Buffer) GetRawCell(viewCol uint16, rawLine uint64) *Cell {
 		return nil
 	}
 	return &line.cells[viewCol]
-}
-
-func (buffer *Buffer) emitDisplayChange() {
-	buffer.dirty = true
 }
 
 // Column returns cursor column
@@ -559,8 +550,7 @@ func (buffer *Buffer) deleteLine() {
 }
 
 func (buffer *Buffer) insertLine() {
-
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	if !buffer.InScrollableRegion() {
 		pos := buffer.RawLine()
@@ -645,7 +635,7 @@ func (buffer *Buffer) Index() {
 	// This sequence causes the active position to move downward one line without changing the column position.
 	// If the active position is at the bottom margin, a scroll up is performed."
 
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	if buffer.InScrollableRegion() {
 
@@ -671,8 +661,7 @@ func (buffer *Buffer) Index() {
 }
 
 func (buffer *Buffer) ReverseIndex() {
-
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	if uint(buffer.terminalState.cursorY) == buffer.terminalState.topMargin {
 		buffer.AreaScrollDown(1)
@@ -683,7 +672,8 @@ func (buffer *Buffer) ReverseIndex() {
 
 // Write will write a rune to the terminal at the position of the cursor, and increment the cursor position
 func (buffer *Buffer) Write(runes ...rune) {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
+
 	// scroll to bottom on input
 	buffer.terminalState.scrollLinesFromBottom = 0
 
@@ -846,7 +836,7 @@ func (buffer *Buffer) MovePosition(x int16, y int16) {
 }
 
 func (buffer *Buffer) SetPosition(col uint16, line uint16) {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	useCol := col
 	useLine := line
@@ -885,11 +875,18 @@ func (buffer *Buffer) GetVisibleLines() []Line {
 // tested to here
 
 func (buffer *Buffer) Clear() {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 	for i := 0; i < int(buffer.ViewHeight()); i++ {
 		buffer.lines = append(buffer.lines, newLine())
 	}
 	buffer.SetPosition(0, 0) // do we need to set position?
+}
+
+func (buffer *Buffer) ReallyClear() {
+	defer buffer.dirty.Notify()
+	buffer.lines = []Line{}
+	buffer.terminalState.SetScrollOffset(0)
+	buffer.SetPosition(0, 0)
 }
 
 // creates if necessary
@@ -918,13 +915,13 @@ func (buffer *Buffer) getViewLine(index uint16) *Line {
 }
 
 func (buffer *Buffer) EraseLine() {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 	line := buffer.getCurrentLine()
 	line.cells = []Cell{}
 }
 
 func (buffer *Buffer) EraseLineToCursor() {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 	line := buffer.getCurrentLine()
 	for i := 0; i <= int(buffer.terminalState.cursorX); i++ {
 		if i < len(line.cells) {
@@ -934,7 +931,7 @@ func (buffer *Buffer) EraseLineToCursor() {
 }
 
 func (buffer *Buffer) EraseLineFromCursor() {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 	line := buffer.getCurrentLine()
 
 	if len(line.cells) > 0 {
@@ -952,7 +949,7 @@ func (buffer *Buffer) EraseLineFromCursor() {
 }
 
 func (buffer *Buffer) EraseDisplay() {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 	for i := uint16(0); i < (buffer.ViewHeight()); i++ {
 		rawLine := buffer.convertViewLineToRawLine(i)
 		if int(rawLine) < len(buffer.lines) {
@@ -962,7 +959,7 @@ func (buffer *Buffer) EraseDisplay() {
 }
 
 func (buffer *Buffer) DeleteChars(n int) {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	line := buffer.getCurrentLine()
 	if int(buffer.terminalState.cursorX) >= len(line.cells) {
@@ -977,7 +974,7 @@ func (buffer *Buffer) DeleteChars(n int) {
 }
 
 func (buffer *Buffer) EraseCharacters(n int) {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	line := buffer.getCurrentLine()
 
@@ -992,7 +989,7 @@ func (buffer *Buffer) EraseCharacters(n int) {
 }
 
 func (buffer *Buffer) EraseDisplayFromCursor() {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 	line := buffer.getCurrentLine()
 
 	max := int(buffer.terminalState.cursorX)
@@ -1008,7 +1005,7 @@ func (buffer *Buffer) EraseDisplayFromCursor() {
 }
 
 func (buffer *Buffer) EraseDisplayToCursor() {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 	line := buffer.getCurrentLine()
 
 	for i := 0; i <= int(buffer.terminalState.cursorX); i++ {
@@ -1026,8 +1023,7 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 }
 
 func (buffer *Buffer) ResizeView(width uint16, height uint16) {
-
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	if buffer.terminalState.viewHeight == 0 {
 		buffer.terminalState.viewWidth = width
@@ -1164,7 +1160,7 @@ func (buffer *Buffer) CompareViewLines(path string) bool {
 }
 
 func (buffer *Buffer) ReverseVideo() {
-	defer buffer.emitDisplayChange()
+	defer buffer.dirty.Notify()
 
 	for _, line := range buffer.lines {
 		line.ReverseVideo()

@@ -6,10 +6,12 @@ import (
 	"flag"
 	"fmt"
 	"os"
+	"runtime"
 	"strings"
 	"testing"
 	"time"
 
+	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/gui"
 	"github.com/liamg/aminal/terminal"
 
@@ -105,7 +107,11 @@ func TestCursorMovement(t *testing.T) {
 			send(term, "1\n")
 			sleep()
 
-			if term.ActiveBuffer().CompareViewLines("vttest/test-cursor-movement-1") == false {
+			term.Lock()
+			compareResult := term.ActiveBuffer().CompareViewLines("vttest/test-cursor-movement-1")
+			term.Unlock()
+
+			if compareResult == false {
 				os.Exit(terminate(fmt.Sprintf("ActiveBuffer doesn't match vttest template vttest/test-cursor-movement-1")))
 			}
 
@@ -119,7 +125,7 @@ func TestCursorMovement(t *testing.T) {
 			g.Close()
 		}
 
-		initialize(testFunc)
+		initialize(testFunc, testConfig())
 	})
 }
 
@@ -155,7 +161,7 @@ func TestScreenFeatures(t *testing.T) {
 			g.Close()
 		}
 
-		initialize(testFunc)
+		initialize(testFunc, testConfig())
 	})
 }
 
@@ -180,11 +186,25 @@ func TestSixel(t *testing.T) {
 			g.Close()
 		}
 
-		initialize(testFunc)
+		initialize(testFunc, testConfig())
 	})
 }
 
 // Last Test should terminate main goroutine since it's infinity looped to execute others GUI tests in main goroutine
 func TestExit(t *testing.T) {
 	os.Exit(0)
+}
+
+func testConfig() *config.Config {
+	c := config.DefaultConfig()
+
+	// Force the scrollbar not showing when running unit tests
+	c.ShowVerticalScrollbar = false
+
+	// Use a vanilla shell on POSIX to help ensure consistency.
+	if runtime.GOOS != "windows" {
+		c.Shell = "/bin/sh"
+	}
+
+	return c
 }
