@@ -75,6 +75,10 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
 		return ""
 	}
 
+	if cell.IsHyperlink() {
+		return cell.hyperlink.Uri
+	}
+
 	candidate := ""
 
 	for i := col; i >= uint16(0); i-- {
