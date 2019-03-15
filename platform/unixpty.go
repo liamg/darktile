@@ -86,6 +86,10 @@ func (pty *unixPty) GetPlatformDependentSettings() PlatformDependentSettings {
 	return pty.platformDependentSettings
 }
 
+func (pty *unixPty) Clear() {
+	// do nothing for unix
+}
+
 func NewPty(x, y int) (Pty, error) {
 	innerPty, innerTty, err := pty.Open()
 	if err != nil {

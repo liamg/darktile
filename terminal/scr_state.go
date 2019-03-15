@@ -6,6 +6,9 @@ func screenStateHandler(pty chan rune, terminal *Terminal) error {
 	b := <-pty
 	switch b {
 	case '8': // DECALN -- Screen Alignment Pattern
+		terminal.Lock()
+		defer terminal.Unlock()
+
 		// hide cursor?
 		buffer := terminal.ActiveBuffer()
 		terminal.ResetVerticalMargins()

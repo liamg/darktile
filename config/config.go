@@ -7,8 +7,6 @@ import (
 )
 
 type Config struct {
-	DebugMode             bool             `toml:"debug"`
-	Slomo                 bool             `toml:"slomo"`
 	ColourScheme          ColourScheme     `toml:"colours"`
 	DPIScale              float32          `toml:"dpi-scale"`
 	Shell                 string           `toml:"shell"`
@@ -16,17 +14,22 @@ type Config struct {
 	SearchURL             string           `toml:"search_url"`
 	MaxLines              uint64           `toml:"max_lines"`
 	CopyAndPasteWithMouse bool             `toml:"copy_and_paste_with_mouse"`
+
+	// Developer options.
+	DebugMode  bool   `toml:"debug"`
+	Slomo      bool   `toml:"slomo"`
+	CPUProfile string `toml:"cpu_profile"`
 }
 
 type KeyMappingConfig map[string]string
 
 func Parse(data []byte) (*Config, error) {
-	c := DefaultConfig
-	err := toml.Unmarshal(data, &c)
+	c := DefaultConfig()
+	err := toml.Unmarshal(data, c)
 	if c.KeyMapping == nil {
 		c.KeyMapping = KeyMappingConfig(map[string]string{})
 	}
-	return &c, err
+	return c, err
 }
 
 func (c *Config) Encode() ([]byte, error) {

@@ -9,4 +9,5 @@ const (
 	ActionReportBug   UserAction = "report"
 	ActionToggleDebug UserAction = "debug"
 	ActionToggleSlomo UserAction = "slomo"
+	ActionBufferClear UserAction = "buffer-clear"
 )

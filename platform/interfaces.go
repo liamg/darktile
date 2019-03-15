@@ -19,4 +19,5 @@ type Pty interface {
 	Resize(x int, y int) error
 	CreateGuestProcess(imagePath string) (Process, error)
 	GetPlatformDependentSettings() PlatformDependentSettings
+	Clear()
 }
