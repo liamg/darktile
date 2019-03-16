@@ -109,7 +109,7 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
 		if protocolMode && !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
 			break
 		}
-		candidate = fmt.Sprintf("%c%s", cell.Rune(), candidate)
+		candidate = fmt.Sprintf("%c%s", c, candidate)
 		if !protocolMode && c == ':' {
 			protocolMode = strings.Contains(candidate, "://")
 		}
