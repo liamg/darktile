@@ -172,6 +172,14 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 			terminal.logger.Infof("Turning off SGR ext mouse mode")
 			terminal.SetMouseExtMode(MouseExtNone)
 		}
+	case "?1015":
+		if enabled {
+			terminal.logger.Infof("Turning on URXVT ext mouse mode")
+			terminal.SetMouseExtMode(MouseExtURXVT)
+		} else {
+			terminal.logger.Infof("Turning off URXVT ext mouse mode")
+			terminal.SetMouseExtMode(MouseExtNone)
+		}
 	case "?1048":
 		if enabled {
 			terminal.ActiveBuffer().SaveCursor()

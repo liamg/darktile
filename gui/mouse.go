@@ -333,13 +333,16 @@ func (gui *GUI) emitButtonEventToTerminal(tx int, ty int, button glfw.MouseButto
 	gui.prevMotionTY = ty
 
 	var packet string
-	if ext == terminal.MouseExtSGR {
+	switch ext {
+	case terminal.MouseExtSGR:
 		final := 'M'
 		if release {
 			final = 'm'
 		}
 		packet = fmt.Sprintf("\x1b[<%d;%d;%d%c", b, tx, ty, final)
-	} else {
+	case terminal.MouseExtURXVT:
+		packet = fmt.Sprintf("\x1b[%d;%d;%dM", b+32, tx, ty)
+	default:
 		packet = fmt.Sprintf("\x1b[M%c%c%c", (rune(b + 32)), (rune(tx + 32)), (rune(ty + 32)))
 	}
 	gui.logger.Infof("Sending mouse packet: '%v'", packet)
