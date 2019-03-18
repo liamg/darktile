@@ -30,6 +30,9 @@ func LoadTrueTypeFont(program uint32, r io.Reader, scale float32) (*Font, error)
 	f.scale = scale
 	f.characters = map[rune]*character{}
 	f.program = program //set shader program
+	f.uniformLocationResolution = gl.GetUniformLocation(program, gl.Str("resolution\x00"))
+	f.uniformLocationTextColor = gl.GetUniformLocation(program, gl.Str("textColor\x00"))
+
 	// Read the truetype font.
 	f.ttf, err = truetype.Parse(data)
 	if err != nil {
