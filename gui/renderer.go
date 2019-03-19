@@ -1,13 +1,12 @@
 package gui
 
 import (
-	"image"
-	"math"
-
 	"github.com/go-gl/gl/all-core/gl"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/glfont"
+	"image"
+	"math"
 )
 
 type OpenGLRenderer struct {
@@ -26,16 +25,8 @@ type OpenGLRenderer struct {
 	textureMap       map[*image.RGBA]uint32
 	fontMap          *FontMap
 	backgroundColour [3]float32
-}
 
-type rectangle struct {
-	vao        uint32
-	vbo        uint32
-	cv         uint32
-	colourAttr uint32
-	colour     [3]float32
-	points     [18]float32
-	prog       uint32
+	rectRenderer *rectangleRenderer
 }
 
 func (r *OpenGLRenderer) CellWidth() float32 {
@@ -46,95 +37,12 @@ func (r *OpenGLRenderer) CellHeight() float32 {
 	return r.cellHeight
 }
 
-func (r *OpenGLRenderer) newRectangleEx(x float32, y float32, width float32, height float32, colourAttr uint32) *rectangle {
-
-	rect := &rectangle{}
-
-	halfAreaWidth := float32(r.areaWidth / 2)
-	halfAreaHeight := float32(r.areaHeight / 2)
-
-	x = (x - halfAreaWidth) / halfAreaWidth
-	y = -(y - (halfAreaHeight)) / halfAreaHeight
-	w := width / halfAreaWidth
-	h := height / halfAreaHeight
-
-	rect.points = [18]float32{
-		x, y, 0,
-		x, y + h, 0,
-		x + w, y + h, 0,
-
-		x + w, y, 0,
-		x, y, 0,
-		x + w, y + h, 0,
+func NewOpenGLRenderer(config *config.Config, fontMap *FontMap, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) (*OpenGLRenderer, error) {
+	rectRenderer, err := newRectangleRenderer()
+	if err != nil {
+		return nil, err
 	}
 
-	rect.colourAttr = colourAttr
-	rect.prog = r.program
-
-	// SHAPE
-	gl.GenBuffers(1, &rect.vbo)
-	gl.BindBuffer(gl.ARRAY_BUFFER, rect.vbo)
-	gl.BufferData(gl.ARRAY_BUFFER, 4*len(rect.points), gl.Ptr(&rect.points[0]), gl.STATIC_DRAW)
-
-	gl.GenVertexArrays(1, &rect.vao)
-	gl.BindVertexArray(rect.vao)
-	gl.EnableVertexAttribArray(0)
-
-	gl.BindBuffer(gl.ARRAY_BUFFER, rect.vbo)
-	gl.VertexAttribPointer(0, 3, gl.FLOAT, false, 0, nil)
-
-	// colour
-	gl.GenBuffers(1, &rect.cv)
-
-	rect.setColour([3]float32{0, 1, 0})
-
-	return rect
-}
-
-func (r *OpenGLRenderer) newRectangle(x float32, y float32, colourAttr uint32) *rectangle {
-	return r.newRectangleEx(x, y, r.cellWidth, r.cellHeight, colourAttr)
-}
-
-func (rect *rectangle) Draw() {
-	gl.UseProgram(rect.prog)
-	gl.BindVertexArray(rect.vao)
-	gl.DrawArrays(gl.TRIANGLES, 0, 6)
-}
-
-func (rect *rectangle) setColour(colour [3]float32) {
-	if rect.colour == colour {
-		return
-	}
-
-	c := []float32{
-		colour[0], colour[1], colour[2],
-		colour[0], colour[1], colour[2],
-		colour[0], colour[1], colour[2],
-		colour[0], colour[1], colour[2],
-		colour[0], colour[1], colour[2],
-		colour[0], colour[1], colour[2],
-	}
-
-	gl.UseProgram(rect.prog)
-	gl.BindBuffer(gl.ARRAY_BUFFER, rect.cv)
-	gl.BufferData(gl.ARRAY_BUFFER, len(c)*4, gl.Ptr(c), gl.STATIC_DRAW)
-	gl.EnableVertexAttribArray(rect.colourAttr)
-	gl.VertexAttribPointer(rect.colourAttr, 3, gl.FLOAT, false, 0, gl.PtrOffset(0))
-
-	rect.colour = colour
-}
-
-func (rect *rectangle) Free() {
-	gl.DeleteVertexArrays(1, &rect.vao)
-	gl.DeleteBuffers(1, &rect.vbo)
-	gl.DeleteBuffers(1, &rect.cv)
-
-	rect.vao = 0
-	rect.vbo = 0
-	rect.cv = 0
-}
-
-func NewOpenGLRenderer(config *config.Config, fontMap *FontMap, areaX int, areaY int, areaWidth int, areaHeight int, colourAttr uint32, program uint32) *OpenGLRenderer {
 	r := &OpenGLRenderer{
 		areaWidth:     areaWidth,
 		areaHeight:    areaHeight,
@@ -146,9 +54,10 @@ func NewOpenGLRenderer(config *config.Config, fontMap *FontMap, areaX int, areaY
 		program:       program,
 		textureMap:    map[*image.RGBA]uint32{},
 		fontMap:       fontMap,
+		rectRenderer:  rectRenderer,
 	}
 	r.SetArea(areaX, areaY, areaWidth, areaHeight)
-	return r
+	return r, nil
 }
 
 // This method ensures that all OpenGL resources are deleted correctly
@@ -162,6 +71,11 @@ func (r *OpenGLRenderer) Free() {
 
 	gl.DeleteProgram(r.program)
 	r.program = 0
+
+	if r.rectRenderer != nil {
+		r.rectRenderer.Free()
+		r.rectRenderer = nil
+	}
 }
 
 func (r *OpenGLRenderer) GetTermSize() (uint, uint) {
@@ -181,26 +95,16 @@ func (r *OpenGLRenderer) SetArea(areaX int, areaY int, areaWidth int, areaHeight
 	r.termRows = uint(math.Floor(float64(float32(r.areaHeight) / r.cellHeight)))
 }
 
-func (r *OpenGLRenderer) GetRectangleSize(col uint, row uint) (float32, float32) {
-	x := float32(float32(col) * r.cellWidth)
-	y := float32(float32(row) * r.cellHeight)
+func (r *OpenGLRenderer) ConvertCoordinates(col uint, row uint) (float32, float32) {
+	left := float32(float32(col) * r.cellWidth)
+	top := float32(float32(row) * r.cellHeight)
 
-	return x, y
-}
-
-func (r *OpenGLRenderer) getRectangle(col uint, row uint) *rectangle {
-	x := float32(float32(col) * r.cellWidth)
-	y := float32(float32(row)*r.cellHeight) + r.cellHeight
-
-	return r.newRectangle(x, y, r.colourAttr)
+	return left, top
 }
 
 func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
-	rect := r.getRectangle(col, row)
-	rect.setColour(colour)
-	rect.Draw()
-
-	rect.Free()
+	left, top := r.ConvertCoordinates(col, row)
+	r.rectRenderer.render(left, top, r.cellWidth, r.cellHeight, colour)
 }
 
 func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, colour *config.Colour, force bool) {
@@ -214,13 +118,9 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, colour
 	}
 
 	if bg != r.backgroundColour || force {
-		rect := r.getRectangle(col, row)
-		rect.setColour(bg)
-		rect.Draw()
-
-		rect.Free()
+		left, top := r.ConvertCoordinates(col, row)
+		r.rectRenderer.render(left, top, r.cellWidth, r.cellHeight, bg)
 	}
-
 }
 
 // DrawUnderline draws a line under 'span' characters starting at (col, row)
@@ -233,12 +133,8 @@ func (r *OpenGLRenderer) DrawUnderline(span int, col uint, row uint, colour [3]f
 	if thickness < 1 {
 		thickness = 1
 	}
-	rect := r.newRectangleEx(x, y, r.cellWidth*float32(span), thickness, r.colourAttr)
 
-	rect.setColour(colour)
-	rect.Draw()
-
-	rect.Free()
+	r.rectRenderer.render(x, y, r.cellWidth*float32(span), thickness, colour)
 }
 
 func (r *OpenGLRenderer) DrawCellText(text string, col uint, row uint, alpha float32, colour [3]float32, bold bool) {

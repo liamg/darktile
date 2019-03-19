@@ -72,6 +72,7 @@ func initialize(unitTestfunc callback, configOverride *config.Config) {
 	if err != nil {
 		logger.Fatalf("Cannot start: %s", err)
 	}
+	defer g.Free()
 
 	terminal.WindowManipulation = g
 

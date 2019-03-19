@@ -198,6 +198,9 @@ func TestExit(t *testing.T) {
 func testConfig() *config.Config {
 	c := config.DefaultConfig()
 
+	// Force the scrollbar not showing when running unit tests
+	c.ShowVerticalScrollbar = false
+
 	// Use a vanilla shell on POSIX to help ensure consistency.
 	if runtime.GOOS != "windows" {
 		c.Shell = "/bin/sh"

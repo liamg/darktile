@@ -14,6 +14,7 @@ type Config struct {
 	SearchURL             string           `toml:"search_url"`
 	MaxLines              uint64           `toml:"max_lines"`
 	CopyAndPasteWithMouse bool             `toml:"copy_and_paste_with_mouse"`
+	ShowVerticalScrollbar bool             `toml:"show_vertical_scrollbar"`
 
 	// Developer options.
 	DebugMode  bool   `toml:"debug"`
