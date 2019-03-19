@@ -5,15 +5,16 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/carlogit/phash"
-	"github.com/liamg/aminal/config"
-	"github.com/liamg/aminal/gui"
-	"github.com/liamg/aminal/terminal"
 	"os"
 	"runtime"
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/carlogit/phash"
+	"github.com/liamg/aminal/config"
+	"github.com/liamg/aminal/gui"
+	"github.com/liamg/aminal/terminal"
 )
 
 var termRef *terminal.Terminal
@@ -76,7 +77,11 @@ func enter(terminal *terminal.Terminal) {
 func validateScreen(img string, waitForChange bool) {
 	fmt.Printf("taking screenshot: %s and comparing...", img)
 
-	guiRef.Screenshot(img)
+	err := guiRef.Screenshot(img)
+	if err != nil {
+		panic(err)
+	}
+
 	compareImages(strings.Join([]string{"vttest/", img}, ""), img)
 
 	fmt.Printf("compare OK\n")
@@ -89,7 +94,10 @@ func validateScreen(img string, waitForChange bool) {
 		for {
 			sleep()
 			actualScren := "temp.png"
-			guiRef.Screenshot(actualScren)
+			err = guiRef.Screenshot(actualScren)
+			if err != nil {
+				panic(err)
+			}
 			distance := imagesAreEqual(actualScren, img)
 			if distance != 0 {
 				break

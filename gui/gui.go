@@ -808,24 +808,27 @@ func (gui *GUI) SwapBuffers() {
 	gui.window.SwapBuffers()
 }
 
-func (gui *GUI) Screenshot(path string) {
+func (gui *GUI) Screenshot(path string) error {
 	x, y := gui.window.GetPos()
 	w, h := gui.window.GetSize()
 
 	img, err := screenshot.CaptureRect(image.Rectangle{Min: image.Point{X: x, Y: y},
 		Max: image.Point{X: x + w, Y: y + h}})
 	if err != nil {
-		panic(err)
+		return err
 	}
 	file, err := os.Create(path)
 	if err != nil {
-		panic(err)
+		return err
 	}
 	defer file.Close()
 	err = png.Encode(file, img)
 	if err != nil {
-		panic(err)
+		os.Remove(path)
+		return err
 	}
+	
+	return nil
 }
 
 func (gui *GUI) windowPosChangeCallback(w *glfw.Window, xpos int, ypos int) {
