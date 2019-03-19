@@ -72,7 +72,7 @@ func initialize(unitTestfunc callback, configOverride *config.Config) {
 	guestProcess, err := pty.CreateGuestProcess(shellStr)
 	if err != nil {
 		pty.Close()
-		logger.Fatalf("Failed to start your shell \"%s\": %s", shellStr, err)
+		logger.Fatalf("Failed to start your shell %q: %s", shellStr, err)
 	}
 	defer guestProcess.Close()
 
