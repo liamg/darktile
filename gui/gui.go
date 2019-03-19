@@ -67,7 +67,6 @@ type GUI struct {
 	selectionRegionMode             buffer.SelectionRegionMode
 
 	mainThreadFunc chan func()
-	wakerEnded     chan bool
 }
 
 func Min(x, y int) int {
@@ -335,7 +334,6 @@ func (gui *GUI) Close() {
 }
 
 func (gui *GUI) Render() error {
-
 	gui.logger.Debugf("Creating window...")
 	var err error
 	gui.window, err = gui.createWindow()
@@ -429,7 +427,9 @@ func (gui *GUI) Render() error {
 	showMessage := true
 
 	stop := make(chan struct{})
-	go gui.waker(stop)
+	var waitForWaker sync.WaitGroup
+	waitForWaker.Add(1)
+	go gui.waker(stop, &waitForWaker)
 
 	for !gui.window.ShouldClose() {
 		gui.redraw(true)
@@ -495,8 +495,8 @@ Buffer Size: %d lines
 
 	gui.logger.Debug("Stopping render...")
 
-	close(stop)      // Tell waker to end...
-	<-gui.wakerEnded // ...and wait it to end
+	close(stop)         // Tell waker to end...
+	waitForWaker.Wait() // ...and wait it to end
 
 	gui.logger.Debug("Render stopped")
 
@@ -508,8 +508,9 @@ Buffer Size: %d lines
 // waking up the main thread when the GUI needs to be
 // redrawn. Limiting is applied on wakeups to avoid excessive CPU
 // usage when the terminal is being updated rapidly.
-func (gui *GUI) waker(stop <-chan struct{}) {
-	gui.wakerEnded = make(chan bool)
+func (gui *GUI) waker(stop <-chan struct{}, wg *sync.WaitGroup) {
+	defer wg.Done()
+
 	dirty := gui.terminal.Dirty()
 	var nextWake <-chan time.Time
 	var last time.Time
@@ -540,7 +541,6 @@ forLoop:
 			break forLoop
 		}
 	}
-	gui.wakerEnded <- true
 }
 
 func (gui *GUI) renderTerminalData(shouldLock bool) {
@@ -827,7 +827,7 @@ func (gui *GUI) Screenshot(path string) error {
 		os.Remove(path)
 		return err
 	}
-	
+
 	return nil
 }
 
