@@ -215,7 +215,7 @@ func (buffer *Buffer) GetSelectedText(selectionRegionMode SelectionRegionMode) s
 		maxX := int(buffer.terminalState.viewWidth) - 1
 		if row == start.Line {
 			minX = start.Col
-		} else if !line.wrapped {
+		} else if !line.wrapped && !line.nobreak {
 			builder.WriteString("\n")
 		}
 		if row == end.Line {
@@ -704,6 +704,7 @@ func (buffer *Buffer) Write(runes ...rune) {
 				buffer.NewLineEx(true)
 
 				newLine := buffer.getCurrentLine()
+				newLine.setNoBreak(true)
 				if len(newLine.cells) == 0 {
 					newLine.Append(buffer.terminalState.DefaultCell(true))
 				}
