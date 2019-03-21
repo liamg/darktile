@@ -20,7 +20,7 @@ type TerminalState struct {
 	CurrentCharset        int              // active charset index in Charsets array, valid values are 0 or 1
 }
 
-// NewTerminalMode creates a new terminal state
+// NewTerminalState creates a new terminal state
 func NewTerminalState(viewCols uint16, viewLines uint16, attr CellAttributes, maxLines uint64) *TerminalState {
 	b := &TerminalState{
 		cursorX:      0,
