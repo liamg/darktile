@@ -50,15 +50,15 @@ func main() {
 	cmd.Dir = usr.HomeDir
 	latestVersionDir := filepath.Join(versionsDir, latestVersion)
 	path, pathSet := os.LookupEnv("PATH")
-	if (pathSet) {
+	if pathSet {
 		path += ";" + latestVersionDir
 	} else {
 		path = latestVersionDir
 	}
-	cmd.Env = append(os.Environ(), "PATH=" + path)
+	cmd.Env = append(os.Environ(), "PATH="+path)
 	const CREATE_NO_WINDOW = 0x08000000
 	cmd.SysProcAttr = &syscall.SysProcAttr{
-		HideWindow: true,
+		HideWindow:    true,
 		CreationFlags: CREATE_NO_WINDOW,
 	}
 	check(cmd.Start())
