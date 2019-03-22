@@ -17,6 +17,7 @@ var ansiSequenceMap = map[rune]escapeSequenceHandler{
 	'P': sixelHandler,
 	'c': risHandler, //RIS
 	'#': screenStateHandler,
+	'^': privacyMessageHandler,
 	'(': scs0Handler,       // select character set into G0
 	')': scs1Handler,       // select character set into G1
 	'*': swallowHandler(1), // character set bullshit
@@ -102,5 +103,26 @@ func tabSetHandler(pty chan rune, terminal *Terminal) error {
 	// defer terminal.Unlock()
 
 	terminal.terminalState.TabSetAtCursor()
+	return nil
+}
+
+func privacyMessageHandler(pty chan rune, terminal *Terminal) error {
+	// Handler should lock the terminal if there will be write operations to any data read by the renderer
+	// terminal.Lock()
+	// defer terminal.Unlock()
+
+	isEscaped := false
+	for {
+		b := <-pty
+		if b == 0x18 /*CAN*/ || b == 0x1a /*SUB*/ || (b == 0x5c /*backslash*/ && isEscaped) {
+			break
+		}
+		if isEscaped {
+			isEscaped = false
+		} else if b == 0x1b {
+			isEscaped = true
+			continue
+		}
+	}
 	return nil
 }
