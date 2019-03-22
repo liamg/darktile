@@ -76,23 +76,13 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
 	row := buffer.convertViewLineToRawLine((viewRow)) - uint64(buffer.terminalState.scrollLinesFromBottom)
 
 	cell := buffer.GetRawCell(col, row)
-	if cell == nil || cell.Rune() == 0x00 {
+	if cell == nil || isRuneURLSelectionMarker(cell.Rune()) {
 		return ""
 	}
 
-	candidate := ""
+	candidate := string(cell.Rune())
 
-	for i := col; i >= uint16(0); i-- {
-		cell := buffer.GetRawCell(i, row)
-		if cell == nil {
-			break
-		}
-		if isRuneURLSelectionMarker(cell.Rune()) {
-			break
-		}
-		candidate = fmt.Sprintf("%c%s", cell.Rune(), candidate)
-	}
-
+	// First, move forward
 	for i := col + 1; i < buffer.terminalState.viewWidth; i++ {
 		cell := buffer.GetRawCell(i, row)
 		if cell == nil {
@@ -102,6 +92,27 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
 			break
 		}
 		candidate = fmt.Sprintf("%s%c", candidate, cell.Rune())
+	}
+
+	// Move backwards
+	protocolMode := strings.Contains(candidate, "://")
+	for i := col - 1; i >= uint16(0); i-- {
+		cell := buffer.GetRawCell(i, row)
+		if cell == nil {
+			break
+		}
+		c := cell.Rune()
+		if isRuneURLSelectionMarker(c) {
+			break
+		}
+		// if we're tracking left of :// we want to break on any non-Latin character
+		if protocolMode && !(c >= 'a' && c <= 'z' || c >= 'A' && c <= 'Z') {
+			break
+		}
+		candidate = fmt.Sprintf("%c%s", c, candidate)
+		if !protocolMode && c == ':' {
+			protocolMode = strings.Contains(candidate, "://")
+		}
 	}
 
 	if candidate == "" || candidate[0] == '/' {
