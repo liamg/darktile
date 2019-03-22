@@ -19,6 +19,7 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/liamg/aminal/windows/winutil"
 	"io/ioutil"
 	"os"
 	"os/exec"
@@ -27,13 +28,12 @@ import (
 	"sort"
 	"strconv"
 	"strings"
-	"github.com/liamg/aminal/windows/winutil"
 	"syscall"
 )
 
 type Version struct {
 	number [3]int
-	name string
+	name   string
 }
 type Versions []Version
 

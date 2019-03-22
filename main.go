@@ -7,10 +7,12 @@ import (
 	"runtime"
 	"runtime/pprof"
 
+	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/gui"
 	"github.com/liamg/aminal/platform"
 	"github.com/liamg/aminal/terminal"
 	"github.com/riywo/loginshell"
+	"time"
 )
 
 type callback func(terminal *terminal.Terminal, g *gui.GUI)
@@ -20,17 +22,28 @@ func init() {
 }
 
 func main() {
-	initialize(nil)
+	initialize(nil, nil)
 }
 
-func initialize(unitTestfunc callback) {
-	conf := getConfig()
+func initialize(unitTestfunc callback, configOverride *config.Config) {
+	conf := maybeGetConfig(configOverride)
+
 	logger, err := getLogger(conf)
 	if err != nil {
 		fmt.Printf("Failed to create logger: %s\n", err)
 		os.Exit(1)
 	}
-	defer logger.Sync()
+	ticker := time.NewTicker(time.Second)
+	go func() {
+		for {
+			<-ticker.C
+			logger.Sync()
+		}
+	}()
+	defer func() {
+		ticker.Stop()
+		logger.Sync()
+	}()
 
 	if conf.CPUProfile != "" {
 		logger.Infof("Starting CPU profiling...")
@@ -59,7 +72,7 @@ func initialize(unitTestfunc callback) {
 	guestProcess, err := pty.CreateGuestProcess(shellStr)
 	if err != nil {
 		pty.Close()
-		logger.Fatalf("Failed to start your shell: %s", err)
+		logger.Fatalf("Failed to start your shell %q: %s", shellStr, err)
 	}
 	defer guestProcess.Close()
 
@@ -70,6 +83,9 @@ func initialize(unitTestfunc callback) {
 	if err != nil {
 		logger.Fatalf("Cannot start: %s", err)
 	}
+	defer g.Free()
+
+	terminal.WindowManipulation = g
 
 	if unitTestfunc != nil {
 		go unitTestfunc(terminal, g)

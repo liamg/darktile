@@ -14,6 +14,7 @@ type Config struct {
 	SearchURL             string           `toml:"search_url"`
 	MaxLines              uint64           `toml:"max_lines"`
 	CopyAndPasteWithMouse bool             `toml:"copy_and_paste_with_mouse"`
+	ShowVerticalScrollbar bool             `toml:"show_vertical_scrollbar"`
 
 	// Developer options.
 	DebugMode  bool   `toml:"debug"`
@@ -24,12 +25,12 @@ type Config struct {
 type KeyMappingConfig map[string]string
 
 func Parse(data []byte) (*Config, error) {
-	c := DefaultConfig
-	err := toml.Unmarshal(data, &c)
+	c := DefaultConfig()
+	err := toml.Unmarshal(data, c)
 	if c.KeyMapping == nil {
 		c.KeyMapping = KeyMappingConfig(map[string]string{})
 	}
-	return &c, err
+	return c, err
 }
 
 func (c *Config) Encode() ([]byte, error) {

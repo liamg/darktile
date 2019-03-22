@@ -6,12 +6,14 @@ import (
 
 type Line struct {
 	wrapped bool // whether line was wrapped onto from the previous one
+	nobreak bool // true if no line break at the beginning of the line
 	cells   []Cell
 }
 
 func newLine() Line {
 	return Line{
 		wrapped: false,
+		nobreak: false,
 		cells:   []Cell{},
 	}
 }
@@ -43,6 +45,10 @@ func (line *Line) Cleanse() {
 
 func (line *Line) setWrapped(wrapped bool) {
 	line.wrapped = wrapped
+}
+
+func (line *Line) setNoBreak(nobreak bool) {
+	line.nobreak = nobreak
 }
 
 func (line *Line) String() string {

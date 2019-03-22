@@ -24,6 +24,24 @@ import (
 	"go.uber.org/zap"
 )
 
+// wakePeriod controls how often the main loop is woken up. This has
+// significant impact on how Aminal feels to use. Adjust with care and
+// test changes on all supported platforms.
+const wakePeriod = time.Second / 120
+const halfWakePeriod = wakePeriod / 2
+
+const (
+	DefaultWindowWidth  = 800
+	DefaultWindowHeight = 600
+)
+
+type mouseEventsHandler interface {
+	mouseMoveCallback(g *GUI, px float64, py float64)
+	mouseButtonCallback(g *GUI, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey, mouseX float64, mouseY float64)
+	cursorEnterCallback(g *GUI, enter bool)
+	isMouseInside(px float64, py float64) bool
+}
+
 type GUI struct {
 	window            *glfw.Window
 	logger            *zap.SugaredLogger
@@ -57,8 +75,17 @@ type GUI struct {
 	leftClickTime                   time.Time
 	leftClickCount                  int // number of clicks in a serie - single click, double click, or triple click
 	mouseMovedAfterSelectionStarted bool
-	internalResize                  bool
-	selectionRegionMode             buffer.SelectionRegionMode
+
+	catchedMouseHandler   mouseEventsHandler
+	mouseCatchedOnButton  glfw.MouseButton
+	prevMouseEventHandler mouseEventsHandler
+
+	internalResize      bool
+	selectionRegionMode buffer.SelectionRegionMode
+
+	vScrollbar *scrollbar
+
+	mainThreadFunc chan func()
 }
 
 func Min(x, y int) int {
@@ -148,20 +175,31 @@ func New(config *config.Config, terminal *terminal.Terminal, logger *zap.Sugared
 	}
 
 	return &GUI{
-		config:            config,
-		logger:            logger,
-		width:             800,
-		height:            600,
-		appliedWidth:      0,
-		appliedHeight:     0,
-		dpiScale:          1,
-		terminal:          terminal,
-		fontScale:         10.0,
-		terminalAlpha:     1,
-		keyboardShortcuts: shortcuts,
-		resizeLock:        &sync.Mutex{},
-		internalResize:    false,
+		config:              config,
+		logger:              logger,
+		width:               DefaultWindowWidth,
+		height:              DefaultWindowHeight,
+		appliedWidth:        0,
+		appliedHeight:       0,
+		dpiScale:            1,
+		terminal:            terminal,
+		fontScale:           10.0,
+		terminalAlpha:       1,
+		keyboardShortcuts:   shortcuts,
+		resizeLock:          &sync.Mutex{},
+		internalResize:      false,
+		vScrollbar:          nil,
+		catchedMouseHandler: nil,
+
+		mainThreadFunc: make(chan func()),
 	}, nil
+}
+
+func (gui *GUI) Free() {
+	if gui.vScrollbar != nil {
+		gui.vScrollbar.Free()
+		gui.vScrollbar = nil
+	}
 }
 
 // inspired by https://kylewbanks.com/blog/tutorial-opengl-with-golang-part-1-hello-opengl
@@ -198,15 +236,20 @@ func (gui *GUI) resizeToTerminal() {
 	gui.logger.Debugf("Initiating GUI resize to columns=%d rows=%d", newCols, newRows)
 
 	gui.logger.Debugf("Calculating size...")
-	width, height := gui.renderer.GetRectangleSize(newCols, newRows)
+	width, height := gui.renderer.ConvertCoordinates(newCols, newRows)
 
 	roundedWidth := int(math.Ceil(float64(width)))
 	roundedHeight := int(math.Ceil(float64(height)))
+
+	if gui.vScrollbar != nil {
+		roundedWidth += int(gui.vScrollbar.position.width())
+	}
 
 	gui.resizeCache = &ResizeCache{roundedWidth, roundedHeight, newCols, newRows}
 
 	gui.logger.Debugf("Resizing window to %dx%d", roundedWidth, roundedHeight)
 	gui.internalResize = true
+
 	gui.window.SetSize(roundedWidth, roundedHeight) // will trigger resize()
 	gui.internalResize = false
 }
@@ -268,14 +311,20 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 
 	gui.width = width
 	gui.height = height
-	gui.appliedWidth = width
-	gui.appliedHeight = height
+	gui.appliedWidth = gui.width
+	gui.appliedHeight = gui.height
+
+	vScrollbarWidth := 0
+	if gui.vScrollbar != nil {
+		gui.vScrollbar.resize(gui)
+		vScrollbarWidth = int(gui.vScrollbar.position.width())
+	}
 
 	gui.logger.Debugf("Updating font resolutions...")
-	gui.loadFonts()
+	gui.loadFonts(gui.width, gui.height)
 
 	gui.logger.Debugf("Setting renderer area...")
-	gui.renderer.SetArea(0, 0, gui.width, gui.height)
+	gui.renderer.SetArea(0, 0, gui.width-vScrollbarWidth, gui.height)
 
 	if gui.resizeCache != nil && gui.resizeCache.Width == width && gui.resizeCache.Height == height {
 		gui.logger.Debugf("No need to resize internal terminal!")
@@ -320,20 +369,20 @@ func (gui *GUI) getTermSize() (uint, uint) {
 
 func (gui *GUI) Close() {
 	gui.window.SetShouldClose(true)
+	glfw.PostEmptyEvent() // wake up main loop so it notices close request
 }
 
 func (gui *GUI) Render() error {
-
 	gui.logger.Debugf("Creating window...")
 	var err error
 	gui.window, err = gui.createWindow()
-	gui.SetDPIScale()
-	gui.window.SetSize(int(float32(gui.width)*gui.dpiScale),
-		int(float32(gui.height)*gui.dpiScale))
 	if err != nil {
 		return fmt.Errorf("Failed to create window: %s", err)
 	}
 	defer glfw.Terminate()
+
+	gui.SetDPIScale()
+	gui.window.SetSize(int(float32(gui.width)*gui.dpiScale), int(float32(gui.height)*gui.dpiScale))
 
 	gui.logger.Debugf("Initialising OpenGL and creating program...")
 	program, err := gui.createProgram()
@@ -344,8 +393,19 @@ func (gui *GUI) Render() error {
 	gui.colourAttr = uint32(gl.GetAttribLocation(program, gl.Str("inColour\x00")))
 	gl.BindFragDataLocation(program, 0, gl.Str("outColour\x00"))
 
+	vScrollbarWidth := 0
+	if gui.config.ShowVerticalScrollbar {
+		vScrollbar, err := newScrollbar()
+		if err != nil {
+			return err
+		}
+		gui.vScrollbar = vScrollbar
+		gui.vScrollbar.resize(gui)
+		vScrollbarWidth = int(gui.vScrollbar.position.width())
+	}
+
 	gui.logger.Debugf("Loading font...")
-	if err := gui.loadFonts(); err != nil {
+	if err := gui.loadFonts(gui.width, gui.height); err != nil {
 		return fmt.Errorf("Failed to load font: %s", err)
 	}
 
@@ -353,20 +413,24 @@ func (gui *GUI) Render() error {
 	resizeChan := make(chan bool, 1)
 	reverseChan := make(chan bool, 1)
 
-	gui.renderer = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width, gui.height, gui.colourAttr, program)
+	gui.renderer, err = NewOpenGLRenderer(gui.config, gui.fontMap, 0, 0, gui.width-vScrollbarWidth, gui.height, gui.colourAttr, program)
+	if err != nil {
+		return err
+	}
 
 	gui.window.SetFramebufferSizeCallback(gui.resize)
 	gui.window.SetKeyCallback(gui.key)
 	gui.window.SetCharCallback(gui.char)
 	gui.window.SetScrollCallback(gui.glfwScrollCallback)
-	gui.window.SetMouseButtonCallback(gui.mouseButtonCallback)
-	gui.window.SetCursorPosCallback(gui.mouseMoveCallback)
+	gui.window.SetMouseButtonCallback(gui.globalMouseButtonCallback)
+	gui.window.SetCursorPosCallback(gui.globalMouseMoveCallback)
+	gui.window.SetCursorEnterCallback(gui.globalCursorEnterCallback)
 	gui.window.SetRefreshCallback(func(w *glfw.Window) {
-		gui.terminal.SetDirtyLocked()
+		gui.terminal.NotifyDirty()
 	})
 	gui.window.SetFocusCallback(func(w *glfw.Window, focused bool) {
 		if focused {
-			gui.terminal.SetDirtyLocked()
+			gui.terminal.NotifyDirty()
 		}
 	})
 	gui.window.SetPosCallback(gui.windowPosChangeCallback)
@@ -393,6 +457,10 @@ func (gui *GUI) Render() error {
 		gui.Close()
 	}()
 
+	if gui.vScrollbar != nil {
+		gui.vScrollbar.resize(gui)
+	}
+
 	gui.logger.Debugf("Starting render...")
 
 	gl.UseProgram(program)
@@ -400,16 +468,6 @@ func (gui *GUI) Render() error {
 	// stop smoothing fonts
 	gl.Disable(gl.DEPTH_TEST)
 	gl.TexParameterf(gl.TEXTURE_2D, gl.TEXTURE_MAG_FILTER, gl.NEAREST)
-
-	ticker := time.NewTicker(time.Second)
-	defer ticker.Stop()
-
-	go func() {
-		for {
-			<-ticker.C
-			gui.logger.Sync()
-		}
-	}()
 
 	gui.terminal.SetProgram(program)
 
@@ -419,80 +477,128 @@ func (gui *GUI) Render() error {
 		r, err := version.GetNewerRelease()
 		if err == nil && r != nil {
 			latestVersion = r.TagName
-			gui.terminal.SetDirty()
+			gui.terminal.NotifyDirty()
 		}
 	}()
 
 	startTime := time.Now()
 	showMessage := true
 
+	stop := make(chan struct{})
+	var waitForWaker sync.WaitGroup
+	waitForWaker.Add(1)
+	go gui.waker(stop, &waitForWaker)
+
 	for !gui.window.ShouldClose() {
+		gui.redraw(true)
 
-		forceRedraw := false
-
-		select {
-		case <-titleChan:
-			gui.window.SetTitle(gui.terminal.GetTitle())
-		case <-resizeChan:
-			gui.resizeToTerminal()
-		case reverse := <-reverseChan:
-			gui.generateDefaultCell(reverse)
-			forceRedraw = true
-		default:
-			// this is more efficient than glfw.PollEvents()
-			glfw.WaitEventsTimeout(0.02) // up to 50fps on no input, otherwise higher
-		}
-
-		if gui.terminal.CheckDirty() || forceRedraw {
-
-			gui.redraw(true)
-
-			if gui.showDebugInfo {
-				gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d
+		if gui.showDebugInfo {
+			gui.textbox(2, 2, fmt.Sprintf(`Cursor:      %d,%d
 View Size:   %d,%d
 Buffer Size: %d lines
 `,
-					gui.terminal.GetLogicalCursorX(),
-					gui.terminal.GetLogicalCursorY(),
-					gui.terminal.ActiveBuffer().ViewWidth(),
-					gui.terminal.ActiveBuffer().ViewHeight(),
-					gui.terminal.ActiveBuffer().Height(),
-				),
-					[3]float32{1, 1, 1},
-					[3]float32{0.8, 0, 0},
-				)
-			}
-
-			if showMessage {
-				if latestVersion != "" && time.Since(startTime) < time.Second*10 && gui.terminal.ActiveBuffer().RawLine() == 0 {
-					time.AfterFunc(time.Second, gui.terminal.SetDirtyLocked)
-					_, h := gui.terminal.GetSize()
-					var msg string
-					if version.Version == "" {
-						msg = "You are using a development build of Aminal."
-					} else {
-						msg = fmt.Sprintf("Version %s of Aminal is now available.", strings.Replace(latestVersion, "v", "", -1))
-					}
-					gui.textbox(
-						2,
-						uint16(h-3),
-						fmt.Sprintf("%s (%d)", msg, 10-int(time.Since(startTime).Seconds())),
-						[3]float32{1, 1, 1},
-						[3]float32{0, 0.5, 0},
-					)
-				} else {
-					showMessage = false
-				}
-			}
-
-			gui.SwapBuffers()
+				gui.terminal.GetLogicalCursorX(),
+				gui.terminal.GetLogicalCursorY(),
+				gui.terminal.ActiveBuffer().ViewWidth(),
+				gui.terminal.ActiveBuffer().ViewHeight(),
+				gui.terminal.ActiveBuffer().Height(),
+			),
+				[3]float32{1, 1, 1},
+				[3]float32{0.8, 0, 0},
+			)
 		}
 
+		if showMessage {
+			if latestVersion != "" && time.Since(startTime) < time.Second*10 && gui.terminal.ActiveBuffer().RawLine() == 0 {
+				time.AfterFunc(time.Second, gui.terminal.NotifyDirty)
+				_, h := gui.terminal.GetSize()
+				var msg string
+				if version.Version == "" {
+					msg = "You are using a development build of Aminal."
+				} else {
+					msg = fmt.Sprintf("Version %s of Aminal is now available.", strings.Replace(latestVersion, "v", "", -1))
+				}
+				gui.textbox(
+					2,
+					uint16(h-3),
+					fmt.Sprintf("%s (%d)", msg, 10-int(time.Since(startTime).Seconds())),
+					[3]float32{1, 1, 1},
+					[3]float32{0, 0.5, 0},
+				)
+			} else {
+				showMessage = false
+			}
+		}
+
+		gui.SwapBuffers()
+		glfw.WaitEvents() // Go to sleep until next event.
+
+		// Process any terminal events since the last wakeup.
+	terminalEvents:
+		for {
+			select {
+			case <-titleChan:
+				gui.window.SetTitle(gui.terminal.GetTitle())
+			case <-resizeChan:
+				gui.resizeToTerminal()
+			case reverse := <-reverseChan:
+				gui.generateDefaultCell(reverse)
+			case funcForMainThread := <-gui.mainThreadFunc:
+				funcForMainThread()
+			default:
+				break terminalEvents
+			}
+		}
 	}
 
-	gui.logger.Debugf("Stopping render...")
+	gui.logger.Debug("Stopping render...")
+
+	close(stop)         // Tell waker to end...
+	waitForWaker.Wait() // ...and wait it to end
+
+	gui.logger.Debug("Render stopped")
+
 	return nil
 
+}
+
+// waker is a goroutine which listens to the terminal's dirty channel,
+// waking up the main thread when the GUI needs to be
+// redrawn. Limiting is applied on wakeups to avoid excessive CPU
+// usage when the terminal is being updated rapidly.
+func (gui *GUI) waker(stop <-chan struct{}, wg *sync.WaitGroup) {
+	defer wg.Done()
+
+	dirty := gui.terminal.Dirty()
+	var nextWake <-chan time.Time
+	var last time.Time
+forLoop:
+	for {
+		select {
+		case <-dirty:
+			if nextWake == nil {
+				if time.Since(last) > wakePeriod {
+					// There hasn't been a wakeup recently so schedule
+					// the next one sooner.
+					nextWake = time.After(halfWakePeriod)
+				} else {
+					nextWake = time.After(wakePeriod)
+				}
+			}
+		case last = <-nextWake:
+			// TODO(mjs) - This is somewhat of a voodoo sleep but it
+			// avoid various rendering issues on Windows in some
+			// situations. Suspect that this will become unnecessary
+			// once various goroutine synchronisation issues have been
+			// resolved.
+			time.Sleep(halfWakePeriod)
+
+			glfw.PostEmptyEvent()
+			nextWake = nil
+		case <-stop:
+			break forLoop
+		}
+	}
 }
 
 func (gui *GUI) renderTerminalData(shouldLock bool) {
@@ -627,8 +733,9 @@ func (gui *GUI) renderTerminalData(shouldLock bool) {
 				gui.renderer.DrawUnderline(span, uint(x-span), uint(y), colour)
 			}
 		}
-
 	}
+
+	gui.renderScrollbar()
 }
 
 func (gui *GUI) redraw(shouldLock bool) {
@@ -760,18 +867,27 @@ func (gui *GUI) SwapBuffers() {
 	gui.window.SwapBuffers()
 }
 
-func (gui *GUI) Screenshot(path string) {
+func (gui *GUI) Screenshot(path string) error {
 	x, y := gui.window.GetPos()
 	w, h := gui.window.GetSize()
 
 	img, err := screenshot.CaptureRect(image.Rectangle{Min: image.Point{X: x, Y: y},
 		Max: image.Point{X: x + w, Y: y + h}})
 	if err != nil {
-		panic(err)
+		return err
 	}
-	file, _ := os.Create(path)
+	file, err := os.Create(path)
+	if err != nil {
+		return err
+	}
 	defer file.Close()
-	png.Encode(file, img)
+	err = png.Encode(file, img)
+	if err != nil {
+		os.Remove(path)
+		return err
+	}
+
+	return nil
 }
 
 func (gui *GUI) windowPosChangeCallback(w *glfw.Window, xpos int, ypos int) {
@@ -780,4 +896,25 @@ func (gui *GUI) windowPosChangeCallback(w *glfw.Window, xpos int, ypos int) {
 
 func (gui *GUI) monitorChangeCallback(monitor *glfw.Monitor, event glfw.MonitorEvent) {
 	gui.SetDPIScale()
+}
+
+func (gui *GUI) renderScrollbar() {
+	if gui.vScrollbar != nil {
+		position := gui.terminal.ActiveBuffer().GetVPosition()
+		maxPosition := int(gui.terminal.ActiveBuffer().GetMaxLines()) - int(gui.terminal.ActiveBuffer().ViewHeight())
+
+		gui.vScrollbar.setPosition(maxPosition, position)
+		gui.vScrollbar.render(gui)
+	}
+}
+
+// Synchronously executes the argument function in the main thread.
+// Does not return until f() executed!
+func (gui *GUI) executeInMainThread(f func() error) error {
+	resultChan := make(chan error, 1)
+	gui.mainThreadFunc <- func() {
+		resultChan <- f()
+	}
+	gui.terminal.NotifyDirty() // wake up the main thread to allow processing
+	return <-resultChan
 }

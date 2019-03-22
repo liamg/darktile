@@ -28,25 +28,25 @@ var runeMap = map[rune]runeHandler{
 
 func newLineHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().NewLine()
-	terminal.isDirty = true
+	terminal.NotifyDirty()
 	return nil
 }
 
 func tabHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().Tab()
-	terminal.isDirty = true
+	terminal.NotifyDirty()
 	return nil
 }
 
 func carriageReturnHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().CarriageReturn()
-	terminal.isDirty = true
+	terminal.NotifyDirty()
 	return nil
 }
 
 func backspaceHandler(terminal *Terminal) error {
 	terminal.ActiveBuffer().Backspace()
-	terminal.isDirty = true
+	terminal.NotifyDirty()
 	return nil
 }
 
@@ -80,16 +80,16 @@ func (terminal *Terminal) processRuneLocked(b rune) {
 }
 
 func (terminal *Terminal) processRune(b rune) {
+	defer terminal.NotifyDirty()
+
 	if handler, ok := runeMap[b]; ok {
 		if err := handler(terminal); err != nil {
 			terminal.logger.Errorf("Error handling control code: %s", err)
 		}
-		terminal.isDirty = true
 		return
 	}
 	//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
 	terminal.ActiveBuffer().Write(terminal.translateRune(b))
-	terminal.isDirty = true
 }
 
 func (terminal *Terminal) translateRune(b rune) rune {
@@ -129,7 +129,7 @@ func (terminal *Terminal) processInput(pty chan rune) {
 			if err := ansiHandler(pty, terminal); err != nil {
 				terminal.logger.Errorf("Error handling escape sequence: %s", err)
 			}
-			terminal.SetDirtyLocked()
+			terminal.NotifyDirty()
 			continue
 		}
 
