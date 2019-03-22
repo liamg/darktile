@@ -11,11 +11,10 @@ import (
 	"testing"
 	"time"
 
+	"github.com/carlogit/phash"
 	"github.com/liamg/aminal/config"
 	"github.com/liamg/aminal/gui"
 	"github.com/liamg/aminal/terminal"
-
-	"github.com/carlogit/phash"
 )
 
 var termRef *terminal.Terminal
@@ -47,10 +46,14 @@ func hash(path string) string {
 	return imageHash
 }
 
+func imagesAreEqual(expected string, actual string) int {
+	expectedHash := hash(expected)
+	actualHash := hash(actual)
+	return phash.GetDistance(expectedHash, actualHash)
+}
+
 func compareImages(expected string, actual string) {
-	template := hash(expected)
-	screen := hash(actual)
-	distance := phash.GetDistance(template, screen)
+	distance := imagesAreEqual(expected, actual)
 	if distance != 0 {
 		os.Exit(terminate(fmt.Sprintf("Screenshot \"%s\" doesn't match expected image \"%s\". Distance of hashes difference: %d\n",
 			actual, expected, distance)))
@@ -58,19 +61,55 @@ func compareImages(expected string, actual string) {
 }
 
 func send(terminal *terminal.Terminal, cmd string) {
-	terminal.Write([]byte(cmd))
+	err := terminal.Write([]byte(cmd))
+	if err != nil {
+		panic(err)
+	}
 }
 
 func enter(terminal *terminal.Terminal) {
-	terminal.Write([]byte("\n"))
+	err := terminal.Write([]byte("\n"))
+	if err != nil {
+		panic(err)
+	}
 }
 
-func validateScreen(img string) {
-	guiRef.Screenshot(img)
+func validateScreen(img string, waitForChange bool) {
+	fmt.Printf("taking screenshot: %s and comparing...", img)
+
+	err := guiRef.Screenshot(img)
+	if err != nil {
+		panic(err)
+	}
+
 	compareImages(strings.Join([]string{"vttest/", img}, ""), img)
 
+	fmt.Printf("compare OK\n")
+
 	enter(termRef)
-	sleep()
+
+	if waitForChange {
+		fmt.Print("Waiting for screen change...")
+		attempts := 10
+		for {
+			sleep()
+			actualScren := "temp.png"
+			err = guiRef.Screenshot(actualScren)
+			if err != nil {
+				panic(err)
+			}
+			distance := imagesAreEqual(actualScren, img)
+			if distance != 0 {
+				break
+			}
+			fmt.Printf(" %d", attempts)
+			attempts--
+			if attempts <= 0 {
+				break
+			}
+		}
+		fmt.Print("done\n")
+	}
 }
 
 func TestMain(m *testing.M) {
@@ -115,12 +154,12 @@ func TestCursorMovement(t *testing.T) {
 				os.Exit(terminate(fmt.Sprintf("ActiveBuffer doesn't match vttest template vttest/test-cursor-movement-1")))
 			}
 
-			validateScreen("test-cursor-movement-1.png")
-			validateScreen("test-cursor-movement-2.png")
-			validateScreen("test-cursor-movement-3.png")
-			validateScreen("test-cursor-movement-4.png")
-			validateScreen("test-cursor-movement-5.png")
-			validateScreen("test-cursor-movement-6.png")
+			validateScreen("test-cursor-movement-1.png", true)
+			validateScreen("test-cursor-movement-2.png", true)
+			validateScreen("test-cursor-movement-3.png", true)
+			validateScreen("test-cursor-movement-4.png", true)
+			validateScreen("test-cursor-movement-5.png", true)
+			validateScreen("test-cursor-movement-6.png", false)
 
 			g.Close()
 		}
@@ -142,21 +181,21 @@ func TestScreenFeatures(t *testing.T) {
 			send(term, "2\n")
 			sleep()
 
-			validateScreen("test-screen-features-1.png")
-			validateScreen("test-screen-features-2.png")
-			validateScreen("test-screen-features-3.png")
-			validateScreen("test-screen-features-4.png")
-			validateScreen("test-screen-features-5.png")
-			validateScreen("test-screen-features-6.png")
-			validateScreen("test-screen-features-7.png")
-			validateScreen("test-screen-features-8.png")
-			validateScreen("test-screen-features-9.png")
-			validateScreen("test-screen-features-10.png")
-			validateScreen("test-screen-features-11.png")
-			validateScreen("test-screen-features-12.png")
-			validateScreen("test-screen-features-13.png")
-			validateScreen("test-screen-features-14.png")
-			validateScreen("test-screen-features-15.png")
+			validateScreen("test-screen-features-1.png", true)
+			validateScreen("test-screen-features-2.png", true)
+			validateScreen("test-screen-features-3.png", true)
+			validateScreen("test-screen-features-4.png", true)
+			validateScreen("test-screen-features-5.png", true)
+			validateScreen("test-screen-features-6.png", true)
+			validateScreen("test-screen-features-7.png", true)
+			validateScreen("test-screen-features-8.png", true)
+			validateScreen("test-screen-features-9.png", true)
+			validateScreen("test-screen-features-10.png", true)
+			validateScreen("test-screen-features-11.png", true)
+			validateScreen("test-screen-features-12.png", true)
+			validateScreen("test-screen-features-13.png", true)
+			validateScreen("test-screen-features-14.png", true)
+			validateScreen("test-screen-features-15.png", false)
 
 			g.Close()
 		}
@@ -178,10 +217,9 @@ func TestSixel(t *testing.T) {
 			send(term, "clear\n")
 			sleep()
 			send(term, "cat example.sixel\n")
-			sleep(4)
+			sleep(10) // Displaying SIXEL graphics *sometimes* takes long time. Excessive synchronization???
 
-			guiRef.Screenshot("test-sixel.png")
-			validateScreen("test-sixel.png")
+			validateScreen("test-sixel.png", false)
 
 			g.Close()
 		}
@@ -197,6 +235,9 @@ func TestExit(t *testing.T) {
 
 func testConfig() *config.Config {
 	c := config.DefaultConfig()
+
+	// Force the scrollbar not showing when running unit tests
+	c.ShowVerticalScrollbar = false
 
 	// Use a vanilla shell on POSIX to help ensure consistency.
 	if runtime.GOOS != "windows" {
