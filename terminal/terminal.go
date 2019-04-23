@@ -31,6 +31,7 @@ const (
 	MouseExtNone MouseExtMode = iota
 	MouseExtUTF
 	MouseExtSGR
+	MouseExtURXVT
 )
 
 type WindowManipulationInterface interface {

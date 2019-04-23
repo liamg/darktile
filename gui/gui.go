@@ -321,7 +321,7 @@ func (gui *GUI) resize(w *glfw.Window, width int, height int) {
 	}
 
 	gui.logger.Debugf("Updating font resolutions...")
-	gui.loadFonts(gui.width, gui.height)
+	gui.updateFontsResolution(gui.width, gui.height)
 
 	gui.logger.Debugf("Setting renderer area...")
 	gui.renderer.SetArea(0, 0, gui.width-vScrollbarWidth, gui.height)

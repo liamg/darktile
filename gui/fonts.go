@@ -47,3 +47,7 @@ func (gui *GUI) loadFonts(actualWidth int, actualHeight int) error {
 
 	return nil
 }
+
+func (gui *GUI) updateFontsResolution(actualWidth int, actualHeight int) {
+	gui.fontMap.UpdateResolution(actualWidth, actualHeight)
+}
