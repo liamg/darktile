@@ -10,6 +10,7 @@ package glfw
 //#cgo linux LDFLAGS: -lglfw
 //#cgo darwin LDFLAGS: -lglfw3 -framework Cocoa -framework OpenGL -framework IOKit -framework CoreVideo
 //#cgo freebsd LDFLAGS: -lglfw3 -lGL -lXrandr -lXxf86vm -lXi
+//#define GLFW_INCLUDE_NONE
 //#include <GLFW/glfw3.h>
 import "C"
 

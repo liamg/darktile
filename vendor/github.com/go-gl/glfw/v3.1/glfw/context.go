@@ -1,6 +1,7 @@
 package glfw
 
 //#include <stdlib.h>
+//#define GLFW_INCLUDE_NONE
 //#include "glfw/include/GLFW/glfw3.h"
 import "C"
 
@@ -72,6 +73,22 @@ func ExtensionSupported(extension string) bool {
 	e := C.CString(extension)
 	defer C.free(unsafe.Pointer(e))
 	ret := glfwbool(C.glfwExtensionSupported(e))
+	panicError()
+	return ret
+}
+
+// GetProcAddress returns the address of the specified OpenGL or OpenGL ES core
+// or extension function, if it is supported by the current context.
+//
+// A context must be current on the calling thread. Calling this function
+// without a current context will cause a GLFW_NO_CURRENT_CONTEXT error.
+//
+// This function is used to provide GL proc resolving capabilities to an
+// external C library.
+func GetProcAddress(procname string) unsafe.Pointer {
+	p := C.CString(procname)
+	defer C.free(unsafe.Pointer(p))
+	ret := unsafe.Pointer(C.glfwGetProcAddress(p))
 	panicError()
 	return ret
 }

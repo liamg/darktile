@@ -309,7 +309,7 @@ static HWND createHelperWindow(void)
                                   L"GLFW helper window",
                                   WS_CLIPSIBLINGS | WS_CLIPCHILDREN,
                                   0, 0, 1, 1,
-                                  NULL, NULL,
+                                  HWND_MESSAGE, NULL,
                                   GetModuleHandleW(NULL),
                                   NULL);
     if (!window)
@@ -428,7 +428,6 @@ int _glfwPlatformInit(void)
     _glfwInitTimerWin32();
     _glfwInitJoysticksWin32();
 
-    _glfwPollMonitorsWin32();
     return GLFW_TRUE;
 }
 

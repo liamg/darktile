@@ -1,5 +1,6 @@
 package glfw
 
+//#define GLFW_INCLUDE_NONE
 //#include <GLFW/glfw3.h>
 //GLFWmonitor* GetMonitorAtIndex(GLFWmonitor **monitors, int index);
 //GLFWvidmode GetVidmodeAtIndex(GLFWvidmode *vidmodes, int index);

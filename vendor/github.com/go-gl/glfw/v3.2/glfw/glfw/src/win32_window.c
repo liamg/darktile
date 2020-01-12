@@ -280,25 +280,25 @@ static void updateClipRect(_GLFWwindow* window)
 
 // Translates a GLFW standard cursor to a resource ID
 //
-static int translateCursorShape(int shape)
+static LPWSTR translateCursorShape(int shape)
 {
     switch (shape)
     {
         case GLFW_ARROW_CURSOR:
-            return OCR_NORMAL;
+            return IDC_ARROW;
         case GLFW_IBEAM_CURSOR:
-            return OCR_IBEAM;
+            return IDC_IBEAM;
         case GLFW_CROSSHAIR_CURSOR:
-            return OCR_CROSS;
+            return IDC_CROSS;
         case GLFW_HAND_CURSOR:
-            return OCR_HAND;
+            return IDC_HAND;
         case GLFW_HRESIZE_CURSOR:
-            return OCR_SIZEWE;
+            return IDC_SIZEWE;
         case GLFW_VRESIZE_CURSOR:
-            return OCR_SIZENS;
+            return IDC_SIZENS;
     }
 
-    return 0;
+    return NULL;
 }
 
 // Retrieves and translates modifier keys
@@ -405,7 +405,7 @@ static GLFWbool acquireMonitor(_GLFWwindow* window)
                  xpos, ypos, mode.width, mode.height,
                  SWP_NOACTIVATE | SWP_NOCOPYBITS);
 
-    _glfwInputMonitorWindow(window->monitor, window);
+    _glfwInputMonitorWindowChange(window->monitor, window);
     return status;
 }
 
@@ -416,7 +416,7 @@ static void releaseMonitor(_GLFWwindow* window)
     if (window->monitor->window != window)
         return;
 
-    _glfwInputMonitorWindow(window->monitor, NULL);
+    _glfwInputMonitorWindowChange(window->monitor, NULL);
     _glfwRestoreVideoModeWin32(window->monitor);
 }
 
@@ -432,12 +432,14 @@ static LRESULT CALLBACK windowProc(HWND hWnd, UINT uMsg,
 
         switch (uMsg)
         {
-            case WM_DISPLAYCHANGE:
-                _glfwPollMonitorsWin32();
-                break;
             case WM_DEVICECHANGE:
             {
-                if (wParam == DBT_DEVICEARRIVAL)
+                if (wParam == DBT_DEVNODES_CHANGED)
+                {
+                    _glfwInputMonitorChange();
+                    return TRUE;
+                }
+                else if (wParam == DBT_DEVICEARRIVAL)
                 {
                     DEV_BROADCAST_HDR* dbh = (DEV_BROADCAST_HDR*) lParam;
                     if (dbh)
@@ -1523,8 +1525,7 @@ int _glfwPlatformCreateCursor(_GLFWcursor* cursor,
 int _glfwPlatformCreateStandardCursor(_GLFWcursor* cursor, int shape)
 {
     cursor->win32.handle =
-        (HCURSOR)LoadImage(NULL, MAKEINTRESOURCE(translateCursorShape(shape)), IMAGE_CURSOR,
-                           0, 0, LR_DEFAULTSIZE | LR_SHARED);
+        CopyCursor(LoadCursorW(NULL, translateCursorShape(shape)));
     if (!cursor->win32.handle)
     {
         _glfwInputError(GLFW_PLATFORM_ERROR,

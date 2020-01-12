@@ -48,9 +48,6 @@
 #define GLFW_INCLUDE_NONE
 #include "../include/GLFW/glfw3.h"
 
-#define _GLFW_INSERT_FIRST      0
-#define _GLFW_INSERT_LAST       1
-
 typedef int GLFWbool;
 
 typedef struct _GLFWwndconfig   _GLFWwndconfig;
@@ -401,7 +398,6 @@ struct _GLFWwindow
 struct _GLFWmonitor
 {
     char*           name;
-    void*           userPointer;
 
     // Physical dimensions in millimeters.
     int             widthMM, heightMM;
@@ -925,9 +921,6 @@ void _glfwInputMonitorChange(void);
 /*! @ingroup event
  */
 void _glfwInputMonitorWindowChange(_GLFWmonitor* monitor, _GLFWwindow* window);
-
-void _glfwInputMonitor(_GLFWmonitor* monitor, int action, int placement);
-void _glfwInputMonitorWindow(_GLFWmonitor* monitor, _GLFWwindow* window);
 
 /*! @brief Notifies shared code of an error.
  *  @param[in] error The error code most suitable for the error.

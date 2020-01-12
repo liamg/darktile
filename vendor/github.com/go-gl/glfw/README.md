@@ -1,4 +1,4 @@
-# GLFW 3.2 for Go [![Build Status](https://travis-ci.org/go-gl/glfw.svg?branch=master)](https://travis-ci.org/go-gl/glfw) [![GoDoc](https://godoc.org/github.com/go-gl/glfw/v3.2/glfw?status.svg)](https://godoc.org/github.com/go-gl/glfw/v3.2/glfw)
+# GLFW 3.3 for Go [![Build Status](https://travis-ci.org/go-gl/glfw.svg?branch=master)](https://travis-ci.org/go-gl/glfw) [![GoDoc](https://godoc.org/github.com/go-gl/glfw/v3.3/glfw?status.svg)](https://godoc.org/github.com/go-gl/glfw/v3.3/glfw)
 
 ## Installation
 
@@ -10,8 +10,20 @@
 * Go 1.4+ is required on Windows (otherwise you must use MinGW v4.8.1 exactly, see [Go issue 8811](https://github.com/golang/go/issues/8811)).
 
 ```
-go get -u github.com/go-gl/glfw/v3.2/glfw
+go get -u github.com/go-gl/glfw/v3.3/glfw
 ```
+
+### OpenGL ES
+
+If your target system only provides an OpenGL ES implementation (true for some ARM boards), you need to link against that implementation.
+You do this by defining the appropriate build tags, e.g.
+
+```
+go get -u -tags=gles2 github.com/go-gl/glfw/v3.3/glfw
+```
+
+Supported tags are `gles1`, `gles2`, `gles3` and `vulkan`.
+Note that required packages might differ from those listed above; consult your hardware's documentation.
 
 ## Usage
 
@@ -20,7 +32,7 @@ package main
 
 import (
 	"runtime"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 func init() {
@@ -53,10 +65,74 @@ func main() {
 
 ## Changelog
 
-* Easy `go get` installation. GLFW source code is now included in-repo and compiled in so you don't have to build GLFW on your own and distribute shared libraries. The revision of GLFW C library used is listed in [GLFW_C_REVISION.txt](https://github.com/go-gl/glfw/blob/master/v3.2/glfw/GLFW_C_REVISION.txt) file.
-* The error callback is now set internally. Functions return an error with corresponding code and description (do a type assertion to glfw3.Error for accessing the variables) if the error is recoverable. If not a panic will occur.
+### GLFW 3.3 Specific Changes
+- Joystick functions now uses receivers instead of passing the joystick ID as argument.
+- Vulkan methods are intentionally not implemented. `Window.Handle` can be used to create a Vulkan surface via the [this](https://github.com/vulkan-go/vulkan) package.
+
+* Renamed `Window.GLFWWindow` to `Window.Handle`
+* Added function `Window.SetAttrib`.
+* Added function `Window.RequestAttention`.
+* Added function `Window.GetContentScale`.
+* Added function `Window.GetOpacity`.
+* Added function `Window.SetOpacity`.
+* Added function `Window.SetMaximizeCallback`.
+* Added function `Window.SetContentScaleCallback`.
+* Added function `Monitor.GetWorkarea`.
+* Added function `Monitor.GetContentScale`.
+* Added function `Monitor.SetUserPointer`.
+* Added function `Monitor.GetUserPointer`.
+* Added function `InitHint`.
+* Added function `RawMouseMotionSupported`
+* Added function `GetKeyScancode`.
+* Added function `WindowHintString`.
+* Added function `GetClipboardString`.
+* Added function `SetClipboardString`.
+* Added function `Joystick.GetHats`.
+* Added function `Joystick.IsGamepad`.
+* Added function `Joystick.GetGUID`.
+* Added function `Joystick.GetGamepadName`.
+* Added function `Joystick.GetGamepadState`.
+* Added function `Joystick.SetUserPointer`.
+* Added function `Joystick.GetUserPointer`.
+* Added function `UpdateGamepadMappings`.
+* Added function `SetX11SelectionString`.
+* Added function `GetX11SelectionString`.
+* Added gamepad button IDs.
+* Added gamepad axis IDs.
+* Added joystick hat state IDs.
+* Added ModifierKey `ModCapsLock`.
+* Added ModifierKey `ModNumLock`
+* Added InputMode `LockKeyMods`.
+* Added InputMode `RawMouseMotion`.
+* Added hint `Hovered`.
+* Added hint `CenterCursor`.
+* Added hint `TransparentFramebuffer`.
+* Added hint `FocusOnShow`.
+* Added hint `ScaleToMonitor`.
+* Added hint `JoystickHatButtons`.
+* Added hint `CocoaChdirResources`.
+* Added hint `CocoaMenubar`.
+* Added hint `TransparentFramebuffer`.
+* Added hint value `OSMesaContextAPI`.
+* Added hint value `CocoaGraphicsSwitching`.
+* Added hint value `CocoaRetinaFramebuffer`.
+* Added string hint value `CocoaFrameNAME`.
+* Added string hint value `X11ClassName`.
+* Added string hint value `X11InstanceName`.
+* `MonitorEvent` renamed to `PeripheralEvent` for reuse with joystick events.
+* `Joystick.GetButtons` Returns `[]Action` instead of `[]byte`.
+* `SetMonitorCallback` Returns `MonitorCallback`.
+* `Focus` No longer returns an error.
+* `Iconify` No longer returns an error.
+* `Maximize` No longer returns an error.
+* `Restore` No longer returns an error.
+* `GetClipboardString` No longer returns an error.
+
 
 ### GLFW 3.2 Specfic Changes
+- Easy `go get` installation. GLFW source code is now included in-repo and compiled in so you don't have to build GLFW on your own and distribute shared libraries. The revision of GLFW C library used is listed in [GLFW_C_REVISION.txt](https://github.com/go-gl/glfw/blob/master/v3.3/glfw/GLFW_C_REVISION.txt) file.
+- The error callback is now set internally. Functions return an error with corresponding code and description (do a type assertion to glfw3.Error for accessing the variables) if the error is recoverable. If not a panic will occur.
+
 * Added function `Window.SetSizeLimits`.
 * Added function `Window.SetAspectRatio`.
 * Added function `Window.SetMonitor`.
@@ -73,6 +149,7 @@ func main() {
 * Added hint `NoAPI`.
 * Added hint `NativeContextAPI`.
 * Added hint `EGLContextAPI`.
+
 
 ### GLFW 3.1 Specfic Changes
 * Added type `Cursor`.

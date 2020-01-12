@@ -1,5 +1,6 @@
 package glfw
 
+//#define GLFW_INCLUDE_NONE
 //#include <GLFW/glfw3.h>
 //void glfwSetKeyCallbackCB(GLFWwindow *window);
 //void glfwSetCharCallbackCB(GLFWwindow *window);

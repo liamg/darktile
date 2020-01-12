@@ -14,7 +14,7 @@ import (
 	"unsafe"
 
 	"github.com/go-gl/gl/all-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/kbinani/screenshot"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
@@ -745,6 +745,6 @@ func (gui *GUI) windowPosChangeCallback(w *glfw.Window, xpos int, ypos int) {
 	gui.SetDPIScale()
 }
 
-func (gui *GUI) monitorChangeCallback(monitor *glfw.Monitor, event glfw.MonitorEvent) {
+func (gui *GUI) monitorChangeCallback(monitor *glfw.Monitor, event glfw.PeripheralEvent) {
 	gui.SetDPIScale()
 }

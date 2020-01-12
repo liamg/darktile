@@ -52,9 +52,8 @@
 [[projects]]
   branch = "master"
   name = "github.com/go-gl/glfw"
-  packages = ["v3.2/glfw"]
-  revision = "14db69009976890a990c14b47a04a91621597f9b"
-  source = "github.com/MaxRis/glfw"
+  packages = ["v3.3/glfw"]
+  revision = "12ad95a8df72b2f4e72eab0d29daa5e27a5c84ac"
 
 [[projects]]
   name = "github.com/gobuffalo/envy"
@@ -173,6 +172,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "22e69f28abe89638a4422ba911ebac3118b459cbc965bf4229b658ab51506d27"
+  inputs-digest = "1ae39e9f76f343bdd4f1ed39c0fedc73af0af81b0efac2732a84e1bf1539f02b"
   solver-name = "gps-cdcl"
   solver-version = 1

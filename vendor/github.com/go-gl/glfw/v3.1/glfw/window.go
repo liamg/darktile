@@ -1,6 +1,7 @@
 package glfw
 
 //#include <stdlib.h>
+//#define GLFW_INCLUDE_NONE
 //#include "glfw/include/GLFW/glfw3.h"
 //void glfwSetWindowPosCallbackCB(GLFWwindow *window);
 //void glfwSetWindowSizeCallbackCB(GLFWwindow *window);
@@ -121,8 +122,8 @@ const (
 
 // Other values.
 const (
-	True     int = C.GL_TRUE
-	False    int = C.GL_FALSE
+	True     int = 1 /* GL_TRUE */
+	False    int = 0 /* GL_FALSE */
 	DontCare int = C.GLFW_DONT_CARE
 )
 
@@ -291,9 +292,9 @@ func (w *Window) ShouldClose() bool {
 // should be closed.
 func (w *Window) SetShouldClose(value bool) {
 	if !value {
-		C.glfwSetWindowShouldClose(w.data, C.GL_FALSE)
+		C.glfwSetWindowShouldClose(w.data, C.int(False))
 	} else {
-		C.glfwSetWindowShouldClose(w.data, C.GL_TRUE)
+		C.glfwSetWindowShouldClose(w.data, C.int(True))
 	}
 	panicError()
 }

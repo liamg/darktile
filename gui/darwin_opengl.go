@@ -13,7 +13,7 @@ void cocoa_update_nsgl_context(void* id) {
 */
 import "C"
 import (
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"unsafe"
 )
 

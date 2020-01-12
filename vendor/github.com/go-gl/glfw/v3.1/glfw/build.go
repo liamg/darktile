@@ -35,8 +35,12 @@ package glfw
 #cgo linux,wayland CFLAGS: -D_GLFW_WAYLAND -D_GLFW_EGL
 
 // Linker Options:
-#cgo linux,!wayland LDFLAGS: -lGL -lX11 -lXrandr -lXxf86vm -lXi -lXcursor -lm -lXinerama -ldl -lrt
-#cgo linux,wayland LDFLAGS: -lGL -lX11 -lXrandr -lXxf86vm -lXi -lXcursor -lm -lXinerama -ldl -lrt
+#cgo linux,!gles1,!gles2,!gles3 LDFLAGS: -lGL
+#cgo linux,gles1 LDFLAGS: -lGLESv1
+#cgo linux,gles2 LDFLAGS: -lGLESv2
+#cgo linux,gles3 LDFLAGS: -lGLESv3
+#cgo linux,!wayland LDFLAGS: -lX11 -lXrandr -lXxf86vm -lXi -lXcursor -lm -lXinerama -ldl -lrt
+#cgo linux,wayland LDFLAGS: -lX11 -lXrandr -lXxf86vm -lXi -lXcursor -lm -lXinerama -ldl -lrt
 
 
 // FreeBSD Build Tags

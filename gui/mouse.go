@@ -6,7 +6,7 @@ import (
 
 	"time"
 
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/terminal"
 )
@@ -155,12 +155,10 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 
 	case glfw.MouseButtonRight:
 		if gui.config.CopyAndPasteWithMouse && action == glfw.Press && gui.terminal.GetMouseMode() == terminal.MouseModeNone {
-			str, err := gui.window.GetClipboardString()
-			if err == nil {
-				activeBuffer := gui.terminal.ActiveBuffer()
-				activeBuffer.ClearSelection()
-				_ = gui.terminal.Paste([]byte(str))
-			}
+			str := gui.window.GetClipboardString()
+			activeBuffer := gui.terminal.ActiveBuffer()
+			activeBuffer.ClearSelection()
+			_ = gui.terminal.Paste([]byte(str))
 		}
 	}
 

@@ -1,6 +1,7 @@
 package glfw
 
 //#include <stdlib.h>
+//#define GLFW_INCLUDE_NONE
 //#include "glfw/include/GLFW/glfw3.h"
 import "C"
 
@@ -10,7 +11,7 @@ import (
 )
 
 func glfwbool(b C.int) bool {
-	if b == C.GL_TRUE {
+	if b == C.int(True) {
 		return true
 	}
 	return false

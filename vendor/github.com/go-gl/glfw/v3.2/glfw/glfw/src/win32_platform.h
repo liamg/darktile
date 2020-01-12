@@ -64,9 +64,6 @@
 // GLFW uses DirectInput8 interfaces
 #define DIRECTINPUT_VERSION 0x0800
 
-// Enable standard cursors images defines
-#define OEMRESOURCE
-
 #include <wctype.h>
 #include <windows.h>
 #include <mmsystem.h>
@@ -347,7 +344,6 @@ char* _glfwCreateUTF8FromWideStringWin32(const WCHAR* source);
 
 void _glfwInitTimerWin32(void);
 
-void _glfwPollMonitorsWin32(void);
 GLFWbool _glfwSetVideoModeWin32(_GLFWmonitor* monitor, const GLFWvidmode* desired);
 void _glfwRestoreVideoModeWin32(_GLFWmonitor* monitor);
 
