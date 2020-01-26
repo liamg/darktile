@@ -11,13 +11,19 @@ import (
 	"github.com/liamg/aminal/sixel"
 )
 
-type boolFormRuneFunc func(rune) bool
+type boolFormRuneFunc func(rune, bool) bool
 
 func swallowByFunction(pty chan rune, isTerminator boolFormRuneFunc) {
+	isEscaped := false
 	for {
 		b := <-pty
-		if isTerminator(b) {
+		if isTerminator(b, isEscaped) {
 			break
+		}
+		if isEscaped {
+			isEscaped = false
+		} else if b == 0x1b {
+			isEscaped = true
 		}
 	}
 }

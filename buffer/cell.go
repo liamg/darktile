@@ -5,9 +5,10 @@ import (
 )
 
 type Cell struct {
-	r     rune
-	attr  CellAttributes
-	image *image.RGBA
+	r         rune
+	attr      CellAttributes
+	image     *image.RGBA
+	hyperlink *Hyperlink
 }
 
 type CellAttributes struct {
@@ -33,6 +34,10 @@ func (cell *Cell) SetImage(img *image.RGBA) {
 
 func (cell *Cell) Attr() CellAttributes {
 	return cell.attr
+}
+
+func (cell *Cell) IsHyperlink() bool {
+	return cell.hyperlink != nil
 }
 
 func (cell *Cell) Rune() rune {

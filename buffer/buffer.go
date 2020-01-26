@@ -80,6 +80,10 @@ func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
 		return ""
 	}
 
+	if cell.IsHyperlink() {
+		return cell.hyperlink.Uri
+	}
+
 	candidate := string(cell.Rune())
 
 	// First, move forward

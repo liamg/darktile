@@ -18,6 +18,7 @@ type TerminalState struct {
 	tabStops              map[uint16]struct{}
 	Charsets              []*map[rune]rune // array of 2 charsets, nil means ASCII (no conversion)
 	CurrentCharset        int              // active charset index in Charsets array, valid values are 0 or 1
+	CurrentHyperlink      *Hyperlink
 }
 
 // NewTerminalMode creates a new terminal state
@@ -41,7 +42,11 @@ func NewTerminalState(viewCols uint16, viewLines uint16, attr CellAttributes, ma
 
 func (terminalState *TerminalState) DefaultCell(applyEffects bool) Cell {
 	attr := terminalState.CursorAttr
-	if !applyEffects {
+	var hyperlink *Hyperlink
+	if applyEffects {
+		// fully-fledged cell
+		hyperlink = terminalState.CurrentHyperlink
+	} else {
 		attr.Blink = false
 		attr.Bold = false
 		attr.Dim = false
@@ -49,7 +54,7 @@ func (terminalState *TerminalState) DefaultCell(applyEffects bool) Cell {
 		attr.Underline = false
 		attr.Dim = false
 	}
-	return Cell{attr: attr}
+	return Cell{attr: attr, hyperlink: hyperlink}
 }
 
 func (terminalState *TerminalState) SetVerticalMargins(top uint, bottom uint) {
