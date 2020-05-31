@@ -30,6 +30,7 @@ func getConfig() *config.Config {
 	slomo := false
 	threads := 4
 	prof := ""
+	dpi := -1.0
 
 	if flag.Parsed() == false {
 		flag.BoolVar(&showVersion, "version", showVersion, "Output version information")
@@ -39,6 +40,7 @@ func getConfig() *config.Config {
 		flag.BoolVar(&slomo, "slomo", slomo, "Render in slow motion (useful for debugging)")
 		flag.IntVar(&threads, "threads", threads, "Number of threads to use")
 		flag.StringVar(&prof, "prof", prof, "Run profiler and dump info to specifed file")
+		flag.Float64Var(&dpi, "dpi-scale", dpi, "Override DPI scale. Defaults to 0.0 (let Aminal determine the DPI scale itself)")
 
 		flag.Parse() // actual parsing and fetching flags from the command line
 	}
@@ -61,6 +63,9 @@ func getConfig() *config.Config {
 	}
 	conf.Prof = prof
 	conf.Threads = threads
+	if dpi != -1.0 {
+		conf.DPIScale = float32(dpi)
+	}
 
 	// Override values in the configuration file with the values specified in the command line, if any.
 	if actuallyProvidedFlags["shell"] {
