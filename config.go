@@ -28,6 +28,8 @@ func getConfig() *config.Config {
 	shell := ""
 	debugMode := false
 	slomo := false
+	threads := 4
+	prof := ""
 
 	if flag.Parsed() == false {
 		flag.BoolVar(&showVersion, "version", showVersion, "Output version information")
@@ -35,6 +37,8 @@ func getConfig() *config.Config {
 		flag.StringVar(&shell, "shell", shell, "Specify the shell to use")
 		flag.BoolVar(&debugMode, "debug", debugMode, "Enable debug logging")
 		flag.BoolVar(&slomo, "slomo", slomo, "Render in slow motion (useful for debugging)")
+		flag.IntVar(&threads, "threads", threads, "Number of threads to use")
+		flag.StringVar(&prof, "prof", prof, "Run profiler and dump info to specifed file")
 
 		flag.Parse() // actual parsing and fetching flags from the command line
 	}
@@ -55,6 +59,8 @@ func getConfig() *config.Config {
 	} else {
 		conf = loadConfigFile()
 	}
+	conf.Prof = prof
+	conf.Threads = threads
 
 	// Override values in the configuration file with the values specified in the command line, if any.
 	if actuallyProvidedFlags["shell"] {

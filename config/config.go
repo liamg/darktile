@@ -16,6 +16,8 @@ type Config struct {
 	SearchURL             string           `toml:"search_url"`
 	MaxLines              uint64           `toml:"max_lines"`
 	CopyAndPasteWithMouse bool             `toml:"copy_and_paste_with_mouse"`
+	Prof                  string           `toml:"prof"`
+	Threads               int              `toml:"threads"`
 }
 
 type KeyMappingConfig map[string]string

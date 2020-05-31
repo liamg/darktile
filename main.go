@@ -8,6 +8,7 @@ import (
 	"github.com/riywo/loginshell"
 	"os"
 	"runtime"
+	"runtime/pprof"
 )
 
 type callback func(terminal *terminal.Terminal, g *gui.GUI)
@@ -23,6 +24,16 @@ func main() {
 func initialize(unitTestfunc callback) {
 	conf := getConfig()
 	logger, err := getLogger(conf)
+	runtime.GOMAXPROCS(conf.Threads)
+	if conf.Prof != "" {
+		f, err := os.Create(conf.Prof)
+		defer f.Close()
+		if err != nil {
+			logger.Fatal(err)
+		}
+		pprof.StartCPUProfile(f)
+		defer pprof.StopCPUProfile()
+	}
 	if err != nil {
 		fmt.Printf("Failed to create logger: %s\n", err)
 		os.Exit(1)
