@@ -154,6 +154,8 @@ dpi-scale = 0.0             # Override DPI scale. Defaults to 0.0 (let Aminal de
 | `--debug`         | Enable debug mode, with debug logging and debug info terminal overlay.
 | `--slomo`         | Enable slomo mode, delay the handling of each incoming byte (or escape sequence) from the pty by 100ms. Useful for debugging.
 | `--shell [shell]` | Use the specified shell program instead of the user's usual one. 
+| `--threads [cores]` | Number of threads to use (default 4)
+| `--prof [cores]` | Run profiler and dump info to specifed file
 | `--version`       | Show the version of aminal and exit.
 
 # Contributors
