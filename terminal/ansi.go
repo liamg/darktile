@@ -15,7 +15,7 @@ var ansiSequenceMap = map[rune]escapeSequenceHandler{
 	'H': tabSetHandler,   // HTS
 	'M': reverseIndexHandler,
 	'P': sixelHandler,
-	'c': risHandler, //RIS
+	'c': risHandler, // RIS
 	'#': screenStateHandler,
 	'(': scs0Handler,       // select character set into G0
 	')': scs1Handler,       // select character set into G1
@@ -65,7 +65,7 @@ func ansiHandler(pty chan rune, terminal *Terminal) error {
 
 	handler, ok := ansiSequenceMap[b]
 	if ok {
-		//terminal.logger.Debugf("Handling ansi sequence %c", b)
+		// terminal.logger.Debugf("Handling ansi sequence %c", b)
 		return handler(pty, terminal)
 	}
 

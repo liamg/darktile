@@ -40,7 +40,6 @@ func (fm *FontMap) UpdateResolution(w int, h int) {
 }
 
 func (fm *FontMap) DefaultFont() *glfont.Font {
-
 	return fm.defaultFont
 }
 

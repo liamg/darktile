@@ -73,7 +73,6 @@ func getConfig() *config.Config {
 }
 
 func loadConfigFile() *config.Config {
-
 	usr, err := user.Current()
 	if err != nil {
 		fmt.Printf("Failed to get current user information: %s\n", err)
@@ -108,11 +107,11 @@ func loadConfigFile() *config.Config {
 	if b, err := config.DefaultConfig.Encode(); err != nil {
 		fmt.Printf("Failed to encode config file: %s\n", err)
 	} else {
-		err = os.MkdirAll(filepath.Dir(places[0]), 0744)
+		err = os.MkdirAll(filepath.Dir(places[0]), 0o744)
 		if err != nil {
 			fmt.Printf("Failed to create config file directory: %s\n", err)
 		} else {
-			if err = ioutil.WriteFile(places[0], b, 0644); err != nil {
+			if err = ioutil.WriteFile(places[0], b, 0o644); err != nil {
 				fmt.Printf("Failed to encode config file: %s\n", err)
 			}
 		}

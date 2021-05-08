@@ -59,9 +59,7 @@ const (
 	DISPID_NEWWINDOW3                 DISPID = 273
 )
 
-var (
-	IID_IDispatch = IID{0x00020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
-)
+var IID_IDispatch = IID{0x00020400, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}
 
 const (
 	DISP_E_MEMBERNOTFOUND = 0x80020003
@@ -169,7 +167,7 @@ type SAFEARRAY struct {
 	Rgsabound  [1]SAFEARRAYBOUND
 }
 
-//type BSTR *uint16
+// type BSTR *uint16
 
 func StringToBSTR(value string) *uint16 /*BSTR*/ {
 	// IMPORTANT: Don't forget to free the BSTR value when no longer needed!

@@ -120,7 +120,6 @@ func sixelHandler(pty chan rune, terminal *Terminal) error {
 	filteredData := filter(newData)
 
 	six, err := sixel.ParseString(string(filteredData))
-
 	if err != nil {
 		return fmt.Errorf("Failed to parse sixel data: %s", err)
 	}

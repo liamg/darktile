@@ -22,7 +22,6 @@ type Asset struct {
 }
 
 func getLatestRelease() (*Release, error) {
-
 	body, err := downloadFile("https://api.github.com/repos/liamg/aminal/releases/latest")
 	if err != nil {
 		return nil, err
@@ -37,7 +36,6 @@ func getLatestRelease() (*Release, error) {
 }
 
 func GetNewerRelease() (*Release, error) {
-
 	release, err := getLatestRelease()
 	if err != nil {
 		return nil, err
@@ -51,7 +49,6 @@ func GetNewerRelease() (*Release, error) {
 }
 
 func downloadFile(url string) ([]byte, error) {
-
 	spaceClient := http.Client{
 		Timeout: time.Second * 2, // Maximum of 2 secs
 	}

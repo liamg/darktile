@@ -61,7 +61,6 @@ func (matrix *AutoMatrix) setAtLine(value rune, x int, line []rune) []rune {
 
 // SetAt sets a value at (x, y) growing the matrix as necessary
 func (matrix *AutoMatrix) SetAt(value rune, x int, y int) {
-
 	if y >= len(matrix.lines) {
 		matrix.lines = append(matrix.lines, make([][]rune, y-len(matrix.lines)+1)...)
 	}

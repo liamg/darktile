@@ -10,7 +10,6 @@ func init() {
 }
 
 func hintColours(word string, context string, wordX uint16, wordY uint16) *Hint {
-
 	item := NewHint(word, context, wordX, wordY)
 
 	if isColour(word) {

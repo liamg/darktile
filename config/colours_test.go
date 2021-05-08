@@ -21,8 +21,8 @@ func TestColourTomlEncoding(t *testing.T) {
 	require.Nil(t, err)
 	assert.Equal(t, `colour = "#ff7f00"
 `, buf.String())
-
 }
+
 func TestColourTomlUnmarshalling(t *testing.T) {
 	target := struct {
 		Purple Colour `toml:"colour"`

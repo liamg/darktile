@@ -21,8 +21,8 @@ type unixPty struct {
 type winsize struct {
 	Height uint16
 	Width  uint16
-	x      uint16 //ignored, but necessary for ioctl calls
-	y      uint16 //ignored, but necessary for ioctl calls
+	x      uint16 // ignored, but necessary for ioctl calls
+	y      uint16 // ignored, but necessary for ioctl calls
 }
 
 func (p *unixPty) Read(b []byte) (int, error) {

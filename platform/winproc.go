@@ -163,6 +163,7 @@ package platform
 //
 //  int hr_succeeded( DWORD hResult );
 import "C"
+
 import (
 	"errors"
 	"os"

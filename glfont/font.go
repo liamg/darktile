@@ -37,9 +37,8 @@ type color struct {
 	a float32
 }
 
-//LoadFont loads the specified font at the given scale.
+// LoadFont loads the specified font at the given scale.
 func LoadFont(reader io.Reader, scale float32, windowWidth int, windowHeight int) (*Font, error) {
-
 	// Configure the default font vertex and fragment shaders
 	program, err := newProgram(vertexFontShader, fragmentFontShader)
 	if err != nil {
@@ -49,7 +48,7 @@ func LoadFont(reader io.Reader, scale float32, windowWidth int, windowHeight int
 	// Activate corresponding render state
 	gl.UseProgram(program)
 
-	//set screen resolution
+	// set screen resolution
 	resUniform := gl.GetUniformLocation(program, gl.Str("resolution\x00"))
 	gl.Uniform2f(resUniform, float32(windowWidth), float32(windowHeight))
 	gl.UseProgram(0)
@@ -72,7 +71,7 @@ func (f *Font) Free() {
 	f.program = 0
 }
 
-//SetColor allows you to set the text color to be used when you draw the text
+// SetColor allows you to set the text color to be used when you draw the text
 func (f *Font) SetColor(red float32, green float32, blue float32, alpha float32) {
 	f.color.r = red
 	f.color.g = green
@@ -85,7 +84,7 @@ func (f *Font) UpdateResolution(windowWidth int, windowHeight int) {
 	resUniform := gl.GetUniformLocation(f.program, gl.Str("resolution\x00"))
 	gl.Uniform2f(resUniform, float32(windowWidth), float32(windowHeight))
 	gl.UseProgram(0)
-	//f.characters = map[rune]*character{}
+	// f.characters = map[rune]*character{}
 }
 
 func (f *Font) LineHeight() float32 {
@@ -96,26 +95,25 @@ func (f *Font) LinePadding() float32 {
 	return f.linePadding
 }
 
-//Printf draws a string to the screen, takes a list of arguments like printf
+// Printf draws a string to the screen, takes a list of arguments like printf
 func (f *Font) Print(x, y float32, text string) error {
-
 	indices := []rune(text)
 
 	if len(indices) == 0 {
 		return nil
 	}
 
-	//setup blending mode
+	// setup blending mode
 	gl.Enable(gl.BLEND)
 	gl.BlendFunc(gl.SRC_ALPHA, gl.ONE_MINUS_SRC_ALPHA)
 
 	// Activate corresponding render state
 	gl.UseProgram(f.program)
-	//set text color
+	// set text color
 	gl.Uniform4f(gl.GetUniformLocation(f.program, gl.Str("textColor\x00")), f.color.r, f.color.g, f.color.b, f.color.a)
-	//set screen resolution
-	//resUniform := gl.GetUniformLocation(f.program, gl.Str("resolution\x00"))
-	//gl.Uniform2f(resUniform, float32(2560), float32(1440))
+	// set screen resolution
+	// resUniform := gl.GetUniformLocation(f.program, gl.Str("resolution\x00"))
+	// gl.Uniform2f(resUniform, float32(2560), float32(1440))
 
 	gl.ActiveTexture(gl.TEXTURE0)
 	gl.BindVertexArray(f.vao)
@@ -123,29 +121,29 @@ func (f *Font) Print(x, y float32, text string) error {
 	// Iterate through all characters in string
 	for i := range indices {
 
-		//get rune
+		// get rune
 		runeIndex := indices[i]
 
-		//find rune in fontChar list
+		// find rune in fontChar list
 		ch, err := f.GetRune(runeIndex)
 		if err != nil {
 			return err // @todo ignore errors?
 		}
 
-		//calculate position and size for current rune
+		// calculate position and size for current rune
 		xpos := x + float32(ch.bearingH)
 		ypos := y - float32(+ch.height-ch.bearingV)
 		w := float32(ch.width)
 		h := float32(ch.height)
 
-		//set quad positions
-		var x1 = xpos
-		var x2 = xpos + w
-		var y1 = ypos
-		var y2 = ypos + h
+		// set quad positions
+		x1 := xpos
+		x2 := xpos + w
+		y1 := ypos
+		y2 := ypos + h
 
-		//setup quad array
-		var vertices = []float32{
+		// setup quad array
+		vertices := []float32{
 			//  X, Y, Z, U, V
 			// Front
 			x1, y1, 0.0, 0.0,
@@ -153,14 +151,15 @@ func (f *Font) Print(x, y float32, text string) error {
 			x1, y2, 0.0, 1.0,
 			x1, y2, 0.0, 1.0,
 			x2, y1, 1.0, 0.0,
-			x2, y2, 1.0, 1.0}
+			x2, y2, 1.0, 1.0,
+		}
 
 		// Render glyph texture over quad
 		gl.BindTexture(gl.TEXTURE_2D, ch.textureID)
 		// Update content of VBO memory
 		gl.BindBuffer(gl.ARRAY_BUFFER, f.vbo)
 
-		//BufferSubData(target Enum, offset int, data []byte)
+		// BufferSubData(target Enum, offset int, data []byte)
 		gl.BufferSubData(gl.ARRAY_BUFFER, 0, len(vertices)*4, gl.Ptr(vertices)) // Be sure to use glBufferSubData and not glBufferData
 		// Render quad
 		gl.DrawArrays(gl.TRIANGLES, 0, 24)
@@ -171,7 +170,7 @@ func (f *Font) Print(x, y float32, text string) error {
 
 	}
 
-	//clear opengl textures and programs
+	// clear opengl textures and programs
 	gl.BindVertexArray(0)
 	gl.BindTexture(gl.TEXTURE_2D, 0)
 	gl.UseProgram(0)
@@ -180,9 +179,8 @@ func (f *Font) Print(x, y float32, text string) error {
 	return nil
 }
 
-//Width returns the width of a piece of text in pixels
+// Width returns the width of a piece of text in pixels
 func (f *Font) Size(text string) (float32, float32) {
-
 	var width float32
 	var height float32
 
@@ -195,10 +193,10 @@ func (f *Font) Size(text string) (float32, float32) {
 	// Iterate through all characters in string
 	for i := range indices {
 
-		//get rune
+		// get rune
 		runeIndex := indices[i]
 
-		//find rune in fontChar list
+		// find rune in fontChar list
 		ch, err := f.GetRune(runeIndex)
 		if err != nil {
 			continue
@@ -232,7 +230,6 @@ func (f *Font) MaxY() float32 {
 }
 
 func (f *Font) GetRune(r rune) (*character, error) {
-
 	cc, ok := f.characters[r]
 	if ok {
 		return cc, nil
@@ -248,37 +245,37 @@ func (f *Font) GetRune(r rune) (*character, error) {
 	gh := int32((gBnd.Max.Y - gBnd.Min.Y) >> 6)
 	gw := int32((gBnd.Max.X - gBnd.Min.X) >> 6)
 
-	//if gylph has no diamensions set to a max value
+	// if gylph has no diamensions set to a max value
 	if gw == 0 || gh == 0 {
 		gBnd = f.ttf.Bounds(fixed.Int26_6(f.scale))
 		gw = int32((gBnd.Max.X - gBnd.Min.X) >> 6)
 		gh = int32((gBnd.Max.Y - gBnd.Min.Y) >> 6)
 
-		//above can sometimes yield 0 for font smaller than 48pt, 1 is minimum
+		// above can sometimes yield 0 for font smaller than 48pt, 1 is minimum
 		if gw == 0 || gh == 0 {
 			gw = 1
 			gh = 1
 		}
 	}
 
-	//The glyph's ascent and descent equal -bounds.Min.Y and +bounds.Max.Y.
+	// The glyph's ascent and descent equal -bounds.Min.Y and +bounds.Max.Y.
 	gAscent := int(-gBnd.Min.Y) >> 6
 	gdescent := int(gBnd.Max.Y) >> 6
 
-	//set w,h and adv, bearing V and bearing H in char
+	// set w,h and adv, bearing V and bearing H in char
 	char.width = int(gw)
 	char.height = int(gh)
 	char.advance = int(gAdv)
 	char.bearingV = gdescent
 	char.bearingH = (int(gBnd.Min.X) >> 6)
 
-	//create image to draw glyph
+	// create image to draw glyph
 	fg, bg := image.White, image.Black
 	rect := image.Rect(0, 0, int(gw), int(gh))
 	rgba := image.NewRGBA(rect)
 	draw.Draw(rgba, rgba.Bounds(), bg, image.ZP, draw.Src)
 
-	//create a freetype context for drawing
+	// create a freetype context for drawing
 	c := freetype.NewContext()
 	c.SetDPI(DPI)
 	c.SetFont(f.ttf)
@@ -288,7 +285,7 @@ func (f *Font) GetRune(r rune) (*character, error) {
 	c.SetSrc(fg)
 	c.SetHinting(font.HintingFull)
 
-	//set the glyph dot
+	// set the glyph dot
 	px := 0 - (int(gBnd.Min.X) >> 6)
 	py := (gAscent)
 	pt := freetype.Pt(px, py)

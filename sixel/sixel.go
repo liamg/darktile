@@ -17,7 +17,6 @@ type Sixel struct {
 type colour [3]uint8
 
 func decompress(data string) string {
-
 	output := ""
 
 	inMarker := false
@@ -49,7 +48,6 @@ func decompress(data string) string {
 
 // pass in everything after ESC+P and before ST
 func ParseString(data string) (*Sixel, error) {
-
 	data = decompress(data)
 
 	inHeader := true
@@ -151,7 +149,7 @@ func ParseString(data string) (*Sixel, error) {
 						six.setPixel(x, y+uint(bit), selectedColour, ratio)
 					} else if !remainMode {
 						// @todo use background colour here
-						//six.setPixel(x, y+uint(bit), selectedColour)
+						// six.setPixel(x, y+uint(bit), selectedColour)
 					}
 				}
 				x++
@@ -162,7 +160,6 @@ func ParseString(data string) (*Sixel, error) {
 }
 
 func (six *Sixel) setPixel(x, y uint, c colour, vhRatio uint) {
-
 	if six.px == nil {
 		six.px = map[uint]map[uint]colour{}
 	}
@@ -184,7 +181,6 @@ func (six *Sixel) setPixel(x, y uint, c colour, vhRatio uint) {
 		}
 		six.px[x][ay+i] = c
 	}
-
 }
 
 func (six *Sixel) RGBA() *image.RGBA {

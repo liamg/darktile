@@ -7,7 +7,6 @@ import (
 )
 
 func (gui *GUI) textbox(col uint16, row uint16, text string, fg [3]float32, bg [3]float32) {
-
 	lines := []string{}
 	line := ""
 	word := ""
@@ -55,7 +54,7 @@ func (gui *GUI) textbox(col uint16, row uint16, text string, fg [3]float32, bg [
 		return false
 	}
 
-	var done = false
+	done := false
 
 DONE:
 	for _, c := range text {
@@ -94,5 +93,4 @@ DONE:
 		y := float32(row+1+uint16(i))*gui.renderer.cellHeight + f.MinY()
 		f.Print(x, y, fmt.Sprintf(" %s", line))
 	}
-
 }

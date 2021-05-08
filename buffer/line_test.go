@@ -7,7 +7,6 @@ import (
 )
 
 func TestLine(t *testing.T) {
-
 	line := newLine()
 	line.cells = []Cell{
 		{r: 'h'},
@@ -25,5 +24,4 @@ func TestLine(t *testing.T) {
 
 	line.setWrapped(false)
 	assert.False(t, line.wrapped)
-
 }

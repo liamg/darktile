@@ -63,7 +63,6 @@ func NewBuffer(terminalState *TerminalState) *Buffer {
 }
 
 func (buffer *Buffer) GetURLAtPosition(col uint16, viewRow uint16) string {
-
 	row := buffer.convertViewLineToRawLine((viewRow)) - uint64(buffer.terminalState.scrollLinesFromBottom)
 
 	cell := buffer.GetRawCell(col, row)
@@ -226,7 +225,6 @@ func (buffer *Buffer) StartSelection(col uint16, viewRow uint16, mode SelectionM
 }
 
 func (buffer *Buffer) ExtendSelection(col uint16, viewRow uint16, complete bool) {
-
 	if buffer.isSelectionComplete {
 		return
 	}
@@ -410,7 +408,6 @@ func (buffer *Buffer) GetCell(viewCol uint16, viewRow uint16) *Cell {
 }
 
 func (buffer *Buffer) GetRawCell(viewCol uint16, rawLine uint64) *Cell {
-
 	if viewCol < 0 || rawLine < 0 || int(rawLine) >= len(buffer.lines) {
 		return nil
 	}
@@ -500,7 +497,6 @@ func (buffer *Buffer) deleteLine() {
 }
 
 func (buffer *Buffer) insertLine() {
-
 	defer buffer.emitDisplayChange()
 
 	if !buffer.InScrollableRegion() {
@@ -543,7 +539,6 @@ func (buffer *Buffer) insertLine() {
 }
 
 func (buffer *Buffer) InsertBlankCharacters(count int) {
-
 	index := int(buffer.RawLine())
 	for i := 0; i < count; i++ {
 		cells := buffer.lines[index].cells
@@ -552,7 +547,6 @@ func (buffer *Buffer) InsertBlankCharacters(count int) {
 }
 
 func (buffer *Buffer) InsertLines(count int) {
-
 	if buffer.HasScrollableRegion() && !buffer.InScrollableRegion() {
 		// should have no effect outside of scrollable region
 		return
@@ -563,11 +557,9 @@ func (buffer *Buffer) InsertLines(count int) {
 	for i := 0; i < count; i++ {
 		buffer.insertLine()
 	}
-
 }
 
 func (buffer *Buffer) DeleteLines(count int) {
-
 	if buffer.HasScrollableRegion() && !buffer.InScrollableRegion() {
 		// should have no effect outside of scrollable region
 		return
@@ -578,11 +570,9 @@ func (buffer *Buffer) DeleteLines(count int) {
 	for i := 0; i < count; i++ {
 		buffer.deleteLine()
 	}
-
 }
 
 func (buffer *Buffer) Index() {
-
 	// This sequence causes the active position to move downward one line without changing the column position.
 	// If the active position is at the bottom margin, a scroll up is performed."
 
@@ -612,7 +602,6 @@ func (buffer *Buffer) Index() {
 }
 
 func (buffer *Buffer) ReverseIndex() {
-
 	defer buffer.emitDisplayChange()
 
 	if uint(buffer.terminalState.cursorY) == buffer.terminalState.topMargin {
@@ -699,7 +688,6 @@ func (buffer *Buffer) inDoWrap() bool {
 }
 
 func (buffer *Buffer) Backspace() {
-
 	if buffer.terminalState.cursorX == 0 {
 		line := buffer.getCurrentLine()
 		if line.wrapped {
@@ -716,7 +704,6 @@ func (buffer *Buffer) Backspace() {
 }
 
 func (buffer *Buffer) CarriageReturn() {
-
 	for {
 		line := buffer.getCurrentLine()
 		if line == nil {
@@ -746,7 +733,6 @@ func (buffer *Buffer) NewLine() {
 }
 
 func (buffer *Buffer) NewLineEx(forceCursorToMargin bool) {
-
 	if buffer.terminalState.IsNewLineMode() || forceCursorToMargin {
 		buffer.terminalState.cursorX = 0
 	}
@@ -766,7 +752,6 @@ func (buffer *Buffer) IsNewLineMode() bool {
 }
 
 func (buffer *Buffer) MovePosition(x int16, y int16) {
-
 	var toX uint16
 	var toY uint16
 
@@ -804,7 +789,7 @@ func (buffer *Buffer) SetPosition(col uint16, line uint16) {
 
 	if useCol >= buffer.ViewWidth() {
 		useCol = buffer.ViewWidth() - 1
-		//logrus.Errorf("Cannot set cursor position: column %d is outside of the current view width (%d columns)", col, buffer.ViewWidth())
+		// logrus.Errorf("Cannot set cursor position: column %d is outside of the current view width (%d columns)", col, buffer.ViewWidth())
 	}
 
 	buffer.terminalState.cursorX = useCol
@@ -839,7 +824,6 @@ func (buffer *Buffer) getCurrentLine() *Line {
 }
 
 func (buffer *Buffer) getViewLine(index uint16) *Line {
-
 	if index >= buffer.ViewHeight() { // @todo is this okay?#
 		return &buffer.lines[len(buffer.lines)-1]
 	}
@@ -889,7 +873,6 @@ func (buffer *Buffer) EraseLineFromCursor() {
 	for i := 0; i < max; i++ {
 		line.Append(buffer.terminalState.DefaultCell(true))
 	}
-
 }
 
 func (buffer *Buffer) EraseDisplay() {
@@ -967,7 +950,6 @@ func (buffer *Buffer) EraseDisplayToCursor() {
 }
 
 func (buffer *Buffer) ResizeView(width uint16, height uint16) {
-
 	defer buffer.emitDisplayChange()
 
 	if buffer.terminalState.viewHeight == 0 {
@@ -1020,7 +1002,7 @@ func (buffer *Buffer) ResizeView(width uint16, height uint16) {
 			//line.Cleanse()
 			for offset := 1; i+offset < len(buffer.lines); offset++ {
 				nextLine := &buffer.lines[i+offset]
-				//nextLine.Cleanse()
+				// nextLine.Cleanse()
 				if !nextLine.wrapped { // if the next line wasn't wrapped, we don't need to move characters back to this line
 					break
 				}

@@ -112,7 +112,6 @@ func csiHandler(pty chan rune, terminal *Terminal) error {
 }
 
 func csiSendDeviceAttributesHandler(params []string, terminal *Terminal) error {
-
 	// we are VT100
 	// for DA1 we'll respond ?1;2
 	// for DA2 we'll respond >0;0;0
@@ -129,7 +128,6 @@ func csiSendDeviceAttributesHandler(params []string, terminal *Terminal) error {
 }
 
 func csiDeviceStatusReportHandler(params []string, terminal *Terminal) error {
-
 	if len(params) == 0 {
 		return fmt.Errorf("Missing Device Status Report identifier")
 	}
@@ -206,7 +204,6 @@ func csiCursorBackwardHandler(params []string, terminal *Terminal) error {
 }
 
 func csiCursorNextLineHandler(params []string, terminal *Terminal) error {
-
 	distance := 1
 	if len(params) > 0 {
 		var err error
@@ -222,7 +219,6 @@ func csiCursorNextLineHandler(params []string, terminal *Terminal) error {
 }
 
 func csiCursorPrecedingLineHandler(params []string, terminal *Terminal) error {
-
 	distance := 1
 	if len(params) > 0 {
 		var err error
@@ -497,14 +493,13 @@ func csiEraseInDisplayHandler(params []string, terminal *Terminal) error {
 
 // CSI Ps K
 func csiEraseInLineHandler(params []string, terminal *Terminal) error {
-
 	n := "0"
 	if len(params) > 0 {
 		n = params[0]
 	}
 
 	switch n {
-	case "0", "": //erase adter cursor
+	case "0", "": // erase adter cursor
 		terminal.ActiveBuffer().EraseLineFromCursor()
 	case "1": // erase to cursor inclusive
 		terminal.ActiveBuffer().EraseLineToCursor()

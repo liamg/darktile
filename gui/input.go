@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 // send typed runes straight through to the pty
@@ -23,7 +23,6 @@ func modsPressed(pressed glfw.ModifierKey, mods ...glfw.ModifierKey) bool {
 }
 
 func getModStr(mods glfw.ModifierKey) string {
-
 	switch true {
 	case modsPressed(mods, glfw.ModControl, glfw.ModShift, glfw.ModAlt):
 		return "8"
@@ -45,7 +44,6 @@ func getModStr(mods glfw.ModifierKey) string {
 }
 
 func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Action, mods glfw.ModifierKey) {
-
 	if action == glfw.Repeat || action == glfw.Press {
 
 		if gui.overlay != nil {
@@ -227,7 +225,7 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			if modsPressed(mods, glfw.ModAlt) {
 				gui.terminal.Write([]byte{0x17}) // ctrl-w/delete word
 			} else {
-				gui.terminal.Write([]byte{0x7f}) //0x7f is DEL
+				gui.terminal.Write([]byte{0x7f}) // 0x7f is DEL
 			}
 		case glfw.KeyUp:
 			if modStr != "" {
@@ -304,5 +302,4 @@ func (gui *GUI) key(w *glfw.Window, key glfw.Key, scancode int, action glfw.Acti
 			}
 		}
 	}
-
 }

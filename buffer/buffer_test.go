@@ -69,7 +69,6 @@ func TestBufferCreation(t *testing.T) {
 }
 
 func TestBufferWriteIncrementsCursorCorrectly(t *testing.T) {
-
 	b := NewBuffer(NewTerminalState(5, 4, CellAttributes{}, 1000))
 
 	/*01234
@@ -113,7 +112,6 @@ func TestBufferWriteIncrementsCursorCorrectly(t *testing.T) {
 	require.Equal(t, 2, len(lines))
 	assert.Equal(t, "xxxxx", lines[0].String())
 	assert.Equal(t, "xx", lines[1].String())
-
 }
 
 func TestWritingNewLineAsFirstRuneOnWrappedLine(t *testing.T) {
@@ -138,7 +136,6 @@ func TestWritingNewLineAsFirstRuneOnWrappedLine(t *testing.T) {
 	require.Equal(t, 3, len(b.lines))
 	assert.Equal(t, "abc", b.lines[0].String())
 	assert.Equal(t, "def", b.lines[1].String())
-
 }
 
 func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
@@ -170,7 +167,6 @@ func TestWritingNewLineAsSecondRuneOnWrappedLine(t *testing.T) {
 }
 
 func TestSetPosition(t *testing.T) {
-
 	b := NewBuffer(NewTerminalState(120, 80, CellAttributes{}, 1000))
 	assert.Equal(t, 0, int(b.CursorColumn()))
 	assert.Equal(t, 0, int(b.CursorLine()))
@@ -183,7 +179,6 @@ func TestSetPosition(t *testing.T) {
 	b.SetPosition(120, 90)
 	assert.Equal(t, 119, int(b.CursorColumn()))
 	assert.Equal(t, 79, int(b.CursorLine()))
-
 }
 
 func TestMovePosition(t *testing.T) {
@@ -208,7 +203,6 @@ func TestMovePosition(t *testing.T) {
 }
 
 func TestVisibleLines(t *testing.T) {
-
 	b := NewBuffer(NewTerminalState(80, 10, CellAttributes{}, 1000))
 	b.Write([]rune("hello 1")...)
 	b.CarriageReturn()
@@ -255,7 +249,6 @@ func TestVisibleLines(t *testing.T) {
 	require.Equal(t, 10, len(lines))
 	assert.Equal(t, "hello 5", lines[0].String())
 	assert.Equal(t, "hello 14", lines[9].String())
-
 }
 
 func TestClearWithoutFullView(t *testing.T) {
@@ -391,7 +384,6 @@ func TestGetCellWithBadCursor(t *testing.T) {
 	b.Write([]rune("Hello\r\nthere\r\nsomething...")...)
 	require.Nil(t, b.GetCell(8, 3))
 	require.Nil(t, b.GetCell(90, 0))
-
 }
 
 func TestCursorAttr(t *testing.T) {
@@ -481,6 +473,7 @@ func TestEraseLineAfterCursor(t *testing.T) {
 	assert.Equal(t, "hello, this is a test", b.lines[0].String())
 	assert.Equal(t, "dele", b.lines[1].String())
 }
+
 func TestEraseDisplay(t *testing.T) {
 	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello")...)
@@ -497,6 +490,7 @@ func TestEraseDisplay(t *testing.T) {
 		assert.Equal(t, "", line.String())
 	}
 }
+
 func TestEraseDisplayToCursor(t *testing.T) {
 	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello")...)
@@ -512,7 +506,6 @@ func TestEraseDisplayToCursor(t *testing.T) {
 	assert.Equal(t, "", lines[0].String())
 	assert.Equal(t, "", lines[1].String())
 	assert.Equal(t, "\x00\x00\x00\x00g", lines[2].String())
-
 }
 
 func TestEraseDisplayFromCursor(t *testing.T) {
@@ -531,6 +524,7 @@ func TestEraseDisplayFromCursor(t *testing.T) {
 	assert.Equal(t, "asd", lines[1].String())
 	assert.Equal(t, "", lines[2].String())
 }
+
 func TestBackspace(t *testing.T) {
 	b := NewBuffer(NewTerminalState(80, 5, CellAttributes{}, 1000))
 	b.Write([]rune("hello")...)

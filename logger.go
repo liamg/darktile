@@ -8,7 +8,6 @@ import (
 )
 
 func getLogger(conf *config.Config) (*zap.SugaredLogger, error) {
-
 	var logger *zap.Logger
 	var err error
 	if conf.DebugMode {

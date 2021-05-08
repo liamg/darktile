@@ -71,7 +71,7 @@ func Capture(x, y, width, height int) (img *image.RGBA, e error) {
 
 		if useShm {
 			shmSize := intersect.Dx() * intersect.Dy() * 4
-			shmId, err := shm.Get(shm.IPC_PRIVATE, shmSize, shm.IPC_CREAT|0777)
+			shmId, err := shm.Get(shm.IPC_PRIVATE, shmSize, shm.IPC_CREAT|0o777)
 			if err != nil {
 				return nil, err
 			}

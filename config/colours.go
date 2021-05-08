@@ -15,7 +15,6 @@ func strToColourNoErr(hexStr string) Colour {
 }
 
 func strToColour(hexStr string) (Colour, error) {
-
 	c := [3]float32{0, 0, 0}
 
 	if strings.HasPrefix(hexStr, "#") {

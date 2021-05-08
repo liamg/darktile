@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"strings"
 
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 )
 
 type KeyCombination struct {
@@ -30,7 +30,6 @@ var modMap = map[KeyMod]glfw.ModifierKey{
 
 // keyStr e.g. "ctrl + alt + a"
 func parseKeyCombination(keyStr string) (*KeyCombination, error) {
-
 	var mods glfw.ModifierKey
 	var key rune
 

@@ -6,7 +6,6 @@ import (
 )
 
 func oscHandler(pty chan rune, terminal *Terminal) error {
-
 	params := []string{}
 	param := ""
 
