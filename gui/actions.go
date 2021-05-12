@@ -26,7 +26,7 @@ func actionCopy(gui *GUI) {
 }
 
 func actionPaste(gui *GUI) {
-	if s, err := gui.window.GetClipboardString(); err == nil {
+	if s := gui.window.GetClipboardString(); s != "" {
 		_ = gui.terminal.Paste([]byte(s))
 	}
 }

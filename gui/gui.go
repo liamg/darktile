@@ -10,11 +10,10 @@ import (
 	"strings"
 	"sync"
 	"time"
-
 	"unsafe"
 
 	"github.com/go-gl/gl/all-core/gl"
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/kbinani/screenshot"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/config"
@@ -29,8 +28,8 @@ type GUI struct {
 	logger            *zap.SugaredLogger
 	config            *config.Config
 	terminal          *terminal.Terminal
-	width             int //window width in pixels
-	height            int //window height in pixels
+	width             int // window width in pixels
+	height            int // window height in pixels
 	appliedWidth      int
 	appliedHeight     int
 	resizeCache       *ResizeCache // resize cache formed by resizeToTerminal()
@@ -173,7 +172,6 @@ func (gui *GUI) scale() float32 {
 
 // can only be called on OS thread
 func (gui *GUI) resizeToTerminal(newCols uint, newRows uint) {
-
 	if gui.window.GetAttrib(glfw.Iconified) != 0 {
 		return
 	}
@@ -234,7 +232,6 @@ func (gui *GUI) getCursorFg(cell *buffer.Cell) (fg [3]float32) {
 
 // can only be called on OS thread
 func (gui *GUI) resize(w *glfw.Window, width int, height int) {
-
 	if gui.window.GetAttrib(glfw.Iconified) != 0 {
 		return
 	}
@@ -297,7 +294,6 @@ func (gui *GUI) Close() {
 }
 
 func (gui *GUI) Render() error {
-
 	gui.logger.Debugf("Creating window...")
 	var err error
 	gui.window, err = gui.createWindow()
@@ -467,7 +463,6 @@ Buffer Size: %d lines
 
 	gui.logger.Debugf("Stopping render...")
 	return nil
-
 }
 
 func (gui *GUI) redraw() {
@@ -517,7 +512,6 @@ func (gui *GUI) redraw() {
 		}
 	}
 	for y := 0; y < lineCount; y++ {
-
 		if y < len(lines) {
 
 			var builder strings.Builder
@@ -570,11 +564,9 @@ func (gui *GUI) redraw() {
 				gui.renderer.DrawCellText(builder.String(), uint(col), uint(y), alpha, colour, bold)
 			}
 		}
-
 	}
 	// underlines
 	for y := 0; y < lineCount; y++ {
-
 		if y < len(lines) {
 
 			span := 0
@@ -599,7 +591,6 @@ func (gui *GUI) redraw() {
 				gui.renderer.DrawUnderline(span, uint(x-span), uint(y), colour)
 			}
 		}
-
 	}
 	gui.renderOverlay()
 }
@@ -648,7 +639,6 @@ func (gui *GUI) createWindow() (*glfw.Window, error) {
 }
 
 func (gui *GUI) createWindowWithOpenGLVersion(major int, minor int) (*glfw.Window, error) {
-
 	glfw.WindowHint(glfw.ContextVersionMajor, major)
 	glfw.WindowHint(glfw.ContextVersionMinor, minor)
 
@@ -715,7 +705,6 @@ func (gui *GUI) createProgram() (uint32, error) {
 }
 
 func (gui *GUI) launchTarget(target string) {
-
 	err := platform.LaunchTarget(target)
 	if err != nil {
 		gui.logger.Errorf("Failed to launch target %s: %s", target, err)
@@ -731,8 +720,10 @@ func (gui *GUI) Screenshot(path string) {
 	x, y := gui.window.GetPos()
 	w, h := gui.window.GetSize()
 
-	img, err := screenshot.CaptureRect(image.Rectangle{Min: image.Point{X: x, Y: y},
-		Max: image.Point{X: x + w, Y: y + h}})
+	img, err := screenshot.CaptureRect(image.Rectangle{
+		Min: image.Point{X: x, Y: y},
+		Max: image.Point{X: x + w, Y: y + h},
+	})
 	if err != nil {
 		panic(err)
 	}
@@ -745,6 +736,6 @@ func (gui *GUI) windowPosChangeCallback(w *glfw.Window, xpos int, ypos int) {
 	gui.SetDPIScale()
 }
 
-func (gui *GUI) monitorChangeCallback(monitor *glfw.Monitor, event glfw.MonitorEvent) {
+func (gui *GUI) monitorChangeCallback(_ *glfw.Monitor, _ glfw.PeripheralEvent) {
 	gui.SetDPIScale()
 }

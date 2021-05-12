@@ -141,9 +141,7 @@ var (
 	gdiplusStartup              uintptr
 )
 
-var (
-	token uintptr
-)
+var token uintptr
 
 func init() {
 	// Library

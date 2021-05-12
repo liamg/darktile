@@ -47,7 +47,6 @@ func (r *OpenGLRenderer) CellHeight() float32 {
 }
 
 func (r *OpenGLRenderer) newRectangleEx(x float32, y float32, width float32, height float32, colourAttr uint32) *rectangle {
-
 	rect := &rectangle{}
 
 	halfAreaWidth := float32(r.areaWidth / 2)
@@ -204,7 +203,6 @@ func (r *OpenGLRenderer) DrawCursor(col uint, row uint, colour config.Colour) {
 }
 
 func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, colour *config.Colour, force bool) {
-
 	var bg [3]float32
 
 	if colour != nil {
@@ -220,12 +218,11 @@ func (r *OpenGLRenderer) DrawCellBg(cell buffer.Cell, col uint, row uint, colour
 
 		rect.Free()
 	}
-
 }
 
 // DrawUnderline draws a line under 'span' characters starting at (col, row)
 func (r *OpenGLRenderer) DrawUnderline(span int, col uint, row uint, colour [3]float32) {
-	//calculate coordinates
+	// calculate coordinates
 	x := float32(float32(col) * r.cellWidth)
 	y := (float32(row+1))*r.cellHeight + r.fontMap.DefaultFont().MinY()*0.25
 
@@ -242,7 +239,6 @@ func (r *OpenGLRenderer) DrawUnderline(span int, col uint, row uint, colour [3]f
 }
 
 func (r *OpenGLRenderer) DrawCellText(text string, col uint, row uint, alpha float32, colour [3]float32, bold bool) {
-
 	var f *glfont.Font
 	if bold {
 		f = r.fontMap.BoldFont()
@@ -259,7 +255,6 @@ func (r *OpenGLRenderer) DrawCellText(text string, col uint, row uint, alpha flo
 }
 
 func (r *OpenGLRenderer) DrawCellImage(cell buffer.Cell, col uint, row uint) {
-
 	img := cell.Image()
 
 	if img == nil {
@@ -302,8 +297,8 @@ func (r *OpenGLRenderer) DrawCellImage(cell buffer.Cell, col uint, row uint) {
 		r.textureMap[img] = tex
 	}
 
-	var w = float32(img.Bounds().Size().X)
-	var h = float32(img.Bounds().Size().Y)
+	w := float32(img.Bounds().Size().X)
+	h := float32(img.Bounds().Size().Y)
 
 	var readFboId uint32
 	gl.GenFramebuffers(1, &readFboId)

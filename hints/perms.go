@@ -111,7 +111,6 @@ func init() {
 }
 
 func hintPerms(word string, context string, wordX uint16, wordY uint16) *Hint {
-
 	item := NewHint(word, context, wordX, wordY)
 
 	if wordX == 0 {

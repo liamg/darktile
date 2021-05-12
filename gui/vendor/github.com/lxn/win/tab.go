@@ -6,8 +6,10 @@
 
 package win
 
-const TCM_FIRST = 0x1300
-const TCN_FIRST = -550
+const (
+	TCM_FIRST = 0x1300
+	TCN_FIRST = -550
+)
 
 const (
 	TCS_SCROLLOPPOSITE    = 0x0001

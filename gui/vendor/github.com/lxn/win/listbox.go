@@ -72,7 +72,7 @@ const (
 	LB_MULTIPLEADDSTRING   = 0x01B1
 )
 
-//Listbox Notification Codes
+// Listbox Notification Codes
 const (
 	LBN_ERRSPACE  = -2
 	LBN_SELCHANGE = 1
@@ -81,6 +81,7 @@ const (
 	LBN_SETFOCUS  = 4
 	LBN_KILLFOCUS = 5
 )
+
 const (
 	LB_ERR      = -1
 	LB_ERRSPACE = -2

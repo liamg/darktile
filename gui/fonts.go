@@ -24,7 +24,6 @@ func (gui *GUI) getPackedFont(name string) (*glfont.Font, error) {
 }
 
 func (gui *GUI) loadFonts() error {
-
 	// from https://github.com/ryanoasis/nerd-fonts/tree/master/patched-fonts/Hack
 
 	defaultFont, err := gui.getPackedFont("Hack Regular Nerd Font Complete.ttf")

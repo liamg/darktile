@@ -11,8 +11,10 @@ import (
 	"unsafe"
 )
 
-type CSIDL uint32
-type HDROP HANDLE
+type (
+	CSIDL uint32
+	HDROP HANDLE
+)
 
 const (
 	CSIDL_DESKTOP                 = 0x00

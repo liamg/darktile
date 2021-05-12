@@ -2,11 +2,12 @@ package screenshot
 
 import (
 	"errors"
-	"github.com/kbinani/screenshot/internal/util"
-	win "github.com/lxn/win"
 	"image"
 	"syscall"
 	"unsafe"
+
+	"github.com/kbinani/screenshot/internal/util"
+	win "github.com/lxn/win"
 )
 
 var (

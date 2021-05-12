@@ -10,7 +10,6 @@ import (
 )
 
 func sgrSequenceHandler(params []string, terminal *Terminal) error {
-
 	if len(params) == 0 {
 		params = []string{"0"}
 	}
@@ -141,13 +140,12 @@ func sgrSequenceHandler(params []string, terminal *Terminal) error {
 		}
 	}
 
-	//terminal.logger.Debugf("SGR control sequence: (ESC[%s%sm)", param, intermediate)
+	// terminal.logger.Debugf("SGR control sequence: (ESC[%s%sm)", param, intermediate)
 
 	return nil
 }
 
 func (terminal *Terminal) getANSIColour(params []string) (config.Colour, error) {
-
 	if len(params) > 2 {
 		switch params[1] {
 		case "5":
@@ -206,11 +204,9 @@ func (terminal *Terminal) getANSIColour(params []string) (config.Colour, error) 
 	}
 
 	return [3]float32{}, fmt.Errorf("Unknown ANSI colour format identifier")
-
 }
 
 func (terminal *Terminal) get8BitSGRColour(colNum uint8) [3]float32 {
-
 	// https://en.wikipedia.org/wiki/ANSI_escape_code#8-bit
 
 	switch colNum {

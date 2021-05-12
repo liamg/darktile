@@ -3,16 +3,14 @@ package gui
 import (
 	"fmt"
 	"math"
-
 	"time"
 
-	"github.com/go-gl/glfw/v3.2/glfw"
+	"github.com/go-gl/glfw/v3.3/glfw"
 	"github.com/liamg/aminal/buffer"
 	"github.com/liamg/aminal/terminal"
 )
 
 func (gui *GUI) glfwScrollCallback(w *glfw.Window, xoff float64, yoff float64) {
-
 	if yoff > 0 {
 		gui.terminal.ScreenScrollUp(1)
 	} else {
@@ -37,7 +35,6 @@ func (gui *GUI) getArrowCursor() *glfw.Cursor {
 }
 
 func (gui *GUI) mouseMoveCallback(w *glfw.Window, px float64, py float64) {
-
 	x, y := gui.convertMouseCoordinates(px, py)
 
 	if gui.mouseDown {
@@ -123,7 +120,6 @@ func btnCode(button glfw.MouseButton, release bool, mod glfw.ModifierKey) (b byt
 }
 
 func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, action glfw.Action, mod glfw.ModifierKey) {
-
 	if gui.overlay != nil {
 		if button == glfw.MouseButtonRight && action == glfw.Release {
 			gui.setOverlay(nil)
@@ -155,8 +151,7 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 
 	case glfw.MouseButtonRight:
 		if gui.config.CopyAndPasteWithMouse && action == glfw.Press && gui.terminal.GetMouseMode() == terminal.MouseModeNone {
-			str, err := gui.window.GetClipboardString()
-			if err == nil {
+			if str := gui.window.GetClipboardString(); str != "" {
 				activeBuffer := gui.terminal.ActiveBuffer()
 				activeBuffer.ClearSelection()
 				_ = gui.terminal.Paste([]byte(str))
@@ -178,7 +173,7 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 		// handle clicks locally
 
 		return
-	case terminal.MouseModeX10: //X10 compatibility mode
+	case terminal.MouseModeX10: // X10 compatibility mode
 
 		/*
 			X10 compatibility mode sends an escape sequence only on button press, encoding the location and the mouse button pressed.
@@ -252,7 +247,6 @@ func (gui *GUI) mouseButtonCallback(w *glfw.Window, button glfw.MouseButton, act
 	default:
 		panic("Unsupported mouse mode")
 	}
-
 }
 
 func (gui *GUI) handleSelectionButtonPress(x uint16, y uint16) {

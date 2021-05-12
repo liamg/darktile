@@ -80,7 +80,7 @@ func (terminal *Terminal) processRune(b rune) {
 		terminal.isDirty = true
 		return
 	}
-	//terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
+	// terminal.logger.Debugf("Received character 0x%X: %q", b, string(b))
 	terminal.ActiveBuffer().Write(terminal.translateRune(b))
 	terminal.isDirty = true
 }
@@ -98,7 +98,6 @@ func (terminal *Terminal) translateRune(b rune) rune {
 }
 
 func (terminal *Terminal) processInput(pty chan rune) {
-
 	// https://en.wikipedia.org/wiki/ANSI_escape_code
 
 	var b rune
@@ -112,7 +111,7 @@ func (terminal *Terminal) processInput(pty chan rune) {
 		b = <-pty
 
 		if b == 0x1b {
-			//terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
+			// terminal.logger.Debugf("Handling escape sequence: 0x%x", b)
 			if err := ansiHandler(pty, terminal); err != nil {
 				terminal.logger.Errorf("Error handling escape sequence: %s", err)
 			}

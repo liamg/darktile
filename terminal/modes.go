@@ -48,7 +48,6 @@ func csiSetModes(modes []string, enabled bool, terminal *Terminal) error {
 }
 
 func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
-
 	/*
 	   Mouse support
 
@@ -104,7 +103,7 @@ func csiSetMode(modeStr string, enabled bool, terminal *Terminal) error {
 		terminal.SetOriginMode(enabled)
 	case "?7":
 		// auto-wrap mode
-		//DECAWM
+		// DECAWM
 		terminal.SetAutoWrap(enabled)
 	case "?9":
 		if enabled {

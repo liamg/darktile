@@ -26,9 +26,7 @@ func (cell *Cell) Image() *image.RGBA {
 }
 
 func (cell *Cell) SetImage(img *image.RGBA) {
-
 	cell.image = img
-
 }
 
 func (cell *Cell) Attr() CellAttributes {

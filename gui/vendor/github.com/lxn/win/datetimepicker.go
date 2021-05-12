@@ -6,9 +6,11 @@
 
 package win
 
-const DTM_FIRST = 0x1000
-const DTN_FIRST = ^uint32(739)  // -740
-const DTN_FIRST2 = ^uint32(752) // -753
+const (
+	DTM_FIRST  = 0x1000
+	DTN_FIRST  = ^uint32(739) // -740
+	DTN_FIRST2 = ^uint32(752) // -753
+)
 
 const (
 	GDTR_MIN = 0x0001

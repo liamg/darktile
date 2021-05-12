@@ -18,8 +18,10 @@ const (
 	InternalBuffer uint8 = 2
 )
 
-type MouseMode uint
-type MouseExtMode uint
+type (
+	MouseMode    uint
+	MouseExtMode uint
+)
 
 const (
 	MouseModeNone MouseMode = iota
@@ -67,8 +69,8 @@ type Modes struct {
 type Winsize struct {
 	Height uint16
 	Width  uint16
-	x      uint16 //ignored, but necessary for ioctl calls
-	y      uint16 //ignored, but necessary for ioctl calls
+	x      uint16 // ignored, but necessary for ioctl calls
+	y      uint16 // ignored, but necessary for ioctl calls
 }
 
 func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Terminal {
@@ -93,7 +95,6 @@ func New(pty platform.Pty, logger *zap.SugaredLogger, config *config.Config) *Te
 	}
 	t.activeBuffer = t.buffers[0]
 	return t
-
 }
 
 func (terminal *Terminal) SetProgram(program uint32) {
@@ -218,6 +219,7 @@ func (terminal *Terminal) ScreenScrollUp(lines uint16) {
 func (terminal *Terminal) ScrollPageDown() {
 	terminal.ScreenScrollDown(terminal.terminalState.ViewHeight())
 }
+
 func (terminal *Terminal) ScrollPageUp() {
 	terminal.ScreenScrollUp(terminal.terminalState.ViewHeight())
 }
@@ -315,7 +317,6 @@ func (terminal *Terminal) WriteReturn() error {
 }
 
 func (terminal *Terminal) Paste(data []byte) error {
-
 	if terminal.bracketedPasteMode {
 		data = []byte(fmt.Sprintf("\x1b[200~%s\x1b[201~", string(data)))
 	}
@@ -325,7 +326,6 @@ func (terminal *Terminal) Paste(data []byte) error {
 
 // Read needs to be run on a goroutine, as it continually reads output to set on the terminal
 func (terminal *Terminal) Read() error {
-
 	buffer := make(chan rune, 0xffff)
 
 	reader := bufio.NewReader(terminal.pty)
@@ -342,7 +342,7 @@ func (terminal *Terminal) Read() error {
 		buffer <- r
 	}
 
-	//clean exit
+	// clean exit
 	return nil
 }
 

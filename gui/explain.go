@@ -16,7 +16,6 @@ func newAnnotation(it *hints.Hint) *annotation {
 }
 
 func (a *annotation) render(gui *GUI) {
-
 	gl.Clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT | gl.STENCIL_BUFFER_BIT)
 
 	lines := gui.terminal.GetVisibleLines()
@@ -42,5 +41,4 @@ func (a *annotation) render(gui *GUI) {
 	}
 
 	gui.textbox(a.hint.StartX+1, a.hint.StartY+3, a.hint.Description, a.hint.ForegroundColour, a.hint.BackgroundColour)
-
 }

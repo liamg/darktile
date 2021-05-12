@@ -8,7 +8,6 @@ import (
 )
 
 func (buffer *Buffer) GetHintAtPosition(col uint16, viewRow uint16) *hints.Hint {
-
 	row := buffer.convertViewLineToRawLine(viewRow) - uint64(buffer.terminalState.scrollLinesFromBottom)
 
 	cell := buffer.GetRawCell(col, row)
@@ -47,5 +46,4 @@ func (buffer *Buffer) GetHintAtPosition(col uint16, viewRow uint16) *hints.Hint 
 	line := buffer.lines[row]
 
 	return hints.Get(strings.Trim(candidate, " "), line.String(), sx, viewRow)
-
 }

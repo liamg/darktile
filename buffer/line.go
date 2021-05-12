@@ -21,7 +21,7 @@ func (line *Line) Cells() []Cell {
 }
 
 func (line *Line) ReverseVideo() {
-	for i, _ := range line.cells {
+	for i := range line.cells {
 		line.cells[i].attr.ReverseVideo()
 	}
 }

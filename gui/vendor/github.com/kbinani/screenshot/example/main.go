@@ -2,10 +2,11 @@ package main
 
 import (
 	"fmt"
-	"github.com/kbinani/screenshot"
 	"image"
 	"image/png"
 	"os"
+
+	"github.com/kbinani/screenshot"
 )
 
 // save *image.RGBA to filePath with PNG format.

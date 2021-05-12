@@ -55,10 +55,12 @@ const (
 	OLECLOSE_PROMPTSAVE  = 2
 )
 
-type IID syscall.GUID
-type CLSID syscall.GUID
-type REFIID *IID
-type REFCLSID *CLSID
+type (
+	IID      syscall.GUID
+	CLSID    syscall.GUID
+	REFIID   *IID
+	REFCLSID *CLSID
+)
 
 var (
 	IID_IClassFactory             = IID{0x00000001, 0x0000, 0x0000, [8]byte{0xC0, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x46}}

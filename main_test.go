@@ -16,8 +16,10 @@ import (
 	"github.com/carlogit/phash"
 )
 
-var termRef *terminal.Terminal
-var guiRef *gui.GUI
+var (
+	termRef *terminal.Terminal
+	guiRef  *gui.GUI
+)
 
 func terminate(msg string) int {
 	defer fmt.Print(msg)
@@ -94,7 +96,6 @@ func runMain(f func()) {
 
 func TestCursorMovement(t *testing.T) {
 	runMain(func() {
-
 		testFunc := func(term *terminal.Terminal, g *gui.GUI) {
 			termRef = term
 			guiRef = g
@@ -125,7 +126,6 @@ func TestCursorMovement(t *testing.T) {
 
 func TestScreenFeatures(t *testing.T) {
 	runMain(func() {
-
 		testFunc := func(term *terminal.Terminal, g *gui.GUI) {
 			termRef = term
 			guiRef = g
@@ -148,8 +148,8 @@ func TestScreenFeatures(t *testing.T) {
 			validateScreen("test-screen-features-10.png")
 
 			// 11th screen test is not passing https://github.com/liamg/aminal/issues/207
-			//g.Screenshot("vttest/test-screen-features-11.png")
-			//compareImages("vttest/test-screen-features-11.png", "vttest/test-screen-features-11.png")
+			// g.Screenshot("vttest/test-screen-features-11.png")
+			// compareImages("vttest/test-screen-features-11.png", "vttest/test-screen-features-11.png")
 
 			enter(term)
 			sleep()
@@ -168,7 +168,6 @@ func TestScreenFeatures(t *testing.T) {
 
 func TestSixel(t *testing.T) {
 	runMain(func() {
-
 		testFunc := func(term *terminal.Terminal, g *gui.GUI) {
 			termRef = term
 			guiRef = g

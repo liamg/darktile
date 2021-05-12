@@ -1,13 +1,13 @@
 package glfont
 
 import (
-	"github.com/go-gl/gl/all-core/gl"
-
 	"fmt"
 	"strings"
+
+	"github.com/go-gl/gl/all-core/gl"
 )
 
-//newProgram links the frag and vertex shader programs
+// newProgram links the frag and vertex shader programs
 func newProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error) {
 	vertexShader, err := compileShader(vertexShaderSource, gl.VERTEX_SHADER)
 	if err != nil {
@@ -43,7 +43,7 @@ func newProgram(vertexShaderSource, fragmentShaderSource string) (uint32, error)
 	return program, nil
 }
 
-//compileShader compiles the shader program
+// compileShader compiles the shader program
 func compileShader(source string, shaderType uint32) (uint32, error) {
 	shader := gl.CreateShader(shaderType)
 

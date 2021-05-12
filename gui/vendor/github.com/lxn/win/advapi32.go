@@ -11,8 +11,10 @@ import (
 	"unsafe"
 )
 
-const KEY_READ REGSAM = 0x20019
-const KEY_WRITE REGSAM = 0x20006
+const (
+	KEY_READ  REGSAM = 0x20019
+	KEY_WRITE REGSAM = 0x20006
+)
 
 const (
 	HKEY_CLASSES_ROOT     HKEY = 0x80000000
