@@ -24,12 +24,6 @@ Install dependencies:
 
 Grab a binary from the [latest release](https://github.com/liamg/darktile/releases/latest).
 
-Alternatively, you can install with Go:
-
-```bash
-go get github.com/liamg/darktile/cmd/darktile
-```
-
 ## Configuration
 
 Configuration files should be created in `$XDG_CONFIG_HOME/darktile/` if the variable is defined, otherwise in `$HOME/.config/darktile/`. 
