@@ -4,9 +4,8 @@ builds:
     main: ./cmd/darktile
     binary: darktile
     ldflags:
-    - "-X github.com/liamg/darktile/internal/app/darktile/version.Version={{.Version}} -s -w -extldflags '-fno-PIC -static'"
+    - "-X github.com/liamg/darktile/internal/app/darktile/version.Version={{.Version}}"
     env:
-      - CGO_ENABLED=0
       - GOFLAGS=-mod=vendor
     goos:
       - linux
