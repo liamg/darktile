@@ -1,8 +1,5 @@
 # Darktile
 
-[![GoReportCard](https://goreportcard.com/badge/github.com/liamg/darktile)](https://goreportcard.com/report/github.com/liamg/darktile)
-[![Downloads](https://img.shields.io/github/downloads/liamg/darktile/total)](https://github.com/liamg/darktile/releases)
-
 Darktile is a GPU rendered terminal emulator designed for tiling window managers. 
 
 ![Demo](demo.gif)
