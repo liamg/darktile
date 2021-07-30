@@ -97,6 +97,6 @@ cursorbackground: '#c5c8c6'
 
 The name changed as a result of a near-complete rewrite of Aminal. Also, Google's "did you mean animal?" was getting pretty annoying.
 
-### Did darktile drop Windows/OSX support?
+### Did Darktile drop Windows/OSX support?
 
 While the project likely won't need much work to build on Windows/OSX, the focus is to develop Darktile for tiling window managers under Linux. If you'd like to get Darktile working for other environments, pull requests are always very welcome, especially when preceded by issues/discussion.
