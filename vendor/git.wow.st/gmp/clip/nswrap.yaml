@@ -1,0 +1,11 @@
+# binding generator for git.wow.st/gmp/nswrap
+# original binding is in ns/main.go- and is not used.
+inputfiles:
+    - /System/Library/Frameworks/AppKit.framework/Headers/NSPasteboard.h
+classes:
+    - NSPasteboard
+    - NSString
+enums:
+    - NSPasteboard.*
+frameworks: [ AppKit, Foundation ]
+pragma: [ clang diagnostic ignored "-Wformat-security" ]

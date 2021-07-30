@@ -1,0 +1,6056 @@
+package ns
+
+
+/*
+#cgo CFLAGS: -x objective-c -fno-objc-arc
+#cgo LDFLAGS: -framework AppKit -framework Foundation
+#pragma clang diagnostic ignored "-Wformat-security"
+
+#import <AppKit/AppKit.h>
+#import <Foundation/Foundation.h>
+
+
+void*
+NSObject_Class() {
+	Class ret;
+	@autoreleasepool {
+		ret = [NSObject class];
+	}
+	return ret;
+
+}
+void*
+NSObject_CopyWithZone(void* zone) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [NSObject copyWithZone:zone];
+	}
+	return ret;
+
+}
+void*
+NSObject_Description() {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [NSObject description];
+	}
+	return ret;
+
+}
+void*
+selectorFromString(char *s) {
+	return NSSelectorFromString([NSString stringWithUTF8String:s]);
+}
+
+BOOL
+NSObject_ResolveInstanceMethod(void* sel) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSObject resolveInstanceMethod:sel];
+	}
+	return ret;
+
+}
+BOOL
+NSObject_IsSubclassOfClass(void* aClass) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSObject isSubclassOfClass:aClass];
+	}
+	return ret;
+
+}
+void*
+NSObject_DebugDescription() {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [NSObject debugDescription];
+	}
+	return ret;
+
+}
+BOOL
+NSObject_ResolveClassMethod(void* sel) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSObject resolveClassMethod:sel];
+	}
+	return ret;
+
+}
+void*
+NSObject_InstanceMethodSignatureForSelector(void* aSelector) {
+	NSMethodSignature* ret;
+	@autoreleasepool {
+		ret = [NSObject instanceMethodSignatureForSelector:aSelector];
+	}
+	return ret;
+
+}
+NSInteger
+NSObject_Version() {
+	NSInteger ret;
+	@autoreleasepool {
+		ret = [NSObject version];
+	}
+	return ret;
+
+}
+BOOL
+NSObject_ConformsToProtocol(void* protocol) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSObject conformsToProtocol:protocol];
+	}
+	return ret;
+
+}
+void*
+NSObject_AllocWithZone(void* zone) {
+	return [NSObject allocWithZone:zone];
+}
+void*
+NSObject_New() {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [NSObject new];
+	}
+	return ret;
+
+}
+void*
+NSObject_MutableCopyWithZone(void* zone) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [NSObject mutableCopyWithZone:zone];
+	}
+	return ret;
+
+}
+void*
+NSObject_Superclass() {
+	Class ret;
+	@autoreleasepool {
+		ret = [NSObject superclass];
+	}
+	return ret;
+
+}
+BOOL
+NSObject_InstancesRespondToSelector(void* aSelector) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSObject instancesRespondToSelector:aSelector];
+	}
+	return ret;
+
+}
+void*
+NSObject_Alloc() {
+	return [NSObject alloc];
+}
+void
+NSObject_Load() {
+	@autoreleasepool {
+		[NSObject load];
+	}
+}
+NSUInteger
+NSObject_Hash() {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [NSObject hash];
+	}
+	return ret;
+
+}
+void
+NSObject_SetVersion(NSInteger aVersion) {
+	@autoreleasepool {
+		[NSObject setVersion:aVersion];
+	}
+}
+void
+NSObject_inst_ForwardInvocation(void* o, void* anInvocation) {
+	@autoreleasepool {
+		[(NSObject*)o forwardInvocation:anInvocation];
+	}
+}
+void*
+NSObject_inst_MutableCopy(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o mutableCopy];
+	}
+	return ret;
+
+}
+void
+NSObject_inst_DoesNotRecognizeSelector(void* o, void* aSelector) {
+	@autoreleasepool {
+		[(NSObject*)o doesNotRecognizeSelector:aSelector];
+	}
+}
+BOOL
+NSObject_inst_IsEqual(void* o, void* object) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o isEqual:object];
+	}
+	return ret;
+
+}
+BOOL
+NSObject_inst_IsProxy(void* o) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o isProxy];
+	}
+	return ret;
+
+}
+void
+NSObject_inst_PasteboardChangedOwner(void* o, void* sender) {
+	@autoreleasepool {
+		[(NSObject*)o pasteboardChangedOwner:sender];
+	}
+}
+void*
+NSObject_inst_Retain(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o retain];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_Superclass(void* o) {
+	Class ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o superclass];
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_ForwardingTargetForSelector(void* o, void* aSelector) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o forwardingTargetForSelector:aSelector];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSObject_inst_AutoContentAccessingProxy(void* o) {
+	NSObject* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o autoContentAccessingProxy];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSObject_inst_IsMemberOfClass(void* o, void* aClass) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o isMemberOfClass:aClass];
+	}
+	return ret;
+
+}
+BOOL
+NSObject_inst_RespondsToSelector(void* o, void* aSelector) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o respondsToSelector:aSelector];
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_Self(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o self];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSObject_inst_ConformsToProtocol(void* o, void* aProtocol) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o conformsToProtocol:aProtocol];
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_Description(void* o) {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o description];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_Zone(void* o) {
+	struct _NSZone* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o zone];
+	}
+	return ret;
+
+}
+BOOL
+NSObject_inst_IsKindOfClass(void* o, void* aClass) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o isKindOfClass:aClass];
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_DebugDescription(void* o) {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o debugDescription];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_PerformSelector(void* o, void* aSelector) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o performSelector:aSelector];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_PerformSelectorWithObject(void* o, void* aSelector, void* object) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o performSelector:aSelector withObject:object];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_PerformSelectorWithObjectWithObject(void* o, void* aSelector, void* object1, void* object2) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o performSelector:aSelector withObject:object1 withObject:object2];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSUInteger
+NSObject_inst_Hash(void* o) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o hash];
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_MethodSignatureForSelector(void* o, void* aSelector) {
+	NSMethodSignature* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o methodSignatureForSelector:aSelector];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSObject_inst_AwakeAfterUsingCoder(void* o, void* aDecoder) {
+	NSObject* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o awakeAfterUsingCoder:aDecoder];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void
+NSObject_inst_Pasteboard(void* o, void* sender, void* type) {
+	@autoreleasepool {
+		[(NSObject*)o pasteboard:sender provideDataForType:type];
+	}
+}
+void* _Nonnull
+NSObject_inst_ClassForCoder(void* o) {
+	Class _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o classForCoder];
+	}
+	return ret;
+
+}
+void
+NSObject_inst_Release(void* o) {
+	@autoreleasepool {
+		[(NSObject*)o release];
+	}
+}
+NSUInteger
+NSObject_inst_RetainCount(void* o) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o retainCount];
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_Copy(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o copy];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSObject_inst_ReplacementObjectForCoder(void* o, void* aCoder) {
+	NSObject* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o replacementObjectForCoder:aCoder];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_Init(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o init];
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_Class(void* o) {
+	Class ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o class];
+	}
+	return ret;
+
+}
+void*
+NSObject_inst_Autorelease(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSObject*)o autorelease];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void
+NSObject_inst_Dealloc(void* o) {
+	@autoreleasepool {
+		[(NSObject*)o dealloc];
+	}
+}
+void* _Nonnull
+NSPasteboard_PasteboardByFilteringData(void* data, void* type) {
+	NSPasteboard* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSPasteboard pasteboardByFilteringData:data ofType:type];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_IsSubclassOfClass(void* aClass) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSPasteboard isSubclassOfClass:aClass];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_ResolveClassMethod(void* sel) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSPasteboard resolveClassMethod:sel];
+	}
+	return ret;
+
+}
+NSUInteger
+NSPasteboard_Hash() {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [NSPasteboard hash];
+	}
+	return ret;
+
+}
+void
+NSPasteboard_SetVersion(NSInteger aVersion) {
+	@autoreleasepool {
+		[NSPasteboard setVersion:aVersion];
+	}
+}
+void* _Nonnull
+NSPasteboard_PasteboardWithUniqueName() {
+	NSPasteboard* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSPasteboard pasteboardWithUniqueName];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSPasteboard_PasteboardByFilteringFile(void* filename) {
+	NSPasteboard* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSPasteboard pasteboardByFilteringFile:filename];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_ConformsToProtocol(void* protocol) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSPasteboard conformsToProtocol:protocol];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_Superclass() {
+	Class ret;
+	@autoreleasepool {
+		ret = [NSPasteboard superclass];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSPasteboard_PasteboardByFilteringTypesInPasteboard(void* pboard) {
+	NSPasteboard* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSPasteboard pasteboardByFilteringTypesInPasteboard:pboard];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_Class() {
+	Class ret;
+	@autoreleasepool {
+		ret = [NSPasteboard class];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_MutableCopyWithZone(void* zone) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [NSPasteboard mutableCopyWithZone:zone];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_InstancesRespondToSelector(void* aSelector) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSPasteboard instancesRespondToSelector:aSelector];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSPasteboard_TypesFilterableTo(void* type) {
+	NSArray* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSPasteboard typesFilterableTo:type];
+	}
+	return ret;
+
+}
+void
+NSPasteboard_Load() {
+	@autoreleasepool {
+		[NSPasteboard load];
+	}
+}
+void* _Nonnull
+NSPasteboard_GeneralPasteboard() {
+	NSPasteboard* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSPasteboard generalPasteboard];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_AllocWithZone(void* zone) {
+	return [NSPasteboard allocWithZone:zone];
+}
+void*
+NSPasteboard_New() {
+	NSPasteboard* ret;
+	@autoreleasepool {
+		ret = [NSPasteboard new];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_Description() {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [NSPasteboard description];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_ResolveInstanceMethod(void* sel) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSPasteboard resolveInstanceMethod:sel];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_DebugDescription() {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [NSPasteboard debugDescription];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_Alloc() {
+	return [NSPasteboard alloc];
+}
+void* _Nonnull
+NSPasteboard_PasteboardWithName(void* name) {
+	NSPasteboard* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSPasteboard pasteboardWithName:name];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_CopyWithZone(void* zone) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [NSPasteboard copyWithZone:zone];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_InstanceMethodSignatureForSelector(void* aSelector) {
+	NSMethodSignature* ret;
+	@autoreleasepool {
+		ret = [NSPasteboard instanceMethodSignatureForSelector:aSelector];
+	}
+	return ret;
+
+}
+NSInteger
+NSPasteboard_Version() {
+	NSInteger ret;
+	@autoreleasepool {
+		ret = [NSPasteboard version];
+	}
+	return ret;
+
+}
+void
+NSPasteboard_inst_PasteboardChangedOwner(void* o, void* sender) {
+	@autoreleasepool {
+		[(NSPasteboard*)o pasteboardChangedOwner:sender];
+	}
+}
+void*
+NSPasteboard_inst_Superclass(void* o) {
+	Class ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o superclass];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_ConformsToProtocol(void* o, void* aProtocol) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o conformsToProtocol:aProtocol];
+	}
+	return ret;
+
+}
+NSUInteger
+NSPasteboard_inst_Hash(void* o) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o hash];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_DataForType(void* o, void* dataType) {
+	NSData* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o dataForType:dataType];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSInteger
+NSPasteboard_inst_ClearContents(void* o) {
+	NSInteger ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o clearContents];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_StringForType(void* o, void* dataType) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o stringForType:dataType];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_Class(void* o) {
+	Class ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o class];
+	}
+	return ret;
+
+}
+NSInteger
+NSPasteboard_inst_PrepareForNewContentsWithOptions(void* o, NSPasteboardContentsOptions options) {
+	NSInteger ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o prepareForNewContentsWithOptions:options];
+	}
+	return ret;
+
+}
+NSUInteger
+NSPasteboard_inst_RetainCount(void* o) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o retainCount];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_SetPropertyList(void* o, void* plist, void* dataType) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o setPropertyList:plist forType:dataType];
+	}
+	return ret;
+
+}
+void
+NSPasteboard_inst_ReleaseGlobally(void* o) {
+	@autoreleasepool {
+		[(NSPasteboard*)o releaseGlobally];
+	}
+}
+void
+NSPasteboard_inst_DoesNotRecognizeSelector(void* o, void* aSelector) {
+	@autoreleasepool {
+		[(NSPasteboard*)o doesNotRecognizeSelector:aSelector];
+	}
+}
+BOOL
+NSPasteboard_inst_IsKindOfClass(void* o, void* aClass) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o isKindOfClass:aClass];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_DebugDescription(void* o) {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o debugDescription];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void
+NSPasteboard_inst_Dealloc(void* o) {
+	@autoreleasepool {
+		[(NSPasteboard*)o dealloc];
+	}
+}
+void* _Nullable
+NSPasteboard_inst_Types(void* o) {
+	NSArray* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o types];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSUInteger
+NSPasteboard_inst_IndexOfPasteboardItem(void* o, void* pasteboardItem) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o indexOfPasteboardItem:pasteboardItem];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_ReadObjectsForClasses(void* o, void* classArray, void* options) {
+	NSArray* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o readObjectsForClasses:classArray options:options];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void
+NSPasteboard_inst_ForwardInvocation(void* o, void* anInvocation) {
+	@autoreleasepool {
+		[(NSPasteboard*)o forwardInvocation:anInvocation];
+	}
+}
+BOOL
+NSPasteboard_inst_IsEqual(void* o, void* object) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o isEqual:object];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_PasteboardItems(void* o) {
+	NSArray* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o pasteboardItems];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_MutableCopy(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o mutableCopy];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_Zone(void* o) {
+	struct _NSZone* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o zone];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_ReadFileWrapper(void* o) {
+	NSFileWrapper* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o readFileWrapper];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSInteger
+NSPasteboard_inst_AddTypes(void* o, void* newTypes, void* newOwner) {
+	NSInteger ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o addTypes:newTypes owner:newOwner];
+	}
+	return ret;
+
+}
+NSInteger
+NSPasteboard_inst_DeclareTypes(void* o, void* newTypes, void* newOwner) {
+	NSInteger ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o declareTypes:newTypes owner:newOwner];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_Self(void* o) {
+	NSPasteboard* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o self];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_SetString(void* o, void* string, void* dataType) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o setString:string forType:dataType];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_RespondsToSelector(void* o, void* aSelector) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o respondsToSelector:aSelector];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_MethodSignatureForSelector(void* o, void* aSelector) {
+	NSMethodSignature* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o methodSignatureForSelector:aSelector];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_AwakeAfterUsingCoder(void* o, void* aDecoder) {
+	NSObject* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o awakeAfterUsingCoder:aDecoder];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSPasteboard_inst_ClassForCoder(void* o) {
+	Class _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o classForCoder];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_WriteFileContents(void* o, void* filename) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o writeFileContents:filename];
+	}
+	return ret;
+
+}
+NSInteger
+NSPasteboard_inst_ChangeCount(void* o) {
+	NSInteger ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o changeCount];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_Retain(void* o) {
+	NSPasteboard* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o retain];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_WriteObjects(void* o, void* objects) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o writeObjects:objects];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_CanReadObjectForClasses(void* o, void* classArray, void* options) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o canReadObjectForClasses:classArray options:options];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_PerformSelector(void* o, void* aSelector) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o performSelector:aSelector];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_PerformSelectorWithObject(void* o, void* aSelector, void* object) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o performSelector:aSelector withObject:object];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_PerformSelectorWithObjectWithObject(void* o, void* aSelector, void* object1, void* object2) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o performSelector:aSelector withObject:object1 withObject:object2];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_Init(void* o) {
+	NSPasteboard* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o init];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSPasteboard_inst_Name(void* o) {
+	NSPasteboardName _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o name];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSPasteboard_inst_AutoContentAccessingProxy(void* o) {
+	NSObject* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o autoContentAccessingProxy];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_IsMemberOfClass(void* o, void* aClass) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o isMemberOfClass:aClass];
+	}
+	return ret;
+
+}
+void
+NSPasteboard_inst_Release(void* o) {
+	@autoreleasepool {
+		[(NSPasteboard*)o release];
+	}
+}
+BOOL
+NSPasteboard_inst_SetData(void* o, void* data, void* dataType) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o setData:data forType:dataType];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_IsProxy(void* o) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o isProxy];
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_ForwardingTargetForSelector(void* o, void* aSelector) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o forwardingTargetForSelector:aSelector];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_Description(void* o) {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o description];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_ReplacementObjectForCoder(void* o, void* aCoder) {
+	NSObject* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o replacementObjectForCoder:aCoder];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_AvailableTypeFromArray(void* o, void* types) {
+	NSPasteboardType _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o availableTypeFromArray:types];
+	}
+	return ret;
+
+}
+void
+NSPasteboard_inst_Pasteboard(void* o, void* sender, void* type) {
+	@autoreleasepool {
+		[(NSPasteboard*)o pasteboard:sender provideDataForType:type];
+	}
+}
+void*
+NSPasteboard_inst_Autorelease(void* o) {
+	NSPasteboard* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o autorelease];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_PropertyListForType(void* o, void* dataType) {
+	NSObject* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o propertyListForType:dataType];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_CanReadItemWithDataConformingToTypes(void* o, void* types) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o canReadItemWithDataConformingToTypes:types];
+	}
+	return ret;
+
+}
+BOOL
+NSPasteboard_inst_WriteFileWrapper(void* o, void* wrapper) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o writeFileWrapper:wrapper];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSPasteboard_inst_ReadFileContentsType(void* o, void* type, void* filename) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o readFileContentsType:type toFile:filename];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSPasteboard_inst_Copy(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSPasteboard*)o copy];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_StringWithContentsOfURLEncoding(void* url, NSStringEncoding enc, void** error) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [NSString stringWithContentsOfURL:url encoding:enc error:(NSError* _Nullable* _Nullable)error];
+		if(ret != nil) { [ret retain]; }
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_StringWithContentsOfURLUsedEncoding(void* url, void* enc, void** error) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [NSString stringWithContentsOfURL:url usedEncoding:enc error:(NSError* _Nullable* _Nullable)error];
+		if(ret != nil) { [ret retain]; }
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+void*
+NSString_Alloc() {
+	return [NSString alloc];
+}
+NSUInteger
+NSString_Hash() {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [NSString hash];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_ObjectWithItemProviderData(void* data, void* typeIdentifier, void** outError) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [NSString objectWithItemProviderData:data typeIdentifier:typeIdentifier error:(NSError* _Nullable* _Nullable)outError];
+		for(int i=0;i<1;i++) {
+			if(outError[i] == 0) { break; }
+			[(id)outError[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+const void* _Nonnull
+NSString_AvailableStringEncodings() {
+	const NSStringEncoding* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString availableStringEncodings];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_StringWithCharacters(void* characters, NSUInteger length) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString stringWithCharacters:characters length:length];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSString_Superclass() {
+	Class ret;
+	@autoreleasepool {
+		ret = [NSString superclass];
+	}
+	return ret;
+
+}
+BOOL
+NSString_SupportsSecureCoding() {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSString supportsSecureCoding];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_LocalizedNameOfStringEncoding(NSStringEncoding encoding) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString localizedNameOfStringEncoding:encoding];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_String() {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString string];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_StringWithFormat(void* format, void* object) {
+	NSObject** arr = object;
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString stringWithFormat:format , arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7], arr[8], arr[9], arr[10], arr[11], arr[12], arr[13], arr[14], arr[15], nil];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSString_Description() {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [NSString description];
+	}
+	return ret;
+
+}
+BOOL
+NSString_IsSubclassOfClass(void* aClass) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSString isSubclassOfClass:aClass];
+	}
+	return ret;
+
+}
+BOOL
+NSString_ResolveClassMethod(void* sel) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSString resolveClassMethod:sel];
+	}
+	return ret;
+
+}
+NSStringEncoding
+NSString_DefaultCStringEncoding() {
+	NSStringEncoding ret;
+	@autoreleasepool {
+		ret = [NSString defaultCStringEncoding];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_StringWithString(void* string) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString stringWithString:string];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_StringWithUTF8String(void* nullTerminatedCString) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [NSString stringWithUTF8String:nullTerminatedCString];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSString_ConformsToProtocol(void* protocol) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSString conformsToProtocol:protocol];
+	}
+	return ret;
+
+}
+void
+NSString_SetVersion(NSInteger aVersion) {
+	@autoreleasepool {
+		[NSString setVersion:aVersion];
+	}
+}
+BOOL
+NSString_ResolveInstanceMethod(void* sel) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSString resolveInstanceMethod:sel];
+	}
+	return ret;
+
+}
+void*
+NSString_AllocWithZone(void* zone) {
+	return [NSString allocWithZone:zone];
+}
+void*
+NSString_MutableCopyWithZone(void* zone) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [NSString mutableCopyWithZone:zone];
+	}
+	return ret;
+
+}
+NSPasteboardReadingOptions
+NSString_ReadingOptionsForType(void* type, void* pasteboard) {
+	NSPasteboardReadingOptions ret;
+	@autoreleasepool {
+		ret = [NSString readingOptionsForType:type pasteboard:pasteboard];
+	}
+	return ret;
+
+}
+NSStringEncoding
+NSString_StringEncodingForData(void* data, void* opts, void** string, void* usedLossyConversion) {
+	NSStringEncoding ret;
+	@autoreleasepool {
+		ret = [NSString stringEncodingForData:data encodingOptions:opts convertedString:(NSString* _Nullable* _Nullable)string usedLossyConversion:usedLossyConversion];
+		for(int i=0;i<1;i++) {
+			if(string[i] == 0) { break; }
+			[(id)string[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_StringWithContentsOfFileEncoding(void* path, NSStringEncoding enc, void** error) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [NSString stringWithContentsOfFile:path encoding:enc error:(NSError* _Nullable* _Nullable)error];
+		if(ret != nil) { [ret retain]; }
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_StringWithContentsOfFileUsedEncoding(void* path, void* enc, void** error) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [NSString stringWithContentsOfFile:path usedEncoding:enc error:(NSError* _Nullable* _Nullable)error];
+		if(ret != nil) { [ret retain]; }
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+void*
+NSString_InstanceMethodSignatureForSelector(void* aSelector) {
+	NSMethodSignature* ret;
+	@autoreleasepool {
+		ret = [NSString instanceMethodSignatureForSelector:aSelector];
+	}
+	return ret;
+
+}
+void*
+NSString_New() {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [NSString new];
+	}
+	return ret;
+
+}
+BOOL
+NSString_InstancesRespondToSelector(void* aSelector) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [NSString instancesRespondToSelector:aSelector];
+	}
+	return ret;
+
+}
+void
+NSString_Load() {
+	@autoreleasepool {
+		[NSString load];
+	}
+}
+NSItemProviderRepresentationVisibility
+NSString_ItemProviderVisibilityForRepresentationWithTypeIdentifier(void* typeIdentifier) {
+	NSItemProviderRepresentationVisibility ret;
+	@autoreleasepool {
+		ret = [NSString itemProviderVisibilityForRepresentationWithTypeIdentifier:typeIdentifier];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_StringWithCString(void* cString, NSStringEncoding enc) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [NSString stringWithCString:cString encoding:enc];
+		if(ret != nil) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSString_Class() {
+	Class ret;
+	@autoreleasepool {
+		ret = [NSString class];
+	}
+	return ret;
+
+}
+void*
+NSString_CopyWithZone(void* zone) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [NSString copyWithZone:zone];
+	}
+	return ret;
+
+}
+void*
+NSString_DebugDescription() {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [NSString debugDescription];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_ReadableTypesForPasteboard(void* pasteboard) {
+	NSArray* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString readableTypesForPasteboard:pasteboard];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_LocalizedStringWithFormat(void* format, void* object) {
+	NSObject** arr = object;
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString localizedStringWithFormat:format , arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7], arr[8], arr[9], arr[10], arr[11], arr[12], arr[13], arr[14], arr[15], nil];
+	}
+	return ret;
+
+}
+NSInteger
+NSString_Version() {
+	NSInteger ret;
+	@autoreleasepool {
+		ret = [NSString version];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_ReadableTypeIdentifiersForItemProvider() {
+	NSArray* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString readableTypeIdentifiersForItemProvider];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_WritableTypeIdentifiersForItemProvider() {
+	NSArray* _Nonnull ret;
+	@autoreleasepool {
+		ret = [NSString writableTypeIdentifiersForItemProvider];
+	}
+	return ret;
+
+}
+NSUInteger
+NSString_inst_Hash(void* o) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSString*)o hash];
+	}
+	return ret;
+
+}
+void
+NSString_inst_DoesNotRecognizeSelector(void* o, void* aSelector) {
+	@autoreleasepool {
+		[(NSString*)o doesNotRecognizeSelector:aSelector];
+	}
+}
+BOOL
+NSString_inst_IsMemberOfClass(void* o, void* aClass) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o isMemberOfClass:aClass];
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_IsEqualToString(void* o, void* aString) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o isEqualToString:aString];
+	}
+	return ret;
+
+}
+int
+NSString_inst_IntValue(void* o) {
+	int ret;
+	@autoreleasepool {
+		ret = [(NSString*)o intValue];
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_LocalizedStandardContainsString(void* o, void* str) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o localizedStandardContainsString:str];
+	}
+	return ret;
+
+}
+NSComparisonResult
+NSString_inst_LocalizedStandardCompare(void* o, void* string) {
+	NSComparisonResult ret;
+	@autoreleasepool {
+		ret = [(NSString*)o localizedStandardCompare:string];
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_RangeOfComposedCharacterSequenceAtIndex(void* o, NSUInteger index) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o rangeOfComposedCharacterSequenceAtIndex:index];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_InitWithFormat(void* o, void* format, void* object) {
+	NSObject** arr = object;
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithFormat:format , arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7], arr[8], arr[9], arr[10], arr[11], arr[12], arr[13], arr[14], arr[15], nil];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_InitWithFormatLocale(void* o, void* format, void* locale, void* object) {
+	NSObject** arr = object;
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithFormat:format locale:locale , arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7], arr[8], arr[9], arr[10], arr[11], arr[12], arr[13], arr[14], arr[15], nil];
+	}
+	return ret;
+
+}
+long long
+NSString_inst_LongLongValue(void* o) {
+	long long ret;
+	@autoreleasepool {
+		ret = [(NSString*)o longLongValue];
+	}
+	return ret;
+
+}
+NSComparisonResult
+NSString_inst_CaseInsensitiveCompare(void* o, void* string) {
+	NSComparisonResult ret;
+	@autoreleasepool {
+		ret = [(NSString*)o caseInsensitiveCompare:string];
+	}
+	return ret;
+
+}
+void*
+NSString_inst_Retain(void* o) {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o retain];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSString_inst_Superclass(void* o) {
+	Class ret;
+	@autoreleasepool {
+		ret = [(NSString*)o superclass];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithUTF8String(void* o, void* nullTerminatedCString) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithUTF8String:nullTerminatedCString];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_LocalizedCapitalizedString(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o localizedCapitalizedString];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_StringByApplyingTransform(void* o, void* transform, BOOL reverse) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByApplyingTransform:transform reverse:reverse];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_ComponentsSeparatedByString(void* o, void* separator) {
+	NSArray* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o componentsSeparatedByString:separator];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSItemProviderRepresentationVisibility
+NSString_inst_ItemProviderVisibilityForRepresentationWithTypeIdentifier(void* o, void* typeIdentifier) {
+	NSItemProviderRepresentationVisibility ret;
+	@autoreleasepool {
+		ret = [(NSString*)o itemProviderVisibilityForRepresentationWithTypeIdentifier:typeIdentifier];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithCoder(void* o, void* aDecoder) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithCoder:aDecoder];
+	}
+	return ret;
+
+}
+NSUInteger
+NSString_inst_Length(void* o) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSString*)o length];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_DecomposedStringWithCompatibilityMapping(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o decomposedStringWithCompatibilityMapping];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+double
+NSString_inst_DoubleValue(void* o) {
+	double ret;
+	@autoreleasepool {
+		ret = [(NSString*)o doubleValue];
+	}
+	return ret;
+
+}
+NSComparisonResult
+NSString_inst_LocalizedCaseInsensitiveCompare(void* o, void* string) {
+	NSComparisonResult ret;
+	@autoreleasepool {
+		ret = [(NSString*)o localizedCaseInsensitiveCompare:string];
+	}
+	return ret;
+
+}
+void*
+NSString_inst_MutableCopy(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o mutableCopy];
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_LocalizedStandardRangeOfString(void* o, void* str) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o localizedStandardRangeOfString:str];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_InitWithCharactersNoCopy(void* o, void* characters, NSUInteger length, BOOL freeBuffer) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithCharactersNoCopy:characters length:length freeWhenDone:freeBuffer];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithData(void* o, void* data, NSStringEncoding encoding) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithData:data encoding:encoding];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_SubstringWithRange(void* o, NSRange range) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o substringWithRange:range];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_LineRangeForRange(void* o, NSRange range) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o lineRangeForRange:range];
+	}
+	return ret;
+
+}
+void*
+NSString_inst_Zone(void* o) {
+	struct _NSZone* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o zone];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_WritableTypesForPasteboard(void* o, void* pasteboard) {
+	NSArray* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o writableTypesForPasteboard:pasteboard];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void
+NSString_inst_GetCharacters(void* o, void* buffer) {
+	@autoreleasepool {
+		[(NSString*)o getCharacters:buffer];
+	}
+}
+void
+NSString_inst_GetCharactersRange(void* o, void* buffer, NSRange range) {
+	@autoreleasepool {
+		[(NSString*)o getCharacters:buffer range:range];
+	}
+}
+void* _Nonnull
+NSString_inst_StringByAppendingString(void* o, void* aString) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByAppendingString:aString];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void
+NSString_inst_Pasteboard(void* o, void* sender, void* type) {
+	@autoreleasepool {
+		[(NSString*)o pasteboard:sender provideDataForType:type];
+	}
+}
+void
+NSString_inst_Release(void* o) {
+	@autoreleasepool {
+		[(NSString*)o release];
+	}
+}
+void*
+NSString_inst_PerformSelector(void* o, void* aSelector) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o performSelector:aSelector];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSString_inst_PerformSelectorWithObject(void* o, void* aSelector, void* object) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o performSelector:aSelector withObject:object];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSString_inst_PerformSelectorWithObjectWithObject(void* o, void* aSelector, void* object1, void* object2) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o performSelector:aSelector withObject:object1 withObject:object2];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_StringByAppendingFormat(void* o, void* format, void* object) {
+	NSObject** arr = object;
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByAppendingFormat:format , arr[0], arr[1], arr[2], arr[3], arr[4], arr[5], arr[6], arr[7], arr[8], arr[9], arr[10], arr[11], arr[12], arr[13], arr[14], arr[15], nil];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_PropertyList(void* o) {
+	NSObject* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o propertyList];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSUInteger
+NSString_inst_MaximumLengthOfBytesUsingEncoding(void* o, NSStringEncoding enc) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSString*)o maximumLengthOfBytesUsingEncoding:enc];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_InitWithString(void* o, void* aString) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithString:aString];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_DataUsingEncoding(void* o, NSStringEncoding encoding) {
+	NSData* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o dataUsingEncoding:encoding];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_DataUsingEncodingAllowLossyConversion(void* o, NSStringEncoding encoding, BOOL lossy) {
+	NSData* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o dataUsingEncoding:encoding allowLossyConversion:lossy];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithContentsOfFileEncoding(void* o, void* path, NSStringEncoding enc, void** error) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithContentsOfFile:path encoding:enc error:(NSError* _Nullable* _Nullable)error];
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithContentsOfFileUsedEncoding(void* o, void* path, void* enc, void** error) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithContentsOfFile:path usedEncoding:enc error:(NSError* _Nullable* _Nullable)error];
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+NSStringEncoding
+NSString_inst_SmallestEncoding(void* o) {
+	NSStringEncoding ret;
+	@autoreleasepool {
+		ret = [(NSString*)o smallestEncoding];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_LowercaseStringWithLocale(void* o, void* locale) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o lowercaseStringWithLocale:locale];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_GetBytes(void* o, void* buffer, NSUInteger maxBufferCount, void* usedBufferCount, NSStringEncoding encoding, NSStringEncodingConversionOptions options, NSRange range, void* leftover) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o getBytes:buffer maxLength:maxBufferCount usedLength:usedBufferCount encoding:encoding options:options range:range remainingRange:leftover];
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_LocalizedCaseInsensitiveContainsString(void* o, void* str) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o localizedCaseInsensitiveContainsString:str];
+	}
+	return ret;
+
+}
+void
+NSString_inst_GetParagraphStart(void* o, void* startPtr, void* parEndPtr, void* contentsEndPtr, NSRange range) {
+	@autoreleasepool {
+		[(NSString*)o getParagraphStart:startPtr end:parEndPtr contentsEnd:contentsEndPtr forRange:range];
+	}
+}
+void* _Nonnull
+NSString_inst_Description(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o description];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+const void* _Nullable
+NSString_inst_CStringUsingEncoding(void* o, NSStringEncoding encoding) {
+	const char* _Nullable ret;
+	@autoreleasepool {
+		ret = strdup([(NSString*)o cStringUsingEncoding:encoding]);
+	}
+	return ret;
+
+}
+NSUInteger
+NSString_inst_LengthOfBytesUsingEncoding(void* o, NSStringEncoding enc) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSString*)o lengthOfBytesUsingEncoding:enc];
+	}
+	return ret;
+
+}
+void*
+NSString_inst_Copy(void* o) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o copy];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_UppercaseStringWithLocale(void* o, void* locale) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o uppercaseStringWithLocale:locale];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_Init(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o init];
+	}
+	return ret;
+
+}
+void
+NSString_inst_PasteboardChangedOwner(void* o, void* sender) {
+	@autoreleasepool {
+		[(NSString*)o pasteboardChangedOwner:sender];
+	}
+}
+void*
+NSString_inst_DebugDescription(void* o) {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o debugDescription];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_GetCString(void* o, void* buffer, NSUInteger maxBufferCount, NSStringEncoding encoding) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o getCString:buffer maxLength:maxBufferCount encoding:encoding];
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_WriteToFile(void* o, void* path, BOOL useAuxiliaryFile, NSStringEncoding enc, void** error) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o writeToFile:path atomically:useAuxiliaryFile encoding:enc error:(NSError* _Nullable* _Nullable)error];
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_DecomposedStringWithCanonicalMapping(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o decomposedStringWithCanonicalMapping];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_StringByReplacingOccurrencesOfStringWithString(void* o, void* target, void* replacement) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByReplacingOccurrencesOfString:target withString:replacement];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_StringByReplacingOccurrencesOfStringWithStringOptions(void* o, void* target, void* replacement, NSStringCompareOptions options, NSRange searchRange) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByReplacingOccurrencesOfString:target withString:replacement options:options range:searchRange];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSComparisonResult
+NSString_inst_Compare(void* o, void* string) {
+	NSComparisonResult ret;
+	@autoreleasepool {
+		ret = [(NSString*)o compare:string];
+	}
+	return ret;
+
+}
+NSComparisonResult
+NSString_inst_CompareOptions(void* o, void* string, NSStringCompareOptions mask) {
+	NSComparisonResult ret;
+	@autoreleasepool {
+		ret = [(NSString*)o compare:string options:mask];
+	}
+	return ret;
+
+}
+NSComparisonResult
+NSString_inst_CompareOptionsRange(void* o, void* string, NSStringCompareOptions mask, NSRange rangeOfReceiverToCompare) {
+	NSComparisonResult ret;
+	@autoreleasepool {
+		ret = [(NSString*)o compare:string options:mask range:rangeOfReceiverToCompare];
+	}
+	return ret;
+
+}
+NSComparisonResult
+NSString_inst_CompareOptionsRangeLocale(void* o, void* string, NSStringCompareOptions mask, NSRange rangeOfReceiverToCompare, void* locale) {
+	NSComparisonResult ret;
+	@autoreleasepool {
+		ret = [(NSString*)o compare:string options:mask range:rangeOfReceiverToCompare locale:locale];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_ClassForCoder(void* o) {
+	Class _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o classForCoder];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_PasteboardPropertyListForType(void* o, void* type) {
+	NSObject* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o pasteboardPropertyListForType:type];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+unichar
+NSString_inst_CharacterAtIndex(void* o, NSUInteger index) {
+	unichar ret;
+	@autoreleasepool {
+		ret = [(NSString*)o characterAtIndex:index];
+	}
+	return ret;
+
+}
+void*
+NSString_inst_ForwardingTargetForSelector(void* o, void* aSelector) {
+	NSObject* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o forwardingTargetForSelector:aSelector];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSString_inst_Self(void* o) {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o self];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSString_inst_Class(void* o) {
+	Class ret;
+	@autoreleasepool {
+		ret = [(NSString*)o class];
+	}
+	return ret;
+
+}
+NSPasteboardWritingOptions
+NSString_inst_WritingOptionsForType(void* o, void* type, void* pasteboard) {
+	NSPasteboardWritingOptions ret;
+	@autoreleasepool {
+		ret = [(NSString*)o writingOptionsForType:type pasteboard:pasteboard];
+	}
+	return ret;
+
+}
+const void* _Nullable
+NSString_inst_UTF8String(void* o) {
+	const char* _Nullable ret;
+	@autoreleasepool {
+		ret = strdup([(NSString*)o UTF8String]);
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_StringByAddingPercentEncodingWithAllowedCharacters(void* o, void* allowedCharacters) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByAddingPercentEncodingWithAllowedCharacters:allowedCharacters];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_CanBeConvertedToEncoding(void* o, NSStringEncoding encoding) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o canBeConvertedToEncoding:encoding];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_AutoContentAccessingProxy(void* o) {
+	NSObject* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o autoContentAccessingProxy];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_WritableTypeIdentifiersForItemProvider(void* o) {
+	NSArray* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o writableTypeIdentifiersForItemProvider];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSStringEncoding
+NSString_inst_FastestEncoding(void* o) {
+	NSStringEncoding ret;
+	@autoreleasepool {
+		ret = [(NSString*)o fastestEncoding];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_StringByTrimmingCharactersInSet(void* o, void* set) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByTrimmingCharactersInSet:set];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithBytesNoCopy(void* o, void* bytes, NSUInteger len, NSStringEncoding encoding, BOOL freeBuffer) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithBytesNoCopy:bytes length:len encoding:encoding freeWhenDone:freeBuffer];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_CapitalizedString(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o capitalizedString];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_IsKindOfClass(void* o, void* aClass) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o isKindOfClass:aClass];
+	}
+	return ret;
+
+}
+NSUInteger
+NSString_inst_RetainCount(void* o) {
+	NSUInteger ret;
+	@autoreleasepool {
+		ret = [(NSString*)o retainCount];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_StringByReplacingCharactersInRange(void* o, NSRange range, void* replacement) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByReplacingCharactersInRange:range withString:replacement];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSComparisonResult
+NSString_inst_LocalizedCompare(void* o, void* string) {
+	NSComparisonResult ret;
+	@autoreleasepool {
+		ret = [(NSString*)o localizedCompare:string];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_MutableCopyWithZone(void* o, void* zone) {
+	NSObject* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o mutableCopyWithZone:zone];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_StringByPaddingToLength(void* o, NSUInteger newLength, void* padString, NSUInteger padIndex) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByPaddingToLength:newLength withString:padString startingAtIndex:padIndex];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_LocalizedUppercaseString(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o localizedUppercaseString];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void
+NSString_inst_GetLineStart(void* o, void* startPtr, void* lineEndPtr, void* contentsEndPtr, NSRange range) {
+	@autoreleasepool {
+		[(NSString*)o getLineStart:startPtr end:lineEndPtr contentsEnd:contentsEndPtr forRange:range];
+	}
+}
+BOOL
+NSString_inst_IsEqual(void* o, void* object) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o isEqual:object];
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_RespondsToSelector(void* o, void* aSelector) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o respondsToSelector:aSelector];
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_ConformsToProtocol(void* o, void* aProtocol) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o conformsToProtocol:aProtocol];
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_RangeOfComposedCharacterSequencesForRange(void* o, NSRange range) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o rangeOfComposedCharacterSequencesForRange:range];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_SubstringToIndex(void* o, NSUInteger to) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o substringToIndex:to];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_StringByFoldingWithOptions(void* o, NSStringCompareOptions options, void* locale) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByFoldingWithOptions:options locale:locale];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_PropertyListFromStringsFileFormat(void* o) {
+	NSDictionary* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o propertyListFromStringsFileFormat];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_HasSuffix(void* o, void* str) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o hasSuffix:str];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_PrecomposedStringWithCompatibilityMapping(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o precomposedStringWithCompatibilityMapping];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_UppercaseString(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o uppercaseString];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_PrecomposedStringWithCanonicalMapping(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o precomposedStringWithCanonicalMapping];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_InitWithCharacters(void* o, void* characters, NSUInteger length) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithCharacters:characters length:length];
+	}
+	return ret;
+
+}
+void*
+NSString_inst_MethodSignatureForSelector(void* o, void* aSelector) {
+	NSMethodSignature* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o methodSignatureForSelector:aSelector];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_CopyWithZone(void* o, void* zone) {
+	NSObject* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o copyWithZone:zone];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_CapitalizedStringWithLocale(void* o, void* locale) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o capitalizedStringWithLocale:locale];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_LocalizedLowercaseString(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o localizedLowercaseString];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_WriteToURL(void* o, void* url, BOOL useAuxiliaryFile, NSStringEncoding enc, void** error) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o writeToURL:url atomically:useAuxiliaryFile encoding:enc error:(NSError* _Nullable* _Nullable)error];
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithCString(void* o, void* nullTerminatedCString, NSStringEncoding encoding) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithCString:nullTerminatedCString encoding:encoding];
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_RangeOfCharacterFromSet(void* o, void* searchSet) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o rangeOfCharacterFromSet:searchSet];
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_RangeOfCharacterFromSetOptions(void* o, void* searchSet, NSStringCompareOptions mask) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o rangeOfCharacterFromSet:searchSet options:mask];
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_RangeOfCharacterFromSetOptionsRange(void* o, void* searchSet, NSStringCompareOptions mask, NSRange rangeOfReceiverToSearch) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o rangeOfCharacterFromSet:searchSet options:mask range:rangeOfReceiverToSearch];
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_IsProxy(void* o) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o isProxy];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithPasteboardPropertyList(void* o, void* propertyList, void* type) {
+	NSObject* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithPasteboardPropertyList:propertyList ofType:type];
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_ContainsString(void* o, void* str) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o containsString:str];
+	}
+	return ret;
+
+}
+NSInteger
+NSString_inst_IntegerValue(void* o) {
+	NSInteger ret;
+	@autoreleasepool {
+		ret = [(NSString*)o integerValue];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_ComponentsSeparatedByCharactersInSet(void* o, void* separator) {
+	NSArray* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o componentsSeparatedByCharactersInSet:separator];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithContentsOfURLEncoding(void* o, void* url, NSStringEncoding enc, void** error) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithContentsOfURL:url encoding:enc error:(NSError* _Nullable* _Nullable)error];
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithContentsOfURLUsedEncoding(void* o, void* url, void* enc, void** error) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithContentsOfURL:url usedEncoding:enc error:(NSError* _Nullable* _Nullable)error];
+		for(int i=0;i<1;i++) {
+			if(error[i] == 0) { break; }
+			[(id)error[i] retain];
+		}
+	
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_ParagraphRangeForRange(void* o, NSRange range) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o paragraphRangeForRange:range];
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_HasPrefix(void* o, void* str) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o hasPrefix:str];
+	}
+	return ret;
+
+}
+void
+NSString_inst_ForwardInvocation(void* o, void* anInvocation) {
+	@autoreleasepool {
+		[(NSString*)o forwardInvocation:anInvocation];
+	}
+}
+void* _Nonnull
+NSString_inst_LowercaseString(void* o) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o lowercaseString];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void*
+NSString_inst_Autorelease(void* o) {
+	NSString* ret;
+	@autoreleasepool {
+		ret = [(NSString*)o autorelease];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_RangeOfString(void* o, void* searchString) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o rangeOfString:searchString];
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_RangeOfStringOptions(void* o, void* searchString, NSStringCompareOptions mask) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o rangeOfString:searchString options:mask];
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_RangeOfStringOptionsRange(void* o, void* searchString, NSStringCompareOptions mask, NSRange rangeOfReceiverToSearch) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o rangeOfString:searchString options:mask range:rangeOfReceiverToSearch];
+	}
+	return ret;
+
+}
+NSRange
+NSString_inst_RangeOfStringOptionsRangeLocale(void* o, void* searchString, NSStringCompareOptions mask, NSRange rangeOfReceiverToSearch, void* locale) {
+	NSRange ret;
+	@autoreleasepool {
+		ret = [(NSString*)o rangeOfString:searchString options:mask range:rangeOfReceiverToSearch locale:locale];
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_SubstringFromIndex(void* o, NSUInteger from) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o substringFromIndex:from];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_InitWithBytes(void* o, void* bytes, NSUInteger len, NSStringEncoding encoding) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o initWithBytes:bytes length:len encoding:encoding];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_StringByRemovingPercentEncoding(void* o) {
+	NSString* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o stringByRemovingPercentEncoding];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+float
+NSString_inst_FloatValue(void* o) {
+	float ret;
+	@autoreleasepool {
+		ret = [(NSString*)o floatValue];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_ReplacementObjectForCoder(void* o, void* aCoder) {
+	NSObject* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o replacementObjectForCoder:aCoder];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void* _Nonnull
+NSString_inst_CommonPrefixWithString(void* o, void* str, NSStringCompareOptions mask) {
+	NSString* _Nonnull ret;
+	@autoreleasepool {
+		ret = [(NSString*)o commonPrefixWithString:str options:mask];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+BOOL
+NSString_inst_BoolValue(void* o) {
+	BOOL ret;
+	@autoreleasepool {
+		ret = [(NSString*)o boolValue];
+	}
+	return ret;
+
+}
+void* _Nullable
+NSString_inst_AwakeAfterUsingCoder(void* o, void* aDecoder) {
+	NSObject* _Nullable ret;
+	@autoreleasepool {
+		ret = [(NSString*)o awakeAfterUsingCoder:aDecoder];
+		if (ret != nil && ret != o) { [ret retain]; }
+	}
+	return ret;
+
+}
+void
+NSString_inst_Dealloc(void* o) {
+	@autoreleasepool {
+		[(NSString*)o dealloc];
+	}
+}
+
+*/
+import "C"
+
+import (
+	"unsafe"
+	"runtime"
+)
+
+
+type Id struct {
+	ptr unsafe.Pointer
+}
+func (o *Id) Ptr() unsafe.Pointer { if o == nil { return nil }; return o.ptr }
+
+type NSObject interface {
+	Ptr() unsafe.Pointer
+}
+
+type Class *C.struct_objc_class
+
+type _NSZone = C.struct__NSZone
+
+type NSString struct { Id }
+func (o *NSString) Ptr() unsafe.Pointer { if o == nil { return nil }; return o.ptr }
+func (o *Id) NSString() *NSString {
+	return (*NSString)(unsafe.Pointer(o))
+}
+
+type BOOL C.uchar
+
+type SEL *C.struct_objc_selector
+
+type NSMethodSignature interface {
+	Ptr() unsafe.Pointer
+}
+
+type NSInteger C.long
+
+type Protocol interface {
+	Ptr() unsafe.Pointer
+}
+
+type NSUInteger C.ulong
+
+type NSInvocation interface {
+	Ptr() unsafe.Pointer
+}
+
+type NSPasteboard struct { Id }
+func (o *NSPasteboard) Ptr() unsafe.Pointer { if o == nil { return nil }; return o.ptr }
+func (o *Id) NSPasteboard() *NSPasteboard {
+	return (*NSPasteboard)(unsafe.Pointer(o))
+}
+
+type NSCoder interface {
+	Ptr() unsafe.Pointer
+}
+
+type NSPasteboardType = *NSString
+
+type NSData interface {
+	Ptr() unsafe.Pointer
+}
+
+type NSArray struct { Id }
+func (o *NSArray) Ptr() unsafe.Pointer { if o == nil { return nil }; return o.ptr }
+func (o *Id) NSArray() *NSArray {
+	return (*NSArray)(unsafe.Pointer(o))
+}
+
+type NSPasteboardName = *NSString
+
+type NSPasteboardContentsOptions C.enum_NSPasteboardContentsOptions
+
+type NSPasteboardItem interface {
+	Ptr() unsafe.Pointer
+}
+
+type NSDictionary struct { Id }
+func (o *NSDictionary) Ptr() unsafe.Pointer { if o == nil { return nil }; return o.ptr }
+func (o *Id) NSDictionary() *NSDictionary {
+	return (*NSDictionary)(unsafe.Pointer(o))
+}
+
+type NSFileWrapper interface {
+	Ptr() unsafe.Pointer
+}
+
+type NSURL struct { Id }
+func (o *NSURL) Ptr() unsafe.Pointer { if o == nil { return nil }; return o.ptr }
+func (o *Id) NSURL() *NSURL {
+	return (*NSURL)(unsafe.Pointer(o))
+}
+
+type NSStringEncoding C.NSUInteger
+
+type NSError interface {
+	Ptr() unsafe.Pointer
+}
+
+type Unichar C.ushort
+
+type Char C.char
+
+type NSPasteboardReadingOptions C.enum_NSPasteboardReadingOptions
+
+type NSItemProviderRepresentationVisibility C.enum_NSItemProviderRepresentationVisibility
+
+type Int C.int
+
+type NSComparisonResult C.enum_NSComparisonResult
+
+type NSRange = C.struct__NSRange
+
+type LongLong C.longlong
+
+type NSStringTransform = *NSString
+
+type Double C.double
+
+type NSLocale interface {
+	Ptr() unsafe.Pointer
+}
+
+type NSStringEncodingConversionOptions C.enum_NSStringEncodingConversionOptions
+
+type NSRangePointer *C.NSRange
+
+type NSStringCompareOptions C.enum_NSStringCompareOptions
+
+type NSPasteboardWritingOptions C.enum_NSPasteboardWritingOptions
+
+type NSCharacterSet struct { Id }
+func (o *NSCharacterSet) Ptr() unsafe.Pointer { if o == nil { return nil }; return o.ptr }
+func (o *Id) NSCharacterSet() *NSCharacterSet {
+	return (*NSCharacterSet)(unsafe.Pointer(o))
+}
+
+type NSZone = C.struct__NSZone
+
+type Float C.float
+const NSPasteboardContentsCurrentHostOnly NSUInteger= C.NSPasteboardContentsCurrentHostOnly
+
+const NSPasteboardWritingPromised NSUInteger= C.NSPasteboardWritingPromised
+
+const NSPasteboardReadingAsData NSUInteger= C.NSPasteboardReadingAsData
+const NSPasteboardReadingAsString NSUInteger= C.NSPasteboardReadingAsString
+const NSPasteboardReadingAsPropertyList NSUInteger= C.NSPasteboardReadingAsPropertyList
+const NSPasteboardReadingAsKeyedArchive NSUInteger= C.NSPasteboardReadingAsKeyedArchive
+
+
+func Selector(s string) SEL {
+	return (SEL)(unsafe.Pointer(C.selectorFromString(C.CString(s))))
+}
+
+func (o *NSString) String() string {
+	utf8 := o.UTF8String()
+	ret := utf8.String()
+	utf8.Free()
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func CharWithGoString(s string) *Char {
+	return (*Char)(unsafe.Pointer(C.CString(s)))
+}
+
+func CharWithBytes(b []byte) *Char {
+	return (*Char)(unsafe.Pointer(C.CString(string(b))))
+}
+
+func (c *Char) String() string {
+	return C.GoString((*C.char)(c))
+}
+
+func (c *Char) Free() {
+	C.free(unsafe.Pointer(c))
+}
+
+func NSObjectClass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSObject_Class()))
+	return ret
+}
+
+func NSObjectCopyWithZone(zone *_NSZone) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_CopyWithZone(unsafe.Pointer(zone)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSObjectDescription() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSObject_Description())
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSObjectResolveInstanceMethod(sel SEL) bool {
+	ret := (C.NSObject_ResolveInstanceMethod(unsafe.Pointer(sel))) != 0
+	return ret
+}
+
+func NSObjectIsSubclassOfClass(aClass Class) bool {
+	ret := (C.NSObject_IsSubclassOfClass(unsafe.Pointer(aClass))) != 0
+	return ret
+}
+
+func NSObjectDebugDescription() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSObject_DebugDescription())
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSObjectResolveClassMethod(sel SEL) bool {
+	ret := (C.NSObject_ResolveClassMethod(unsafe.Pointer(sel))) != 0
+	return ret
+}
+
+func NSObjectInstanceMethodSignatureForSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_InstanceMethodSignatureForSelector(unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSObjectVersion() NSInteger {
+	ret := (NSInteger)(C.NSObject_Version())
+	return ret
+}
+
+func NSObjectConformsToProtocol(protocol Protocol) bool {
+	ret := (C.NSObject_ConformsToProtocol(protocol.Ptr())) != 0
+	return ret
+}
+
+func NSObjectAllocWithZone(zone *_NSZone) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_AllocWithZone(unsafe.Pointer(zone)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSObjectNew() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_New())
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSObjectMutableCopyWithZone(zone *_NSZone) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_MutableCopyWithZone(unsafe.Pointer(zone)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSObjectSuperclass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSObject_Superclass()))
+	return ret
+}
+
+func NSObjectInstancesRespondToSelector(aSelector SEL) bool {
+	ret := (C.NSObject_InstancesRespondToSelector(unsafe.Pointer(aSelector))) != 0
+	return ret
+}
+
+func NSObjectAlloc() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_Alloc())
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	return ret
+}
+
+func (o *Id) GC() {
+	if o.ptr == nil { return }
+	runtime.SetFinalizer(o, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+}
+
+func NSObjectLoad()  {
+	C.NSObject_Load()
+}
+
+func NSObjectHash() NSUInteger {
+	ret := (NSUInteger)(C.NSObject_Hash())
+	return ret
+}
+
+func NSObjectSetVersion(aVersion NSInteger)  {
+	C.NSObject_SetVersion((C.NSInteger)(aVersion))
+}
+
+func (o *Id) ForwardInvocation(anInvocation NSInvocation)  {
+	C.NSObject_inst_ForwardInvocation(o.Ptr(), anInvocation.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *Id) MutableCopy() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_MutableCopy(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) DoesNotRecognizeSelector(aSelector SEL)  {
+	C.NSObject_inst_DoesNotRecognizeSelector(o.Ptr(), unsafe.Pointer(aSelector))
+	runtime.KeepAlive(o)
+}
+
+func (o *Id) IsEqual(object NSObject) bool {
+	ret := (C.NSObject_inst_IsEqual(o.Ptr(), object.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) IsProxy() bool {
+	ret := (C.NSObject_inst_IsProxy(o.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) PasteboardChangedOwner(sender *NSPasteboard)  {
+	C.NSObject_inst_PasteboardChangedOwner(o.Ptr(), sender.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *Id) Retain() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_Retain(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Superclass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSObject_inst_Superclass(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) ForwardingTargetForSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_ForwardingTargetForSelector(o.Ptr(), unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) AutoContentAccessingProxy() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_AutoContentAccessingProxy(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) IsMemberOfClass(aClass Class) bool {
+	ret := (C.NSObject_inst_IsMemberOfClass(o.Ptr(), unsafe.Pointer(aClass))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) RespondsToSelector(aSelector SEL) bool {
+	ret := (C.NSObject_inst_RespondsToSelector(o.Ptr(), unsafe.Pointer(aSelector))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Self() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_Self(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) ConformsToProtocol(aProtocol Protocol) bool {
+	ret := (C.NSObject_inst_ConformsToProtocol(o.Ptr(), aProtocol.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Description() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_Description(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Zone() *_NSZone {
+	ret := (*_NSZone)(unsafe.Pointer(C.NSObject_inst_Zone(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) IsKindOfClass(aClass Class) bool {
+	ret := (C.NSObject_inst_IsKindOfClass(o.Ptr(), unsafe.Pointer(aClass))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) DebugDescription() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_DebugDescription(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) PerformSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_PerformSelector(o.Ptr(), unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) PerformSelectorWithObject(aSelector SEL, object NSObject) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_PerformSelectorWithObject(o.Ptr(), unsafe.Pointer(aSelector), object.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) PerformSelectorWithObjectWithObject(aSelector SEL, object1 NSObject, object2 NSObject) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_PerformSelectorWithObjectWithObject(o.Ptr(), unsafe.Pointer(aSelector), object1.Ptr(), object2.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Hash() NSUInteger {
+	ret := (NSUInteger)(C.NSObject_inst_Hash(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) MethodSignatureForSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_MethodSignatureForSelector(o.Ptr(), unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) AwakeAfterUsingCoder(aDecoder NSCoder) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_AwakeAfterUsingCoder(o.Ptr(), aDecoder.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Pasteboard(sender *NSPasteboard, type_ NSPasteboardType)  {
+	C.NSObject_inst_Pasteboard(o.Ptr(), sender.Ptr(), type_.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *Id) ClassForCoder() Class {
+	ret := (Class)(unsafe.Pointer(C.NSObject_inst_ClassForCoder(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Release()  {
+	C.NSObject_inst_Release(o.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *Id) RetainCount() NSUInteger {
+	ret := (NSUInteger)(C.NSObject_inst_RetainCount(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Copy() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_Copy(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) ReplacementObjectForCoder(aCoder NSCoder) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_ReplacementObjectForCoder(o.Ptr(), aCoder.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Init() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_Init(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) GetClass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSObject_inst_Class(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Autorelease() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSObject_inst_Autorelease(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *Id) Dealloc()  {
+	C.NSObject_inst_Dealloc(o.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func NSPasteboardByFilteringData(data NSData, type_ NSPasteboardType) *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_PasteboardByFilteringData(data.Ptr(), type_.Ptr()))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSPasteboardIsSubclassOfClass(aClass Class) bool {
+	ret := (C.NSPasteboard_IsSubclassOfClass(unsafe.Pointer(aClass))) != 0
+	return ret
+}
+
+func NSPasteboardResolveClassMethod(sel SEL) bool {
+	ret := (C.NSPasteboard_ResolveClassMethod(unsafe.Pointer(sel))) != 0
+	return ret
+}
+
+func NSPasteboardHash() NSUInteger {
+	ret := (NSUInteger)(C.NSPasteboard_Hash())
+	return ret
+}
+
+func NSPasteboardSetVersion(aVersion NSInteger)  {
+	C.NSPasteboard_SetVersion((C.NSInteger)(aVersion))
+}
+
+func NSPasteboardWithUniqueName() *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_PasteboardWithUniqueName())
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSPasteboardByFilteringFile(filename *NSString) *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_PasteboardByFilteringFile(filename.Ptr()))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSPasteboardConformsToProtocol(protocol Protocol) bool {
+	ret := (C.NSPasteboard_ConformsToProtocol(protocol.Ptr())) != 0
+	return ret
+}
+
+func NSPasteboardSuperclass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSPasteboard_Superclass()))
+	return ret
+}
+
+func NSPasteboardByFilteringTypesInPasteboard(pboard *NSPasteboard) *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_PasteboardByFilteringTypesInPasteboard(pboard.Ptr()))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSPasteboardClass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSPasteboard_Class()))
+	return ret
+}
+
+func NSPasteboardMutableCopyWithZone(zone *_NSZone) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_MutableCopyWithZone(unsafe.Pointer(zone)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSPasteboardInstancesRespondToSelector(aSelector SEL) bool {
+	ret := (C.NSPasteboard_InstancesRespondToSelector(unsafe.Pointer(aSelector))) != 0
+	return ret
+}
+
+func NSPasteboardTypesFilterableTo(type_ NSPasteboardType) *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_TypesFilterableTo(type_.Ptr()))
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSPasteboardLoad()  {
+	C.NSPasteboard_Load()
+}
+
+func NSPasteboardGeneralPasteboard() *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_GeneralPasteboard())
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSPasteboardAllocWithZone(zone *_NSZone) *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_AllocWithZone(unsafe.Pointer(zone)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSPasteboardNew() *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_New())
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSPasteboardDescription() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_Description())
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSPasteboardResolveInstanceMethod(sel SEL) bool {
+	ret := (C.NSPasteboard_ResolveInstanceMethod(unsafe.Pointer(sel))) != 0
+	return ret
+}
+
+func NSPasteboardDebugDescription() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_DebugDescription())
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSPasteboardAlloc() *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_Alloc())
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	return ret
+}
+
+func (o *NSPasteboard) GC() {
+	if o.ptr == nil { return }
+	runtime.SetFinalizer(o, func(o *NSPasteboard) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+}
+
+func NSPasteboardWithName(name NSPasteboardName) *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_PasteboardWithName(name.Ptr()))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSPasteboardCopyWithZone(zone *_NSZone) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_CopyWithZone(unsafe.Pointer(zone)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSPasteboardInstanceMethodSignatureForSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_InstanceMethodSignatureForSelector(unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSPasteboardVersion() NSInteger {
+	ret := (NSInteger)(C.NSPasteboard_Version())
+	return ret
+}
+
+func (o *NSPasteboard) PasteboardChangedOwner(sender *NSPasteboard)  {
+	C.NSPasteboard_inst_PasteboardChangedOwner(o.Ptr(), sender.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSPasteboard) Superclass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSPasteboard_inst_Superclass(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ConformsToProtocol(aProtocol Protocol) bool {
+	ret := (C.NSPasteboard_inst_ConformsToProtocol(o.Ptr(), aProtocol.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Hash() NSUInteger {
+	ret := (NSUInteger)(C.NSPasteboard_inst_Hash(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) DataForType(dataType NSPasteboardType) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_DataForType(o.Ptr(), dataType.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ClearContents() NSInteger {
+	ret := (NSInteger)(C.NSPasteboard_inst_ClearContents(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) StringForType(dataType NSPasteboardType) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_StringForType(o.Ptr(), dataType.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) GetClass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSPasteboard_inst_Class(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) PrepareForNewContentsWithOptions(options NSPasteboardContentsOptions) NSInteger {
+	ret := (NSInteger)(C.NSPasteboard_inst_PrepareForNewContentsWithOptions(o.Ptr(), (C.NSPasteboardContentsOptions)(options)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) RetainCount() NSUInteger {
+	ret := (NSUInteger)(C.NSPasteboard_inst_RetainCount(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) SetPropertyList(plist NSObject, dataType NSPasteboardType) bool {
+	ret := (C.NSPasteboard_inst_SetPropertyList(o.Ptr(), plist.Ptr(), dataType.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ReleaseGlobally()  {
+	C.NSPasteboard_inst_ReleaseGlobally(o.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSPasteboard) DoesNotRecognizeSelector(aSelector SEL)  {
+	C.NSPasteboard_inst_DoesNotRecognizeSelector(o.Ptr(), unsafe.Pointer(aSelector))
+	runtime.KeepAlive(o)
+}
+
+func (o *NSPasteboard) IsKindOfClass(aClass Class) bool {
+	ret := (C.NSPasteboard_inst_IsKindOfClass(o.Ptr(), unsafe.Pointer(aClass))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) DebugDescription() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_DebugDescription(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Dealloc()  {
+	C.NSPasteboard_inst_Dealloc(o.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSPasteboard) Types() *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_Types(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSArray)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSArray) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) IndexOfPasteboardItem(pasteboardItem NSPasteboardItem) NSUInteger {
+	ret := (NSUInteger)(C.NSPasteboard_inst_IndexOfPasteboardItem(o.Ptr(), pasteboardItem.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ReadObjectsForClasses(classArray *NSArray, options *NSDictionary) *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_ReadObjectsForClasses(o.Ptr(), classArray.Ptr(), options.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSArray)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSArray) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ForwardInvocation(anInvocation NSInvocation)  {
+	C.NSPasteboard_inst_ForwardInvocation(o.Ptr(), anInvocation.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSPasteboard) IsEqual(object NSObject) bool {
+	ret := (C.NSPasteboard_inst_IsEqual(o.Ptr(), object.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) PasteboardItems() *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_PasteboardItems(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSArray)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSArray) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) MutableCopy() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_MutableCopy(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Zone() *_NSZone {
+	ret := (*_NSZone)(unsafe.Pointer(C.NSPasteboard_inst_Zone(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ReadFileWrapper() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_ReadFileWrapper(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) AddTypes(newTypes *NSArray, newOwner NSObject) NSInteger {
+	ret := (NSInteger)(C.NSPasteboard_inst_AddTypes(o.Ptr(), newTypes.Ptr(), newOwner.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) DeclareTypes(newTypes *NSArray, newOwner NSObject) NSInteger {
+	ret := (NSInteger)(C.NSPasteboard_inst_DeclareTypes(o.Ptr(), newTypes.Ptr(), newOwner.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Self() *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_Self(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSPasteboard)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) SetString(string *NSString, dataType NSPasteboardType) bool {
+	ret := (C.NSPasteboard_inst_SetString(o.Ptr(), string.Ptr(), dataType.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) RespondsToSelector(aSelector SEL) bool {
+	ret := (C.NSPasteboard_inst_RespondsToSelector(o.Ptr(), unsafe.Pointer(aSelector))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) MethodSignatureForSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_MethodSignatureForSelector(o.Ptr(), unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) AwakeAfterUsingCoder(aDecoder NSCoder) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_AwakeAfterUsingCoder(o.Ptr(), aDecoder.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ClassForCoder() Class {
+	ret := (Class)(unsafe.Pointer(C.NSPasteboard_inst_ClassForCoder(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) WriteFileContents(filename *NSString) bool {
+	ret := (C.NSPasteboard_inst_WriteFileContents(o.Ptr(), filename.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ChangeCount() NSInteger {
+	ret := (NSInteger)(C.NSPasteboard_inst_ChangeCount(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Retain() *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_Retain(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSPasteboard)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) WriteObjects(objects *NSArray) bool {
+	ret := (C.NSPasteboard_inst_WriteObjects(o.Ptr(), objects.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) CanReadObjectForClasses(classArray *NSArray, options *NSDictionary) bool {
+	ret := (C.NSPasteboard_inst_CanReadObjectForClasses(o.Ptr(), classArray.Ptr(), options.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) PerformSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_PerformSelector(o.Ptr(), unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) PerformSelectorWithObject(aSelector SEL, object NSObject) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_PerformSelectorWithObject(o.Ptr(), unsafe.Pointer(aSelector), object.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) PerformSelectorWithObjectWithObject(aSelector SEL, object1 NSObject, object2 NSObject) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_PerformSelectorWithObjectWithObject(o.Ptr(), unsafe.Pointer(aSelector), object1.Ptr(), object2.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Init() *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_Init(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSPasteboard)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Name() NSPasteboardName {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_Name(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (NSPasteboardName)(unsafe.Pointer(o)) }
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) AutoContentAccessingProxy() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_AutoContentAccessingProxy(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) IsMemberOfClass(aClass Class) bool {
+	ret := (C.NSPasteboard_inst_IsMemberOfClass(o.Ptr(), unsafe.Pointer(aClass))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Release()  {
+	C.NSPasteboard_inst_Release(o.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSPasteboard) SetData(data NSData, dataType NSPasteboardType) bool {
+	ret := (C.NSPasteboard_inst_SetData(o.Ptr(), data.Ptr(), dataType.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) IsProxy() bool {
+	ret := (C.NSPasteboard_inst_IsProxy(o.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ForwardingTargetForSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_ForwardingTargetForSelector(o.Ptr(), unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Description() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_Description(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ReplacementObjectForCoder(aCoder NSCoder) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_ReplacementObjectForCoder(o.Ptr(), aCoder.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) AvailableTypeFromArray(types *NSArray) NSPasteboardType {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_AvailableTypeFromArray(o.Ptr(), types.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (NSPasteboardType)(unsafe.Pointer(o)) }
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Pasteboard(sender *NSPasteboard, type_ NSPasteboardType)  {
+	C.NSPasteboard_inst_Pasteboard(o.Ptr(), sender.Ptr(), type_.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSPasteboard) Autorelease() *NSPasteboard {
+	ret := &NSPasteboard{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_Autorelease(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSPasteboard)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSPasteboard) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) PropertyListForType(dataType NSPasteboardType) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_PropertyListForType(o.Ptr(), dataType.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) CanReadItemWithDataConformingToTypes(types *NSArray) bool {
+	ret := (C.NSPasteboard_inst_CanReadItemWithDataConformingToTypes(o.Ptr(), types.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) WriteFileWrapper(wrapper NSFileWrapper) bool {
+	ret := (C.NSPasteboard_inst_WriteFileWrapper(o.Ptr(), wrapper.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) ReadFileContentsType(type_ NSPasteboardType, filename *NSString) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_ReadFileContentsType(o.Ptr(), type_.Ptr(), filename.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSPasteboard) Copy() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSPasteboard_inst_Copy(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func NSStringWithContentsOfURLEncoding(url *NSURL, enc NSStringEncoding, error *[]*Id) *NSString {
+
+	goSlice2 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice2[i] = (*error)[i].Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_StringWithContentsOfURLEncoding(url.Ptr(), (C.NSStringEncoding)(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice2[0]))))
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice2[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice2[i]
+	}
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringWithContentsOfURLUsedEncoding(url *NSURL, enc *NSStringEncoding, error *[]*Id) *NSString {
+
+	goSlice2 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice2[i] = (*error)[i].Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_StringWithContentsOfURLUsedEncoding(url.Ptr(), unsafe.Pointer(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice2[0]))))
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice2[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice2[i]
+	}
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringAlloc() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_Alloc())
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func (o *NSString) GC() {
+	if o.ptr == nil { return }
+	runtime.SetFinalizer(o, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+}
+
+func NSStringHash() NSUInteger {
+	ret := (NSUInteger)(C.NSString_Hash())
+	return ret
+}
+
+func NSStringObjectWithItemProviderData(data NSData, typeIdentifier *NSString, outError *[]*Id) *NSString {
+
+	goSlice2 := make([]unsafe.Pointer,cap(*outError))
+	for i := 0; i < len(*outError); i++ {
+		goSlice2[i] = (*outError)[i].Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_ObjectWithItemProviderData(data.Ptr(), typeIdentifier.Ptr(), (*unsafe.Pointer)(unsafe.Pointer(&goSlice2[0]))))
+	(*outError) = (*outError)[:cap(*outError)]
+	for i := 0; i < len(*outError); i++ {
+		if goSlice2[i] == nil {
+			(*outError) = (*outError)[:i]
+			break
+		}
+		if (*outError)[i] == nil {
+			(*outError)[i] = &Id{}
+			runtime.SetFinalizer((*outError)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*outError)[i].ptr = goSlice2[i]
+	}
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSStringAvailableStringEncodings() *NSStringEncoding {
+	ret := (*NSStringEncoding)(unsafe.Pointer(C.NSString_AvailableStringEncodings()))
+	return ret
+}
+
+func NSStringWithCharacters(characters *Unichar, length NSUInteger) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_StringWithCharacters(unsafe.Pointer(characters), (C.NSUInteger)(length)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringSuperclass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSString_Superclass()))
+	return ret
+}
+
+func NSStringSupportsSecureCoding() bool {
+	ret := (C.NSString_SupportsSecureCoding()) != 0
+	return ret
+}
+
+func NSStringLocalizedNameOfStringEncoding(encoding NSStringEncoding) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_LocalizedNameOfStringEncoding((C.NSStringEncoding)(encoding)))
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSStringString() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_String())
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringWithFormat(format *NSString, objects ...NSObject) *NSString {
+	var object [16]unsafe.Pointer
+	for i,o := range objects {
+		object[i] = o.Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_StringWithFormat(format.Ptr(), unsafe.Pointer(&object)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringDescription() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_Description())
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSStringIsSubclassOfClass(aClass Class) bool {
+	ret := (C.NSString_IsSubclassOfClass(unsafe.Pointer(aClass))) != 0
+	return ret
+}
+
+func NSStringResolveClassMethod(sel SEL) bool {
+	ret := (C.NSString_ResolveClassMethod(unsafe.Pointer(sel))) != 0
+	return ret
+}
+
+func NSStringDefaultCStringEncoding() NSStringEncoding {
+	ret := (NSStringEncoding)(C.NSString_DefaultCStringEncoding())
+	return ret
+}
+
+func NSStringWithString(string *NSString) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_StringWithString(string.Ptr()))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringWithGoString(string string) *NSString {
+	string_chr := CharWithGoString(string)
+	defer string_chr.Free()
+	ret := NSStringWithString(NSStringWithUTF8String(string_chr))
+	return ret
+}
+
+func NSStringWithUTF8String(nullTerminatedCString *Char) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_StringWithUTF8String(unsafe.Pointer(nullTerminatedCString)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringConformsToProtocol(protocol Protocol) bool {
+	ret := (C.NSString_ConformsToProtocol(protocol.Ptr())) != 0
+	return ret
+}
+
+func NSStringSetVersion(aVersion NSInteger)  {
+	C.NSString_SetVersion((C.NSInteger)(aVersion))
+}
+
+func NSStringResolveInstanceMethod(sel SEL) bool {
+	ret := (C.NSString_ResolveInstanceMethod(unsafe.Pointer(sel))) != 0
+	return ret
+}
+
+func NSStringAllocWithZone(zone *_NSZone) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_AllocWithZone(unsafe.Pointer(zone)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringMutableCopyWithZone(zone *_NSZone) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_MutableCopyWithZone(unsafe.Pointer(zone)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringReadingOptionsForType(type_ NSPasteboardType, pasteboard *NSPasteboard) NSPasteboardReadingOptions {
+	ret := (NSPasteboardReadingOptions)(C.NSString_ReadingOptionsForType(type_.Ptr(), pasteboard.Ptr()))
+	return ret
+}
+
+func NSStringEncodingForData(data NSData, opts *NSDictionary, string *[]*NSString, usedLossyConversion *BOOL) NSStringEncoding {
+
+	goSlice2 := make([]unsafe.Pointer,cap(*string))
+	for i := 0; i < len(*string); i++ {
+		goSlice2[i] = (*string)[i].Ptr()
+	}
+	ret := (NSStringEncoding)(C.NSString_StringEncodingForData(data.Ptr(), opts.Ptr(), (*unsafe.Pointer)(unsafe.Pointer(&goSlice2[0])), unsafe.Pointer(usedLossyConversion)))
+	(*string) = (*string)[:cap(*string)]
+	for i := 0; i < len(*string); i++ {
+		if goSlice2[i] == nil {
+			(*string) = (*string)[:i]
+			break
+		}
+		if (*string)[i] == nil {
+			(*string)[i] = &NSString{}
+			runtime.SetFinalizer((*string)[i], func(o *NSString) {
+				o.Release()
+			})
+		}
+		(*string)[i].ptr = goSlice2[i]
+	}
+	return ret
+}
+
+func NSStringWithContentsOfFileEncoding(path *NSString, enc NSStringEncoding, error *[]*Id) *NSString {
+
+	goSlice2 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice2[i] = (*error)[i].Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_StringWithContentsOfFileEncoding(path.Ptr(), (C.NSStringEncoding)(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice2[0]))))
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice2[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice2[i]
+	}
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringWithContentsOfFileUsedEncoding(path *NSString, enc *NSStringEncoding, error *[]*Id) *NSString {
+
+	goSlice2 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice2[i] = (*error)[i].Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_StringWithContentsOfFileUsedEncoding(path.Ptr(), unsafe.Pointer(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice2[0]))))
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice2[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice2[i]
+	}
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringInstanceMethodSignatureForSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_InstanceMethodSignatureForSelector(unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSStringNew() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_New())
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringInstancesRespondToSelector(aSelector SEL) bool {
+	ret := (C.NSString_InstancesRespondToSelector(unsafe.Pointer(aSelector))) != 0
+	return ret
+}
+
+func NSStringLoad()  {
+	C.NSString_Load()
+}
+
+func NSStringItemProviderVisibilityForRepresentationWithTypeIdentifier(typeIdentifier *NSString) NSItemProviderRepresentationVisibility {
+	ret := (NSItemProviderRepresentationVisibility)(C.NSString_ItemProviderVisibilityForRepresentationWithTypeIdentifier(typeIdentifier.Ptr()))
+	return ret
+}
+
+func NSStringWithCString(cString *Char, enc NSStringEncoding) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_StringWithCString(unsafe.Pointer(cString), (C.NSStringEncoding)(enc)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringClass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSString_Class()))
+	return ret
+}
+
+func NSStringCopyWithZone(zone *_NSZone) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_CopyWithZone(unsafe.Pointer(zone)))
+	if ret.ptr == nil { return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	return ret
+}
+
+func NSStringDebugDescription() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_DebugDescription())
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSStringReadableTypesForPasteboard(pasteboard *NSPasteboard) *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSString_ReadableTypesForPasteboard(pasteboard.Ptr()))
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSStringLocalizedStringWithFormat(format *NSString, objects ...NSObject) *NSString {
+	var object [16]unsafe.Pointer
+	for i,o := range objects {
+		object[i] = o.Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_LocalizedStringWithFormat(format.Ptr(), unsafe.Pointer(&object)))
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSStringVersion() NSInteger {
+	ret := (NSInteger)(C.NSString_Version())
+	return ret
+}
+
+func NSStringReadableTypeIdentifiersForItemProvider() *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSString_ReadableTypeIdentifiersForItemProvider())
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func NSStringWritableTypeIdentifiersForItemProvider() *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSString_WritableTypeIdentifiersForItemProvider())
+	if ret.ptr == nil { return ret }
+	return ret
+}
+
+func (o *NSString) Hash() NSUInteger {
+	ret := (NSUInteger)(C.NSString_inst_Hash(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) DoesNotRecognizeSelector(aSelector SEL)  {
+	C.NSString_inst_DoesNotRecognizeSelector(o.Ptr(), unsafe.Pointer(aSelector))
+	runtime.KeepAlive(o)
+}
+
+func (o *NSString) IsMemberOfClass(aClass Class) bool {
+	ret := (C.NSString_inst_IsMemberOfClass(o.Ptr(), unsafe.Pointer(aClass))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) IsEqualToString(aString *NSString) bool {
+	ret := (C.NSString_inst_IsEqualToString(o.Ptr(), aString.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) IntValue() Int {
+	ret := (Int)(C.NSString_inst_IntValue(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LocalizedStandardContainsString(str *NSString) bool {
+	ret := (C.NSString_inst_LocalizedStandardContainsString(o.Ptr(), str.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LocalizedStandardCompare(string *NSString) NSComparisonResult {
+	ret := (NSComparisonResult)(C.NSString_inst_LocalizedStandardCompare(o.Ptr(), string.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RangeOfComposedCharacterSequenceAtIndex(index NSUInteger) NSRange {
+	ret := (NSRange)(C.NSString_inst_RangeOfComposedCharacterSequenceAtIndex(o.Ptr(), (C.NSUInteger)(index)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithFormat(format *NSString, objects ...NSObject) *NSString {
+	var object [16]unsafe.Pointer
+	for i,o := range objects {
+		object[i] = o.Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithFormat(o.Ptr(), format.Ptr(), unsafe.Pointer(&object)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithFormatLocale(format *NSString, locale NSObject, objects ...NSObject) *NSString {
+	var object [16]unsafe.Pointer
+	for i,o := range objects {
+		object[i] = o.Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithFormatLocale(o.Ptr(), format.Ptr(), locale.Ptr(), unsafe.Pointer(&object)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LongLongValue() LongLong {
+	ret := (LongLong)(C.NSString_inst_LongLongValue(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CaseInsensitiveCompare(string *NSString) NSComparisonResult {
+	ret := (NSComparisonResult)(C.NSString_inst_CaseInsensitiveCompare(o.Ptr(), string.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Retain() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_Retain(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Superclass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSString_inst_Superclass(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithUTF8String(nullTerminatedCString *Char) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithUTF8String(o.Ptr(), unsafe.Pointer(nullTerminatedCString)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LocalizedCapitalizedString() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_LocalizedCapitalizedString(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByApplyingTransform(transform NSStringTransform, reverse BOOL) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByApplyingTransform(o.Ptr(), transform.Ptr(), (C.BOOL)(reverse)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ComponentsSeparatedByString(separator *NSString) *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_ComponentsSeparatedByString(o.Ptr(), separator.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSArray)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSArray) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ItemProviderVisibilityForRepresentationWithTypeIdentifier(typeIdentifier *NSString) NSItemProviderRepresentationVisibility {
+	ret := (NSItemProviderRepresentationVisibility)(C.NSString_inst_ItemProviderVisibilityForRepresentationWithTypeIdentifier(o.Ptr(), typeIdentifier.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithCoder(aDecoder NSCoder) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithCoder(o.Ptr(), aDecoder.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Length() NSUInteger {
+	ret := (NSUInteger)(C.NSString_inst_Length(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) DecomposedStringWithCompatibilityMapping() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_DecomposedStringWithCompatibilityMapping(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) DoubleValue() Double {
+	ret := (Double)(C.NSString_inst_DoubleValue(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LocalizedCaseInsensitiveCompare(string *NSString) NSComparisonResult {
+	ret := (NSComparisonResult)(C.NSString_inst_LocalizedCaseInsensitiveCompare(o.Ptr(), string.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) MutableCopy() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_MutableCopy(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LocalizedStandardRangeOfString(str *NSString) NSRange {
+	ret := (NSRange)(C.NSString_inst_LocalizedStandardRangeOfString(o.Ptr(), str.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithCharactersNoCopy(characters *Unichar, length NSUInteger, freeBuffer BOOL) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithCharactersNoCopy(o.Ptr(), unsafe.Pointer(characters), (C.NSUInteger)(length), (C.BOOL)(freeBuffer)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithData(data NSData, encoding NSStringEncoding) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithData(o.Ptr(), data.Ptr(), (C.NSStringEncoding)(encoding)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) SubstringWithRange(range_ NSRange) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_SubstringWithRange(o.Ptr(), (C.NSRange)(range_)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LineRangeForRange(range_ NSRange) NSRange {
+	ret := (NSRange)(C.NSString_inst_LineRangeForRange(o.Ptr(), (C.NSRange)(range_)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Zone() *_NSZone {
+	ret := (*_NSZone)(unsafe.Pointer(C.NSString_inst_Zone(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) WritableTypesForPasteboard(pasteboard *NSPasteboard) *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_WritableTypesForPasteboard(o.Ptr(), pasteboard.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSArray)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSArray) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) GetCharacters(buffer *Unichar)  {
+	C.NSString_inst_GetCharacters(o.Ptr(), unsafe.Pointer(buffer))
+	runtime.KeepAlive(o)
+}
+
+func (o *NSString) GetCharactersRange(buffer *Unichar, range_ NSRange)  {
+	C.NSString_inst_GetCharactersRange(o.Ptr(), unsafe.Pointer(buffer), (C.NSRange)(range_))
+	runtime.KeepAlive(o)
+}
+
+func (o *NSString) StringByAppendingString(aString *NSString) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByAppendingString(o.Ptr(), aString.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Pasteboard(sender *NSPasteboard, type_ NSPasteboardType)  {
+	C.NSString_inst_Pasteboard(o.Ptr(), sender.Ptr(), type_.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSString) Release()  {
+	C.NSString_inst_Release(o.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSString) PerformSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_PerformSelector(o.Ptr(), unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) PerformSelectorWithObject(aSelector SEL, object NSObject) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_PerformSelectorWithObject(o.Ptr(), unsafe.Pointer(aSelector), object.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) PerformSelectorWithObjectWithObject(aSelector SEL, object1 NSObject, object2 NSObject) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_PerformSelectorWithObjectWithObject(o.Ptr(), unsafe.Pointer(aSelector), object1.Ptr(), object2.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByAppendingFormat(format *NSString, objects ...NSObject) *NSString {
+	var object [16]unsafe.Pointer
+	for i,o := range objects {
+		object[i] = o.Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByAppendingFormat(o.Ptr(), format.Ptr(), unsafe.Pointer(&object)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) PropertyList() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_PropertyList(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) MaximumLengthOfBytesUsingEncoding(enc NSStringEncoding) NSUInteger {
+	ret := (NSUInteger)(C.NSString_inst_MaximumLengthOfBytesUsingEncoding(o.Ptr(), (C.NSStringEncoding)(enc)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithString(aString *NSString) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithString(o.Ptr(), aString.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithGoString(aString string) *NSString {
+	aString_chr := CharWithGoString(aString)
+	defer aString_chr.Free()
+	ret := o.InitWithString(NSStringWithUTF8String(aString_chr))
+	return ret
+}
+
+func (o *NSString) DataUsingEncoding(encoding NSStringEncoding) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_DataUsingEncoding(o.Ptr(), (C.NSStringEncoding)(encoding)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) DataUsingEncodingAllowLossyConversion(encoding NSStringEncoding, lossy BOOL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_DataUsingEncodingAllowLossyConversion(o.Ptr(), (C.NSStringEncoding)(encoding), (C.BOOL)(lossy)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithContentsOfFileEncoding(path *NSString, enc NSStringEncoding, error *[]*Id) *NSString {
+
+	goSlice3 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice3[i] = (*error)[i].Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithContentsOfFileEncoding(o.Ptr(), path.Ptr(), (C.NSStringEncoding)(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice3[0]))))
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice3[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice3[i]
+	}
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithContentsOfFileUsedEncoding(path *NSString, enc *NSStringEncoding, error *[]*Id) *NSString {
+
+	goSlice3 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice3[i] = (*error)[i].Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithContentsOfFileUsedEncoding(o.Ptr(), path.Ptr(), unsafe.Pointer(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice3[0]))))
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice3[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice3[i]
+	}
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) SmallestEncoding() NSStringEncoding {
+	ret := (NSStringEncoding)(C.NSString_inst_SmallestEncoding(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LowercaseStringWithLocale(locale NSLocale) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_LowercaseStringWithLocale(o.Ptr(), locale.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) GetBytes(buffer unsafe.Pointer, maxBufferCount NSUInteger, usedBufferCount *NSUInteger, encoding NSStringEncoding, options NSStringEncodingConversionOptions, range_ NSRange, leftover NSRangePointer) bool {
+	ret := (C.NSString_inst_GetBytes(o.Ptr(), unsafe.Pointer(buffer), (C.NSUInteger)(maxBufferCount), unsafe.Pointer(usedBufferCount), (C.NSStringEncoding)(encoding), (C.NSStringEncodingConversionOptions)(options), (C.NSRange)(range_), unsafe.Pointer(leftover))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LocalizedCaseInsensitiveContainsString(str *NSString) bool {
+	ret := (C.NSString_inst_LocalizedCaseInsensitiveContainsString(o.Ptr(), str.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) GetParagraphStart(startPtr *NSUInteger, parEndPtr *NSUInteger, contentsEndPtr *NSUInteger, range_ NSRange)  {
+	C.NSString_inst_GetParagraphStart(o.Ptr(), unsafe.Pointer(startPtr), unsafe.Pointer(parEndPtr), unsafe.Pointer(contentsEndPtr), (C.NSRange)(range_))
+	runtime.KeepAlive(o)
+}
+
+func (o *NSString) Description() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_Description(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CStringUsingEncoding(encoding NSStringEncoding) *Char {
+	ret := (*Char)(unsafe.Pointer(C.NSString_inst_CStringUsingEncoding(o.Ptr(), (C.NSStringEncoding)(encoding))))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LengthOfBytesUsingEncoding(enc NSStringEncoding) NSUInteger {
+	ret := (NSUInteger)(C.NSString_inst_LengthOfBytesUsingEncoding(o.Ptr(), (C.NSStringEncoding)(enc)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Copy() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_Copy(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) UppercaseStringWithLocale(locale NSLocale) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_UppercaseStringWithLocale(o.Ptr(), locale.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Init() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_Init(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) PasteboardChangedOwner(sender *NSPasteboard)  {
+	C.NSString_inst_PasteboardChangedOwner(o.Ptr(), sender.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSString) DebugDescription() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_DebugDescription(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) GetCString(buffer *Char, maxBufferCount NSUInteger, encoding NSStringEncoding) bool {
+	ret := (C.NSString_inst_GetCString(o.Ptr(), unsafe.Pointer(buffer), (C.NSUInteger)(maxBufferCount), (C.NSStringEncoding)(encoding))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) WriteToFile(path *NSString, useAuxiliaryFile BOOL, enc NSStringEncoding, error *[]*Id) bool {
+
+	goSlice4 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice4[i] = (*error)[i].Ptr()
+	}
+	ret := (C.NSString_inst_WriteToFile(o.Ptr(), path.Ptr(), (C.BOOL)(useAuxiliaryFile), (C.NSStringEncoding)(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice4[0])))) != 0
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice4[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice4[i]
+	}
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) DecomposedStringWithCanonicalMapping() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_DecomposedStringWithCanonicalMapping(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByReplacingOccurrencesOfStringWithString(target *NSString, replacement *NSString) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByReplacingOccurrencesOfStringWithString(o.Ptr(), target.Ptr(), replacement.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByReplacingOccurrencesOfStringWithStringOptions(target *NSString, replacement *NSString, options NSStringCompareOptions, searchRange NSRange) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByReplacingOccurrencesOfStringWithStringOptions(o.Ptr(), target.Ptr(), replacement.Ptr(), (C.NSStringCompareOptions)(options), (C.NSRange)(searchRange)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Compare(string *NSString) NSComparisonResult {
+	ret := (NSComparisonResult)(C.NSString_inst_Compare(o.Ptr(), string.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CompareOptions(string *NSString, mask NSStringCompareOptions) NSComparisonResult {
+	ret := (NSComparisonResult)(C.NSString_inst_CompareOptions(o.Ptr(), string.Ptr(), (C.NSStringCompareOptions)(mask)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CompareOptionsRange(string *NSString, mask NSStringCompareOptions, rangeOfReceiverToCompare NSRange) NSComparisonResult {
+	ret := (NSComparisonResult)(C.NSString_inst_CompareOptionsRange(o.Ptr(), string.Ptr(), (C.NSStringCompareOptions)(mask), (C.NSRange)(rangeOfReceiverToCompare)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CompareOptionsRangeLocale(string *NSString, mask NSStringCompareOptions, rangeOfReceiverToCompare NSRange, locale NSObject) NSComparisonResult {
+	ret := (NSComparisonResult)(C.NSString_inst_CompareOptionsRangeLocale(o.Ptr(), string.Ptr(), (C.NSStringCompareOptions)(mask), (C.NSRange)(rangeOfReceiverToCompare), locale.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ClassForCoder() Class {
+	ret := (Class)(unsafe.Pointer(C.NSString_inst_ClassForCoder(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) PasteboardPropertyListForType(type_ NSPasteboardType) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_PasteboardPropertyListForType(o.Ptr(), type_.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CharacterAtIndex(index NSUInteger) Unichar {
+	ret := (Unichar)(C.NSString_inst_CharacterAtIndex(o.Ptr(), (C.NSUInteger)(index)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ForwardingTargetForSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_ForwardingTargetForSelector(o.Ptr(), unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Self() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_Self(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) GetClass() Class {
+	ret := (Class)(unsafe.Pointer(C.NSString_inst_Class(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) WritingOptionsForType(type_ NSPasteboardType, pasteboard *NSPasteboard) NSPasteboardWritingOptions {
+	ret := (NSPasteboardWritingOptions)(C.NSString_inst_WritingOptionsForType(o.Ptr(), type_.Ptr(), pasteboard.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) UTF8String() *Char {
+	ret := (*Char)(unsafe.Pointer(C.NSString_inst_UTF8String(o.Ptr())))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByAddingPercentEncodingWithAllowedCharacters(allowedCharacters *NSCharacterSet) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByAddingPercentEncodingWithAllowedCharacters(o.Ptr(), allowedCharacters.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CanBeConvertedToEncoding(encoding NSStringEncoding) bool {
+	ret := (C.NSString_inst_CanBeConvertedToEncoding(o.Ptr(), (C.NSStringEncoding)(encoding))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) AutoContentAccessingProxy() *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_AutoContentAccessingProxy(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) WritableTypeIdentifiersForItemProvider() *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_WritableTypeIdentifiersForItemProvider(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSArray)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSArray) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) FastestEncoding() NSStringEncoding {
+	ret := (NSStringEncoding)(C.NSString_inst_FastestEncoding(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByTrimmingCharactersInSet(set *NSCharacterSet) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByTrimmingCharactersInSet(o.Ptr(), set.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithBytesNoCopy(bytes unsafe.Pointer, len_ NSUInteger, encoding NSStringEncoding, freeBuffer BOOL) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithBytesNoCopy(o.Ptr(), unsafe.Pointer(bytes), (C.NSUInteger)(len_), (C.NSStringEncoding)(encoding), (C.BOOL)(freeBuffer)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CapitalizedString() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_CapitalizedString(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) IsKindOfClass(aClass Class) bool {
+	ret := (C.NSString_inst_IsKindOfClass(o.Ptr(), unsafe.Pointer(aClass))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RetainCount() NSUInteger {
+	ret := (NSUInteger)(C.NSString_inst_RetainCount(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByReplacingCharactersInRange(range_ NSRange, replacement *NSString) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByReplacingCharactersInRange(o.Ptr(), (C.NSRange)(range_), replacement.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LocalizedCompare(string *NSString) NSComparisonResult {
+	ret := (NSComparisonResult)(C.NSString_inst_LocalizedCompare(o.Ptr(), string.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) MutableCopyWithZone(zone *NSZone) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_MutableCopyWithZone(o.Ptr(), unsafe.Pointer(zone)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByPaddingToLength(newLength NSUInteger, padString *NSString, padIndex NSUInteger) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByPaddingToLength(o.Ptr(), (C.NSUInteger)(newLength), padString.Ptr(), (C.NSUInteger)(padIndex)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LocalizedUppercaseString() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_LocalizedUppercaseString(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) GetLineStart(startPtr *NSUInteger, lineEndPtr *NSUInteger, contentsEndPtr *NSUInteger, range_ NSRange)  {
+	C.NSString_inst_GetLineStart(o.Ptr(), unsafe.Pointer(startPtr), unsafe.Pointer(lineEndPtr), unsafe.Pointer(contentsEndPtr), (C.NSRange)(range_))
+	runtime.KeepAlive(o)
+}
+
+func (o *NSString) IsEqual(object NSObject) bool {
+	ret := (C.NSString_inst_IsEqual(o.Ptr(), object.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RespondsToSelector(aSelector SEL) bool {
+	ret := (C.NSString_inst_RespondsToSelector(o.Ptr(), unsafe.Pointer(aSelector))) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ConformsToProtocol(aProtocol Protocol) bool {
+	ret := (C.NSString_inst_ConformsToProtocol(o.Ptr(), aProtocol.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RangeOfComposedCharacterSequencesForRange(range_ NSRange) NSRange {
+	ret := (NSRange)(C.NSString_inst_RangeOfComposedCharacterSequencesForRange(o.Ptr(), (C.NSRange)(range_)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) SubstringToIndex(to NSUInteger) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_SubstringToIndex(o.Ptr(), (C.NSUInteger)(to)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByFoldingWithOptions(options NSStringCompareOptions, locale NSLocale) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByFoldingWithOptions(o.Ptr(), (C.NSStringCompareOptions)(options), locale.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) PropertyListFromStringsFileFormat() *NSDictionary {
+	ret := &NSDictionary{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_PropertyListFromStringsFileFormat(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSDictionary)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSDictionary) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) HasSuffix(str *NSString) bool {
+	ret := (C.NSString_inst_HasSuffix(o.Ptr(), str.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) PrecomposedStringWithCompatibilityMapping() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_PrecomposedStringWithCompatibilityMapping(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) UppercaseString() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_UppercaseString(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) PrecomposedStringWithCanonicalMapping() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_PrecomposedStringWithCanonicalMapping(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithCharacters(characters *Unichar, length NSUInteger) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithCharacters(o.Ptr(), unsafe.Pointer(characters), (C.NSUInteger)(length)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) MethodSignatureForSelector(aSelector SEL) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_MethodSignatureForSelector(o.Ptr(), unsafe.Pointer(aSelector)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CopyWithZone(zone *NSZone) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_CopyWithZone(o.Ptr(), unsafe.Pointer(zone)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CapitalizedStringWithLocale(locale NSLocale) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_CapitalizedStringWithLocale(o.Ptr(), locale.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) LocalizedLowercaseString() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_LocalizedLowercaseString(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) WriteToURL(url *NSURL, useAuxiliaryFile BOOL, enc NSStringEncoding, error *[]*Id) bool {
+
+	goSlice4 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice4[i] = (*error)[i].Ptr()
+	}
+	ret := (C.NSString_inst_WriteToURL(o.Ptr(), url.Ptr(), (C.BOOL)(useAuxiliaryFile), (C.NSStringEncoding)(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice4[0])))) != 0
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice4[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice4[i]
+	}
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithCString(nullTerminatedCString *Char, encoding NSStringEncoding) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithCString(o.Ptr(), unsafe.Pointer(nullTerminatedCString), (C.NSStringEncoding)(encoding)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RangeOfCharacterFromSet(searchSet *NSCharacterSet) NSRange {
+	ret := (NSRange)(C.NSString_inst_RangeOfCharacterFromSet(o.Ptr(), searchSet.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RangeOfCharacterFromSetOptions(searchSet *NSCharacterSet, mask NSStringCompareOptions) NSRange {
+	ret := (NSRange)(C.NSString_inst_RangeOfCharacterFromSetOptions(o.Ptr(), searchSet.Ptr(), (C.NSStringCompareOptions)(mask)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RangeOfCharacterFromSetOptionsRange(searchSet *NSCharacterSet, mask NSStringCompareOptions, rangeOfReceiverToSearch NSRange) NSRange {
+	ret := (NSRange)(C.NSString_inst_RangeOfCharacterFromSetOptionsRange(o.Ptr(), searchSet.Ptr(), (C.NSStringCompareOptions)(mask), (C.NSRange)(rangeOfReceiverToSearch)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) IsProxy() bool {
+	ret := (C.NSString_inst_IsProxy(o.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithPasteboardPropertyList(propertyList NSObject, type_ NSPasteboardType) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithPasteboardPropertyList(o.Ptr(), propertyList.Ptr(), type_.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ContainsString(str *NSString) bool {
+	ret := (C.NSString_inst_ContainsString(o.Ptr(), str.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) IntegerValue() NSInteger {
+	ret := (NSInteger)(C.NSString_inst_IntegerValue(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ComponentsSeparatedByCharactersInSet(separator *NSCharacterSet) *NSArray {
+	ret := &NSArray{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_ComponentsSeparatedByCharactersInSet(o.Ptr(), separator.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSArray)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSArray) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithContentsOfURLEncoding(url *NSURL, enc NSStringEncoding, error *[]*Id) *NSString {
+
+	goSlice3 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice3[i] = (*error)[i].Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithContentsOfURLEncoding(o.Ptr(), url.Ptr(), (C.NSStringEncoding)(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice3[0]))))
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice3[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice3[i]
+	}
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithContentsOfURLUsedEncoding(url *NSURL, enc *NSStringEncoding, error *[]*Id) *NSString {
+
+	goSlice3 := make([]unsafe.Pointer,cap(*error))
+	for i := 0; i < len(*error); i++ {
+		goSlice3[i] = (*error)[i].Ptr()
+	}
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithContentsOfURLUsedEncoding(o.Ptr(), url.Ptr(), unsafe.Pointer(enc), (*unsafe.Pointer)(unsafe.Pointer(&goSlice3[0]))))
+	(*error) = (*error)[:cap(*error)]
+	for i := 0; i < len(*error); i++ {
+		if goSlice3[i] == nil {
+			(*error) = (*error)[:i]
+			break
+		}
+		if (*error)[i] == nil {
+			(*error)[i] = &Id{}
+			runtime.SetFinalizer((*error)[i], func(o *Id) {
+				o.Release()
+			})
+		}
+		(*error)[i].ptr = goSlice3[i]
+	}
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ParagraphRangeForRange(range_ NSRange) NSRange {
+	ret := (NSRange)(C.NSString_inst_ParagraphRangeForRange(o.Ptr(), (C.NSRange)(range_)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) HasPrefix(str *NSString) bool {
+	ret := (C.NSString_inst_HasPrefix(o.Ptr(), str.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ForwardInvocation(anInvocation NSInvocation)  {
+	C.NSString_inst_ForwardInvocation(o.Ptr(), anInvocation.Ptr())
+	runtime.KeepAlive(o)
+}
+
+func (o *NSString) LowercaseString() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_LowercaseString(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Autorelease() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_Autorelease(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RangeOfString(searchString *NSString) NSRange {
+	ret := (NSRange)(C.NSString_inst_RangeOfString(o.Ptr(), searchString.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RangeOfStringOptions(searchString *NSString, mask NSStringCompareOptions) NSRange {
+	ret := (NSRange)(C.NSString_inst_RangeOfStringOptions(o.Ptr(), searchString.Ptr(), (C.NSStringCompareOptions)(mask)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RangeOfStringOptionsRange(searchString *NSString, mask NSStringCompareOptions, rangeOfReceiverToSearch NSRange) NSRange {
+	ret := (NSRange)(C.NSString_inst_RangeOfStringOptionsRange(o.Ptr(), searchString.Ptr(), (C.NSStringCompareOptions)(mask), (C.NSRange)(rangeOfReceiverToSearch)))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) RangeOfStringOptionsRangeLocale(searchString *NSString, mask NSStringCompareOptions, rangeOfReceiverToSearch NSRange, locale NSLocale) NSRange {
+	ret := (NSRange)(C.NSString_inst_RangeOfStringOptionsRangeLocale(o.Ptr(), searchString.Ptr(), (C.NSStringCompareOptions)(mask), (C.NSRange)(rangeOfReceiverToSearch), locale.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) SubstringFromIndex(from NSUInteger) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_SubstringFromIndex(o.Ptr(), (C.NSUInteger)(from)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) InitWithBytes(bytes unsafe.Pointer, len_ NSUInteger, encoding NSStringEncoding) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_InitWithBytes(o.Ptr(), unsafe.Pointer(bytes), (C.NSUInteger)(len_), (C.NSStringEncoding)(encoding)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) StringByRemovingPercentEncoding() *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_StringByRemovingPercentEncoding(o.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) FloatValue() Float {
+	ret := (Float)(C.NSString_inst_FloatValue(o.Ptr()))
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) ReplacementObjectForCoder(aCoder NSCoder) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_ReplacementObjectForCoder(o.Ptr(), aCoder.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CommonPrefixWithString(str *NSString, mask NSStringCompareOptions) *NSString {
+	ret := &NSString{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_CommonPrefixWithString(o.Ptr(), str.Ptr(), (C.NSStringCompareOptions)(mask)))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*NSString)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *NSString) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) CommonPrefixWithGoString(str string, mask NSStringCompareOptions) *NSString {
+	str_chr := CharWithGoString(str)
+	defer str_chr.Free()
+	ret := o.CommonPrefixWithString(NSStringWithUTF8String(str_chr), mask)
+	return ret
+}
+
+func (o *NSString) BoolValue() bool {
+	ret := (C.NSString_inst_BoolValue(o.Ptr())) != 0
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) AwakeAfterUsingCoder(aDecoder NSCoder) *Id {
+	ret := &Id{}
+	ret.ptr = unsafe.Pointer(C.NSString_inst_AwakeAfterUsingCoder(o.Ptr(), aDecoder.Ptr()))
+	if ret.ptr == nil { runtime.KeepAlive(o); return ret }
+	if ret.ptr == o.ptr { runtime.KeepAlive(o); return (*Id)(unsafe.Pointer(o)) }
+	runtime.SetFinalizer(ret, func(o *Id) {
+		o.Release()
+	})
+	runtime.KeepAlive(o)
+	return ret
+}
+
+func (o *NSString) Dealloc()  {
+	C.NSString_inst_Dealloc(o.Ptr())
+	runtime.KeepAlive(o)
+}
