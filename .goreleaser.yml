@@ -1,3 +1,7 @@
+before:
+    hooks:
+    - sudo apt install xorg-dev libgl1-mesa-dev
+    - go mod vendor
 builds:
   -
     id: darktile
