@@ -273,8 +273,6 @@ func (g *GUI) handleMouseRemotely(x, y int, pressedLeft, pressedMiddle, pressedR
 
 	mode := g.terminal.GetMouseMode()
 
-	fmt.Printf("MM: 0x%X\r\n", mode)
-
 	switch mode {
 	case termutil.MouseModeNone:
 		return false
