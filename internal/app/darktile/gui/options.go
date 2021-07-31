@@ -8,6 +8,13 @@ func WithFontFamily(family string) func(g *GUI) error {
 	}
 }
 
+func WithOpacity(opacity float64) func(g *GUI) error {
+	return func(g *GUI) error {
+		g.opacity = opacity
+		return nil
+	}
+}
+
 func WithFontSize(size float64) func(g *GUI) error {
 	return func(g *GUI) error {
 		g.fontManager.SetSize(size)
