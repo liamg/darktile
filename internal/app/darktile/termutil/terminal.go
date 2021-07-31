@@ -27,6 +27,8 @@ type Terminal struct {
 	closeChan         chan struct{}
 	buffers           []*Buffer
 	activeBuffer      *Buffer
+	mouseMode         MouseMode
+	mouseExtMode      MouseExtMode
 	logFile           *os.File
 	theme             *Theme
 	running           bool
@@ -283,6 +285,14 @@ func (t *Terminal) switchBuffer(index uint8) {
 	if carrySize {
 		t.activeBuffer.resizeView(w, h)
 	}
+}
+
+func (t *Terminal) GetMouseMode() MouseMode {
+	return t.mouseMode
+}
+
+func (t *Terminal) GetMouseExtMode() MouseExtMode {
+	return t.mouseExtMode
 }
 
 func (t *Terminal) GetActiveBuffer() *Buffer {

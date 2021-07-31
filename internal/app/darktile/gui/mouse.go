@@ -271,7 +271,7 @@ func (g *GUI) handleMouseRemotely(x, y int, pressedLeft, pressedMiddle, pressedR
 
 	tx, ty := 1+(x/g.fontManager.CharSize().X), 1+(y/g.fontManager.CharSize().Y)
 
-	mode := g.terminal.GetActiveBuffer().GetMouseMode()
+	mode := g.terminal.GetMouseMode()
 
 	switch mode {
 	case termutil.MouseModeNone:
@@ -295,7 +295,7 @@ func (g *GUI) handleMouseRemotely(x, y int, pressedLeft, pressedMiddle, pressedR
 
 		var button rune
 
-		extMode := g.terminal.GetActiveBuffer().GetMouseExtMode()
+		extMode := g.terminal.GetMouseExtMode()
 
 		switch true {
 		case pressedLeft:

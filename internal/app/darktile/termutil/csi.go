@@ -717,11 +717,9 @@ func (t *Terminal) csiSetMode(modes string, enabled bool) bool {
 			t.activeBuffer.modes.AutoWrap = enabled
 		case "?9":
 			if enabled {
-				//terminal.logger.Infof("Turning on X10 mouse mode")
-				t.activeBuffer.mouseMode = (MouseModeX10)
+				t.mouseMode = (MouseModeX10)
 			} else {
-				//terminal.logger.Infof("Turning off X10 mouse mode")
-				t.activeBuffer.mouseMode = (MouseModeNone)
+				t.mouseMode = (MouseModeNone)
 			}
 		case "?12", "?13":
 			t.activeBuffer.modes.BlinkingCursor = enabled
@@ -737,46 +735,40 @@ func (t *Terminal) csiSetMode(modes string, enabled bool) bool {
 			// enable mouse tracking
 			// 1000 refers to ext mode for extended mouse click area - otherwise only x <= 255-31
 			if enabled {
-				t.activeBuffer.mouseMode = (MouseModeVT200)
+				t.mouseMode = (MouseModeVT200)
 			} else {
-				t.activeBuffer.mouseMode = (MouseModeNone)
+				t.mouseMode = (MouseModeNone)
 			}
 		case "?1002":
 			if enabled {
-				//terminal.logger.Infof("Turning on Button Event mouse mode")
-				t.activeBuffer.mouseMode = (MouseModeButtonEvent)
+				t.mouseMode = (MouseModeButtonEvent)
 			} else {
-				//terminal.logger.Infof("Turning off Button Event mouse mode")
-				t.activeBuffer.mouseMode = (MouseModeNone)
+				t.mouseMode = (MouseModeNone)
 			}
 		case "?1003":
 			if enabled {
-				t.activeBuffer.mouseMode = MouseModeAnyEvent
+				t.mouseMode = MouseModeAnyEvent
 			} else {
-				t.activeBuffer.mouseMode = MouseModeNone
+				t.mouseMode = MouseModeNone
 			}
 		case "?1005":
 			if enabled {
-				t.activeBuffer.mouseExtMode = MouseExtUTF
+				t.mouseExtMode = MouseExtUTF
 			} else {
-				t.activeBuffer.mouseExtMode = MouseExtNone
+				t.mouseExtMode = MouseExtNone
 			}
 
 		case "?1006":
 			if enabled {
-				//.logger.Infof("Turning on SGR ext mouse mode")
-				t.activeBuffer.mouseExtMode = MouseExtSGR
+				t.mouseExtMode = MouseExtSGR
 			} else {
-				//terminal.logger.Infof("Turning off SGR ext mouse mode")
-				t.activeBuffer.mouseExtMode = (MouseExtNone)
+				t.mouseExtMode = (MouseExtNone)
 			}
 		case "?1015":
 			if enabled {
-				//terminal.logger.Infof("Turning on URXVT ext mouse mode")
-				t.activeBuffer.mouseExtMode = (MouseExtURXVT)
+				t.mouseExtMode = (MouseExtURXVT)
 			} else {
-				//terminal.logger.Infof("Turning off URXVT ext mouse mode")
-				t.activeBuffer.mouseExtMode = (MouseExtNone)
+				t.mouseExtMode = (MouseExtNone)
 			}
 		case "?1048":
 			if enabled {
