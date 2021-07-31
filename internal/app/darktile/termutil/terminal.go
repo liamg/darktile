@@ -157,11 +157,14 @@ func (t *Terminal) Run(updateChan chan struct{}, rows uint16, cols uint16) error
 	}
 
 	// Set stdin in raw mode.
-	oldState, err := term.MakeRaw(int(os.Stdin.Fd()))
-	if err != nil {
-		t.windowManipulator.ReportError(err)
+
+	if fd := int(os.Stdin.Fd()); term.IsTerminal(fd) {
+		oldState, err := term.MakeRaw(fd)
+		if err != nil {
+			t.windowManipulator.ReportError(err)
+		}
+		defer func() { _ = term.Restore(fd, oldState) }() // Best effort.
 	}
-	defer func() { _ = term.Restore(int(os.Stdin.Fd()), oldState) }() // Best effort.
 
 	go t.process()
 
