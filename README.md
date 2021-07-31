@@ -22,7 +22,13 @@ Install dependencies:
 - `xorg-dev`
 - `libgl1-mesa-dev`
 
-Grab a binary from the [latest release](https://github.com/liamg/darktile/releases/latest).
+Grab a binary from the [latest release](https://github.com/liamg/darktile/releases/latest), `chmod +x` it and place it in your `$PATH`.
+
+If you're too lazy to do the above and you like to live life on the edge, you can pipe this script to sudo:
+
+```bash
+curl -s "https://raw.githubusercontent.com/liamg/darktile/main/scripts/install.sh" | sudo bash
+```
 
 ## Configuration
 
