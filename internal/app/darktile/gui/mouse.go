@@ -121,6 +121,9 @@ func (g *GUI) handleMouse() error {
 				Col:  uint16(col),
 			})
 		}
+
+		ebiten.ScheduleFrame()
+
 	} else {
 		g.mouseDrag = false
 	}
@@ -222,7 +225,7 @@ func (g *GUI) handleClick(clickCount, x, y int) (bool, error) {
 		line := uint64(y / g.fontManager.CharSize().Y)
 		g.terminal.GetActiveBuffer().SelectWordAt(termutil.Position{Col: col, Line: line}, wordMatcher)
 		return true, nil
-	case 3: // triple click
+	default: // triple click (or more!)
 		g.terminal.GetActiveBuffer().ExtendSelectionToEntireLines()
 		return true, nil
 	}

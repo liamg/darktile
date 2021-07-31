@@ -168,6 +168,8 @@ func (g *GUI) handleInput() error {
 		return g.terminal.WriteToPty([]byte{0x09}) // tab
 
 	case g.keyState.RepeatPressed(ebiten.KeyEscape):
+		g.terminal.GetActiveBuffer().ClearSelection()
+		g.terminal.GetActiveBuffer().ClearHighlight()
 		return g.terminal.WriteToPty([]byte{0x1b}) // escape
 	case g.keyState.RepeatPressed(ebiten.KeyBackspace):
 		if ebiten.IsKeyPressed(ebiten.KeyAlt) {
