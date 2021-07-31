@@ -25,8 +25,6 @@ type Buffer struct {
 	charsets              []*map[rune]rune // array of 2 charsets, nil means ASCII (no conversion)
 	currentCharset        int              // active charset index in charsets array, valid values are 0 or 1
 	modes                 Modes
-	mouseMode             MouseMode
-	mouseExtMode          MouseExtMode
 	selectionStart        *Position
 	selectionEnd          *Position
 	highlightStart        *Position
@@ -78,14 +76,6 @@ func NewBuffer(width, height uint16, maxLines uint64, fg color.Color, bg color.C
 
 func (buffer *Buffer) IsCursorVisible() bool {
 	return buffer.modes.ShowCursor
-}
-
-func (buffer *Buffer) GetMouseMode() MouseMode {
-	return buffer.mouseMode
-}
-
-func (buffer *Buffer) GetMouseExtMode() MouseExtMode {
-	return buffer.mouseExtMode
 }
 
 func (buffer *Buffer) IsApplicationCursorKeysModeEnabled() bool {
