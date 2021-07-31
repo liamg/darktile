@@ -318,4 +318,5 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 	opt := &ebiten.DrawImageOptions{}
 	opt.ColorM.Scale(1, 1, 1, g.opacity)
 	screen.DrawImage(tmp, opt)
+	tmp.Dispose()
 }
