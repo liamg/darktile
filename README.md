@@ -27,7 +27,7 @@ Grab a binary from the [latest release](https://github.com/liamg/darktile/releas
 If you're too lazy to do the above and you like to live life on the edge, you can pipe this script to sudo:
 
 ```bash
-curl -s "https://raw.githubusercontent.com/liamg/darktile/master/scripts/install.sh" | sudo bash
+curl -s "https://raw.githubusercontent.com/liamg/darktile/main/scripts/install.sh" | sudo bash
 ```
 
 ## Configuration
