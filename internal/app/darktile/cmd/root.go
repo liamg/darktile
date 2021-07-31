@@ -90,6 +90,7 @@ var rootCmd = &cobra.Command{
 			gui.WithFontDPI(conf.Font.DPI),
 			gui.WithFontSize(conf.Font.Size),
 			gui.WithFontFamily(conf.Font.Family),
+			gui.WithOpacity(conf.Opacity),
 		}
 
 		if screenshotAfterMS > 0 {

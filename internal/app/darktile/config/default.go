@@ -73,7 +73,7 @@ func LoadThemeFromPath(conf *Config, path string) (*termutil.Theme, error) {
 
 func loadThemeFromConf(conf *Config, themeConf *Theme) (*termutil.Theme, error) {
 
-	factory := termutil.NewThemeFactory().WithOpacity(conf.Opacity)
+	factory := termutil.NewThemeFactory()
 
 	colours := map[termutil.Colour]string{
 		termutil.ColourBlack:               themeConf.Black,

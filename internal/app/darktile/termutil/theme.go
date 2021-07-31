@@ -35,7 +35,6 @@ const (
 )
 
 type Theme struct {
-	alpha     uint8
 	colourMap map[Colour]color.Color
 }
 
@@ -87,7 +86,7 @@ func (t *Theme) ColourFrom4Bit(code uint8) color.Color {
 func (t *Theme) DefaultBackground() color.Color {
 	c, ok := t.colourMap[ColourBackground]
 	if !ok {
-		return color.RGBA{0, 0, 0, t.alpha}
+		return color.RGBA{0, 0, 0, 0xff}
 	}
 	return c
 }
@@ -95,7 +94,7 @@ func (t *Theme) DefaultBackground() color.Color {
 func (t *Theme) DefaultForeground() color.Color {
 	c, ok := t.colourMap[ColourForeground]
 	if !ok {
-		return color.RGBA{255, 255, 255, t.alpha}
+		return color.RGBA{255, 255, 255, 0xff}
 	}
 	return c
 }
@@ -103,7 +102,7 @@ func (t *Theme) DefaultForeground() color.Color {
 func (t *Theme) SelectionBackground() color.Color {
 	c, ok := t.colourMap[ColourSelectionBackground]
 	if !ok {
-		return color.RGBA{0, 0, 0, t.alpha}
+		return color.RGBA{0, 0, 0, 0xff}
 	}
 	return c
 }
@@ -111,7 +110,7 @@ func (t *Theme) SelectionBackground() color.Color {
 func (t *Theme) SelectionForeground() color.Color {
 	c, ok := t.colourMap[ColourSelectionForeground]
 	if !ok {
-		return color.RGBA{255, 255, 255, t.alpha}
+		return color.RGBA{255, 255, 255, 0xff}
 	}
 	return c
 }
@@ -119,7 +118,7 @@ func (t *Theme) SelectionForeground() color.Color {
 func (t *Theme) CursorBackground() color.Color {
 	c, ok := t.colourMap[ColourCursorBackground]
 	if !ok {
-		return color.RGBA{255, 255, 255, t.alpha}
+		return color.RGBA{255, 255, 255, 0xff}
 	}
 	return c
 }
@@ -127,7 +126,7 @@ func (t *Theme) CursorBackground() color.Color {
 func (t *Theme) CursorForeground() color.Color {
 	c, ok := t.colourMap[ColourCursorForeground]
 	if !ok {
-		return color.RGBA{0, 0, 0, t.alpha}
+		return color.RGBA{0, 0, 0, 0xff}
 	}
 	return c
 }
@@ -149,12 +148,12 @@ func (t *Theme) ColourFrom8Bit(n string) (color.Color, error) {
 			R: byte(c),
 			G: byte(c),
 			B: byte(c),
-			A: t.alpha,
+			A: 0xff,
 		}, nil
 	}
 
 	var colour color.RGBA
-	colour.A = t.alpha
+	colour.A = 0xff
 	indexR := ((index - 16) / 36)
 	if indexR > 0 {
 		colour.R = uint8(55 + indexR*40)
@@ -188,7 +187,7 @@ func (t *Theme) ColourFrom24Bit(r, g, b string) (color.Color, error) {
 		R: byte(ri),
 		G: byte(gi),
 		B: byte(bi),
-		A: t.alpha,
+		A: 0xff,
 	}, nil
 }
 

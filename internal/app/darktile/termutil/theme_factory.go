@@ -10,7 +10,6 @@ type ThemeFactory struct {
 func NewThemeFactory() *ThemeFactory {
 	return &ThemeFactory{
 		theme: &Theme{
-			alpha:     0xff,
 			colourMap: map[Colour]color.Color{},
 		},
 		colourMap: make(map[Colour]color.Color),
@@ -24,15 +23,10 @@ func (t *ThemeFactory) Build() *Theme {
 			R: uint8(r / 0xff),
 			G: uint8(g / 0xff),
 			B: uint8(b / 0xff),
-			A: t.theme.alpha,
+			A: 0xff,
 		}
 	}
 	return t.theme
-}
-
-func (t *ThemeFactory) WithOpacity(opacity float64) *ThemeFactory {
-	t.theme.alpha = uint8(0xff * opacity)
-	return t
 }
 
 func (t *ThemeFactory) WithColour(key Colour, colour color.Color) *ThemeFactory {

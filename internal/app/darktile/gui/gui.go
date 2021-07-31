@@ -39,6 +39,7 @@ type GUI struct {
 	screenshotFilename  string
 	startupFuncs        []func(g *GUI)
 	keyState            *keyState
+	opacity             float64
 }
 
 type PopupMessage struct {
@@ -88,6 +89,7 @@ func (g *GUI) Run() error {
 	}()
 
 	ebiten.SetScreenTransparent(true)
+	ebiten.SetScreenClearedEveryFrame(true)
 	ebiten.SetWindowResizable(true)
 	ebiten.SetRunnableOnUnfocused(true)
 	ebiten.SetFPSMode(ebiten.FPSModeVsyncOffMinimum)

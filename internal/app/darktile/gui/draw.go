@@ -14,6 +14,8 @@ import (
 // Draw renders the terminal GUI to the ebtien window. Required to implement the ebiten interface.
 func (g *GUI) Draw(screen *ebiten.Image) {
 
+	tmp := ebiten.NewImage(g.size.X, g.size.Y)
+
 	cellSize := g.fontManager.CharSize()
 	dotDepth := g.fontManager.DotDepth()
 
@@ -36,10 +38,10 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 	extraW := float64(g.size.X) - endX
 	extraH := float64(g.size.Y) - endY
 	if extraW > 0 {
-		ebitenutil.DrawRect(screen, endX, 0, extraW, endY, defBg)
+		ebitenutil.DrawRect(tmp, endX, 0, extraW, endY, defBg)
 	}
 	if extraH > 0 {
-		ebitenutil.DrawRect(screen, 0, endY, float64(g.size.X), extraH, defBg)
+		ebitenutil.DrawRect(tmp, 0, endY, float64(g.size.X), extraH, defBg)
 	}
 
 	var inHighlight bool
@@ -52,7 +54,7 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 	for y := int(buffer.ViewHeight() - 1); y >= 0; y-- {
 		py := cellSize.Y * y
 
-		ebitenutil.DrawRect(screen, 0, float64(py), float64(g.size.X), float64(cellSize.Y), defBg)
+		ebitenutil.DrawRect(tmp, 0, float64(py), float64(g.size.X), float64(cellSize.Y), defBg)
 		inHighlight = false
 		for x := uint16(0); x < buffer.ViewWidth(); x++ {
 			cell := buffer.GetCell(x, uint16(y))
@@ -74,7 +76,7 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 				colour = defBg
 			}
 
-			ebitenutil.DrawRect(screen, float64(px), float64(py), float64(cellSize.X), float64(cellSize.Y), colour)
+			ebitenutil.DrawRect(tmp, float64(px), float64(py), float64(cellSize.X), float64(cellSize.Y), colour)
 
 			if buffer.IsHighlighted(termutil.Position{
 				Line: uint64(y),
@@ -106,7 +108,7 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 			}
 
 			if isCursor && !ebiten.IsFocused() {
-				ebitenutil.DrawRect(screen, float64(px)+1, float64(py)+1, float64(cellSize.X)-2, float64(cellSize.Y)-2, g.terminal.Theme().DefaultBackground())
+				ebitenutil.DrawRect(tmp, float64(px)+1, float64(py)+1, float64(cellSize.X)-2, float64(cellSize.Y)-2, g.terminal.Theme().DefaultBackground())
 			}
 		}
 		for x := uint16(0); x < buffer.ViewWidth(); x++ {
@@ -139,13 +141,13 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 
 			if cell.Underline() {
 				uly := float64(py + (dotDepth+cellSize.Y)/2)
-				ebitenutil.DrawLine(screen, float64(px), uly, float64(px+cellSize.X), uly, colour)
+				ebitenutil.DrawLine(tmp, float64(px), uly, float64(px+cellSize.X), uly, colour)
 			}
 
-			text.Draw(screen, string(cell.Rune().Rune), useFace, px, py+dotDepth, colour)
+			text.Draw(tmp, string(cell.Rune().Rune), useFace, px, py+dotDepth, colour)
 
 			if cell.Strikethrough() {
-				ebitenutil.DrawLine(screen, float64(px), float64(py+(cellSize.Y/2)), float64(px+cellSize.X), float64(py+(cellSize.Y/2)), colour)
+				ebitenutil.DrawLine(tmp, float64(px), float64(py+(cellSize.Y/2)), float64(px+cellSize.X), float64(py+(cellSize.Y/2)), colour)
 			}
 
 		}
@@ -157,7 +159,7 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 
 		op := &ebiten.DrawImageOptions{}
 		op.GeoM.Translate(sx, sy)
-		screen.DrawImage(
+		tmp.DrawImage(
 			ebiten.NewImageFromImage(sixel.Sixel.Image),
 			op,
 		)
@@ -237,19 +239,19 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 			}
 
 			// draw opaque box below and above highlighted line(s)
-			ebitenutil.DrawRect(screen, 0, float64(highlightMin.Line*uint64(cellSize.Y)), float64(cellSize.X*int(highlightMin.Col)), float64(cellSize.Y), color.RGBA{A: 0x80})
-			ebitenutil.DrawRect(screen, float64((cellSize.X)*int(highlightMax.Col+1)), float64(highlightMax.Line*uint64(cellSize.Y)), float64(g.size.X), float64(cellSize.Y), color.RGBA{A: 0x80})
-			ebitenutil.DrawRect(screen, 0, 0, float64(g.size.X), float64(highlightMin.Line*uint64(cellSize.Y)), color.RGBA{A: 0x80})
+			ebitenutil.DrawRect(tmp, 0, float64(highlightMin.Line*uint64(cellSize.Y)), float64(cellSize.X*int(highlightMin.Col)), float64(cellSize.Y), color.RGBA{A: 0x80})
+			ebitenutil.DrawRect(tmp, float64((cellSize.X)*int(highlightMax.Col+1)), float64(highlightMax.Line*uint64(cellSize.Y)), float64(g.size.X), float64(cellSize.Y), color.RGBA{A: 0x80})
+			ebitenutil.DrawRect(tmp, 0, 0, float64(g.size.X), float64(highlightMin.Line*uint64(cellSize.Y)), color.RGBA{A: 0x80})
 			afterLineY := float64((1 + highlightMax.Line) * uint64(cellSize.Y))
-			ebitenutil.DrawRect(screen, 0, afterLineY, float64(g.size.X), float64(g.size.Y)-afterLineY, color.RGBA{A: 0x80})
+			ebitenutil.DrawRect(tmp, 0, afterLineY, float64(g.size.X), float64(g.size.Y)-afterLineY, color.RGBA{A: 0x80})
 
 			// annotation border
-			ebitenutil.DrawRect(screen, float64(annotationX)-padding, annotationY-padding, float64(annotationWidth)+(padding*2), annotationHeight+(padding*2), g.terminal.Theme().SelectionBackground())
+			ebitenutil.DrawRect(tmp, float64(annotationX)-padding, annotationY-padding, float64(annotationWidth)+(padding*2), annotationHeight+(padding*2), g.terminal.Theme().SelectionBackground())
 			// annotation background
-			ebitenutil.DrawRect(screen, 1+float64(annotationX)-padding, 1+annotationY-padding, float64(annotationWidth)+(padding*2)-2, annotationHeight+(padding*2)-2, g.terminal.Theme().DefaultBackground())
+			ebitenutil.DrawRect(tmp, 1+float64(annotationX)-padding, 1+annotationY-padding, float64(annotationWidth)+(padding*2)-2, annotationHeight+(padding*2)-2, g.terminal.Theme().DefaultBackground())
 
 			// vertical line
-			ebitenutil.DrawLine(screen, lineX, float64(lineY), lineX, lineY+lineHeight, g.terminal.Theme().SelectionBackground())
+			ebitenutil.DrawLine(tmp, lineX, float64(lineY), lineX, lineY+lineHeight, g.terminal.Theme().SelectionBackground())
 
 			var tY int
 			var tX int
@@ -259,7 +261,7 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 
 				op := &ebiten.DrawImageOptions{}
 				op.GeoM.Translate(float64(annotationX), annotationY)
-				screen.DrawImage(
+				tmp.DrawImage(
 					ebiten.NewImageFromImage(annotation.Image),
 					op,
 				)
@@ -271,7 +273,7 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 					tX = 0
 					continue
 				}
-				text.Draw(screen, string(r), regularFace, annotationX+tX, int(annotationY)+dotDepth+tY, g.terminal.Theme().DefaultForeground())
+				text.Draw(tmp, string(r), regularFace, annotationX+tX, int(annotationY)+dotDepth+tY, g.terminal.Theme().DefaultForeground())
 				tX += cellSize.X
 			}
 
@@ -298,11 +300,11 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 				boxWidth = endX / 8
 			}
 
-			ebitenutil.DrawRect(screen, float64(msgX-1), msgY-1, boxWidth+2, boxHeight+2, msg.Foreground)
-			ebitenutil.DrawRect(screen, float64(msgX), msgY, boxWidth, boxHeight, msg.Background)
+			ebitenutil.DrawRect(tmp, float64(msgX-1), msgY-1, boxWidth+2, boxHeight+2, msg.Foreground)
+			ebitenutil.DrawRect(tmp, float64(msgX), msgY, boxWidth, boxHeight, msg.Background)
 			for y, line := range lines {
 				for x, r := range line {
-					text.Draw(screen, string(r), regularFace, msgX+pad+(x*cellSize.X), pad+(y*cellSize.Y)+int(msgY)+dotDepth, msg.Foreground)
+					text.Draw(tmp, string(r), regularFace, msgX+pad+(x*cellSize.X), pad+(y*cellSize.Y)+int(msgY)+dotDepth, msg.Foreground)
 				}
 			}
 			msgEndY = msgEndY - float64(pad*4) - float64(len(lines)*g.CellSize().Y)
@@ -310,7 +312,10 @@ func (g *GUI) Draw(screen *ebiten.Image) {
 	}
 
 	if g.screenshotRequested {
-		g.takeScreenshot(screen)
+		g.takeScreenshot(tmp)
 	}
 
+	opt := &ebiten.DrawImageOptions{}
+	opt.ColorM.Scale(1, 1, 1, g.opacity)
+	screen.DrawImage(tmp, opt)
 }
