@@ -4,6 +4,7 @@ import (
 	"time"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/liamg/darktile/internal/app/darktile/gui/popup"
 )
 
 func (g *GUI) getModifierStr() string {
@@ -40,7 +41,7 @@ func (g *GUI) Update() error {
 }
 
 func (g *GUI) filterPopupMessages() {
-	var filtered []PopupMessage
+	var filtered []popup.Message
 	for _, msg := range g.popupMessages {
 		if time.Since(msg.Expiry) >= 0 {
 			continue

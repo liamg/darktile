@@ -12,12 +12,18 @@ import (
 type Config struct {
 	Opacity float64
 	Font    Font
+	Cursor  Cursor
 }
 
 type Font struct {
-	Family string
-	Size   float64
-	DPI    float64
+	Family    string
+	Size      float64
+	DPI       float64
+	Ligatures bool
+}
+
+type Cursor struct {
+	Image string
 }
 
 type ErrorFileNotFound struct {

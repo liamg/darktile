@@ -1,6 +1,8 @@
 package termutil
 
 func (buffer *Buffer) ClearSelection() {
+	buffer.selectionMu.Lock()
+	defer buffer.selectionMu.Unlock()
 	buffer.selectionStart = nil
 	buffer.selectionEnd = nil
 }
@@ -13,6 +15,9 @@ func (buffer *Buffer) GetBoundedTextAtPosition(pos Position) (start Position, en
 
 // if the selection is invalid - e.g. lines are selected that no longer exist in the buffer
 func (buffer *Buffer) fixSelection() bool {
+	buffer.selectionMu.Lock()
+	defer buffer.selectionMu.Unlock()
+
 	if buffer.selectionStart == nil || buffer.selectionEnd == nil {
 		return false
 	}
@@ -43,6 +48,9 @@ func (buffer *Buffer) ExtendSelectionToEntireLines() {
 	if !buffer.fixSelection() {
 		return
 	}
+
+	buffer.selectionMu.Lock()
+	defer buffer.selectionMu.Unlock()
 
 	buffer.selectionStart.Col = 0
 	buffer.selectionEnd.Col = uint16(len(buffer.lines[buffer.selectionEnd.Line].cells)) - 1
@@ -150,6 +158,8 @@ FORWARD:
 }
 
 func (buffer *Buffer) SetSelectionStart(pos Position) {
+	buffer.selectionMu.Lock()
+	defer buffer.selectionMu.Unlock()
 	buffer.selectionStart = &Position{
 		Col:  pos.Col,
 		Line: buffer.convertViewLineToRawLine(uint16(pos.Line)),
@@ -157,10 +167,14 @@ func (buffer *Buffer) SetSelectionStart(pos Position) {
 }
 
 func (buffer *Buffer) setRawSelectionStart(pos Position) {
+	buffer.selectionMu.Lock()
+	defer buffer.selectionMu.Unlock()
 	buffer.selectionStart = &pos
 }
 
 func (buffer *Buffer) SetSelectionEnd(pos Position) {
+	buffer.selectionMu.Lock()
+	defer buffer.selectionMu.Unlock()
 	buffer.selectionEnd = &Position{
 		Col:  pos.Col,
 		Line: buffer.convertViewLineToRawLine(uint16(pos.Line)),
@@ -168,6 +182,8 @@ func (buffer *Buffer) SetSelectionEnd(pos Position) {
 }
 
 func (buffer *Buffer) setRawSelectionEnd(pos Position) {
+	buffer.selectionMu.Lock()
+	defer buffer.selectionMu.Unlock()
 	buffer.selectionEnd = &pos
 }
 
@@ -175,6 +191,9 @@ func (buffer *Buffer) GetSelection() (string, *Selection) {
 	if !buffer.fixSelection() {
 		return "", nil
 	}
+
+	buffer.selectionMu.Lock()
+	defer buffer.selectionMu.Unlock()
 
 	start := *buffer.selectionStart
 	end := *buffer.selectionEnd
@@ -187,6 +206,9 @@ func (buffer *Buffer) GetSelection() (string, *Selection) {
 
 	var text string
 	for y := start.Line; y <= end.Line; y++ {
+		if y >= uint64(len(buffer.lines)) {
+			break
+		}
 		line := buffer.lines[y]
 		startX := 0
 		endX := len(line.cells) - 1
@@ -200,7 +222,13 @@ func (buffer *Buffer) GetSelection() (string, *Selection) {
 			text += "\n"
 		}
 		for x := startX; x <= endX; x++ {
+			if x >= len(line.cells) {
+				break
+			}
 			mr := line.cells[x].Rune()
+			if mr.Width == 0 {
+				continue
+			}
 			x += mr.Width - 1
 			text += string(mr.Rune)
 		}
@@ -221,6 +249,8 @@ func (buffer *Buffer) InSelection(pos Position) bool {
 	if !buffer.fixSelection() {
 		return false
 	}
+	buffer.selectionMu.Lock()
+	defer buffer.selectionMu.Unlock()
 
 	start := *buffer.selectionStart
 	end := *buffer.selectionEnd
@@ -256,31 +286,30 @@ func (buffer *Buffer) GetHighlightAnnotation() *Annotation {
 	return buffer.highlightAnnotation
 }
 
-// takes view coords
-func (buffer *Buffer) IsHighlighted(pos Position) bool {
+func (buffer *Buffer) GetViewHighlight() (start Position, end Position, exists bool) {
 
 	if buffer.highlightStart == nil || buffer.highlightEnd == nil {
-		return false
+		return
 	}
 
 	if buffer.highlightStart.Line >= uint64(len(buffer.lines)) {
-		return false
+		return
 	}
 
 	if buffer.highlightEnd.Line >= uint64(len(buffer.lines)) {
-		return false
+		return
 	}
 
 	if buffer.highlightStart.Col >= uint16(len(buffer.lines[buffer.highlightStart.Line].cells)) {
-		return false
+		return
 	}
 
 	if buffer.highlightEnd.Col >= uint16(len(buffer.lines[buffer.highlightEnd.Line].cells)) {
-		return false
+		return
 	}
 
-	start := *buffer.highlightStart
-	end := *buffer.highlightEnd
+	start = *buffer.highlightStart
+	end = *buffer.highlightEnd
 
 	if end.Line < start.Line || (end.Line == start.Line && end.Col < start.Col) {
 		swap := end
@@ -288,23 +317,8 @@ func (buffer *Buffer) IsHighlighted(pos Position) bool {
 		start = swap
 	}
 
-	rY := buffer.convertViewLineToRawLine(uint16(pos.Line))
-	if rY < start.Line {
-		return false
-	}
-	if rY > end.Line {
-		return false
-	}
-	if rY == start.Line {
-		if pos.Col < start.Col {
-			return false
-		}
-	}
-	if rY == end.Line {
-		if pos.Col > end.Col {
-			return false
-		}
-	}
+	start.Line = uint64(buffer.convertRawLineToViewLine(start.Line))
+	end.Line = uint64(buffer.convertRawLineToViewLine(end.Line))
 
-	return true
+	return start, end, true
 }

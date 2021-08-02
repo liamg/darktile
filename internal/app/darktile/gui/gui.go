@@ -3,13 +3,13 @@ package gui
 import (
 	"fmt"
 	"image"
-	"image/color"
 	"math/rand"
 	"os"
 	"strings"
 	"time"
 
 	"github.com/liamg/darktile/internal/app/darktile/font"
+	"github.com/liamg/darktile/internal/app/darktile/gui/popup"
 	"github.com/liamg/darktile/internal/app/darktile/hinters"
 	"github.com/liamg/darktile/internal/app/darktile/termutil"
 
@@ -34,19 +34,14 @@ type GUI struct {
 	mousePos            termutil.Position
 	hinters             []hinters.Hinter
 	activeHinter        int
-	popupMessages       []PopupMessage
+	popupMessages       []popup.Message
 	screenshotRequested bool
 	screenshotFilename  string
 	startupFuncs        []func(g *GUI)
 	keyState            *keyState
 	opacity             float64
-}
-
-type PopupMessage struct {
-	Text       string
-	Expiry     time.Time
-	Foreground color.Color
-	Background color.Color
+	enableLigatures     bool
+	cursorImage         *ebiten.Image
 }
 
 type MouseState uint8
@@ -59,12 +54,13 @@ const (
 func New(terminal *termutil.Terminal, options ...Option) (*GUI, error) {
 
 	g := &GUI{
-		terminal:     terminal,
-		size:         image.Point{80, 30},
-		updateChan:   make(chan struct{}),
-		fontManager:  font.NewManager(),
-		activeHinter: -1,
-		keyState:     newKeyState(),
+		terminal:        terminal,
+		size:            image.Point{80, 30},
+		updateChan:      make(chan struct{}),
+		fontManager:     font.NewManager(),
+		activeHinter:    -1,
+		keyState:        newKeyState(),
+		enableLigatures: true,
 	}
 
 	for _, option := range options {

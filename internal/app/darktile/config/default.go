@@ -11,9 +11,10 @@ import (
 var defaultConfig = Config{
 	Opacity: 1.0,
 	Font: Font{
-		Family: "", // internally packed font will be loaded by default
-		Size:   18.0,
-		DPI:    72.0,
+		Family:    "", // internally packed font will be loaded by default
+		Size:      18.0,
+		DPI:       72.0,
+		Ligatures: true,
 	},
 }
 

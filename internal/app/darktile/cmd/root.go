@@ -3,6 +3,7 @@ package cmd
 import (
 	"errors"
 	"fmt"
+	"image"
 	"os"
 	"time"
 
@@ -48,6 +49,8 @@ var rootCmd = &cobra.Command{
 			if _, err := conf.Save(); err != nil {
 				return fmt.Errorf("failed to write config file: %w", err)
 			}
+			fmt.Println("Config written.")
+			return nil
 		}
 
 		var theme *termutil.Theme
@@ -91,6 +94,16 @@ var rootCmd = &cobra.Command{
 			gui.WithFontSize(conf.Font.Size),
 			gui.WithFontFamily(conf.Font.Family),
 			gui.WithOpacity(conf.Opacity),
+			gui.WithLigatures(conf.Font.Ligatures),
+		}
+
+		if conf.Cursor.Image != "" {
+			img, err := getImageFromFilePath(conf.Cursor.Image)
+			if err != nil {
+				startupErrors = append(startupErrors, err)
+			} else {
+				options = append(options, gui.WithCursorImage(img))
+			}
 		}
 
 		if screenshotAfterMS > 0 {
@@ -116,6 +129,16 @@ var rootCmd = &cobra.Command{
 
 		return g.Run()
 	},
+}
+
+func getImageFromFilePath(filePath string) (image.Image, error) {
+	f, err := os.Open(filePath)
+	if err != nil {
+		return nil, err
+	}
+	defer f.Close()
+	image, _, err := image.Decode(f)
+	return image, err
 }
 
 func Execute() error {
