@@ -4,6 +4,8 @@ import (
 	"fmt"
 	"image/color"
 	"time"
+
+	"github.com/liamg/darktile/internal/app/darktile/gui/popup"
 )
 
 const (
@@ -12,7 +14,7 @@ const (
 )
 
 func (g *GUI) ShowPopup(msg string, fg color.Color, bg color.Color, duration time.Duration) {
-	g.popupMessages = append(g.popupMessages, PopupMessage{
+	g.popupMessages = append(g.popupMessages, popup.Message{
 		Text:       msg,
 		Expiry:     time.Now().Add(duration),
 		Foreground: fg,

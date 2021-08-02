@@ -1,5 +1,11 @@
 package gui
 
+import (
+	"image"
+
+	"github.com/hajimehoshi/ebiten/v2"
+)
+
 type Option func(g *GUI) error
 
 func WithFontFamily(family string) func(g *GUI) error {
@@ -25,6 +31,20 @@ func WithFontSize(size float64) func(g *GUI) error {
 func WithFontDPI(dpi float64) func(g *GUI) error {
 	return func(g *GUI) error {
 		g.fontManager.SetSize(dpi)
+		return nil
+	}
+}
+
+func WithLigatures(enable bool) func(g *GUI) error {
+	return func(g *GUI) error {
+		g.enableLigatures = enable
+		return nil
+	}
+}
+
+func WithCursorImage(img image.Image) func(g *GUI) error {
+	return func(g *GUI) error {
+		g.cursorImage = ebiten.NewImageFromImage(img)
 		return nil
 	}
 }

@@ -8,12 +8,19 @@ Darktile is a GPU rendered terminal emulator designed for tiling window managers
 
 - GPU rendering
 - Unicode support
+- Variety of themes available (or build your own!)
 - Compiled-in powerline font
-- Configurable/customisable, supports custom themes, fonts etc.
-- Hints: Context-aware overlays e.g. hex colour viewer
+- Works with your favourite monospaced TTF/OTF fonts
+- Font ligatures (turn it off if you're not a ligature fan)
+- Hints: Context-aware overlays e.g. hex colour viewer, octal permission annotation
 - Take screenshots with a single key-binding
-- Sixel support
-- Transparency
+- Sixels
+- Window transparency (0-100%)
+- Customisable cursor (most popular image formats supported)
+
+<p align="center">
+<img src="cursor.gif">
+</p>
 
 ## Installation
 
@@ -43,11 +50,14 @@ Darktile will use sensible defaults if no config/theme files are available. The 
 Found in the config directory (see above) inside `config.yaml`.
 
 ```yaml
-opacity: 1.0 # window opacity: 0.0 is fully transparent, 1.0 is fully opaque
+opacity: 1.0       # Window opacity: 0.0 is fully transparent, 1.0 is fully opaque
 font:
-  family: "" # Find possible values for this by running 'darktile list-fonts'
-  size: 16
-  dpi: 72
+  family: ""       # Font family. Find possible values for this by running 'darktile list-fonts'
+  size: 16         # Font size
+  dpi: 72          # DPI
+  ligatures: true  # Enable font ligatures e.g. render '≡' instead of '==='
+cursor:
+  image: ""        # Path to an image to render as your cursor (defaults to standard rectangular cursor)
 ```
 
 ### Example Theme

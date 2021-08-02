@@ -219,11 +219,7 @@ func (g *GUI) handleInput() error {
 		return g.terminal.WriteToPty([]byte(fmt.Sprintf("\x1b[6%s~", g.getModifierStr())))
 	default:
 		input := ebiten.AppendInputChars(nil)
-		for _, runePressed := range input {
-			if err := g.terminal.WriteToPty([]byte(string(runePressed))); err != nil {
-				return err
-			}
-		}
+		return g.terminal.WriteToPty([]byte(string(input)))
 	}
 
 	return nil

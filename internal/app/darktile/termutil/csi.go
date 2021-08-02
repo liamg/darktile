@@ -45,13 +45,6 @@ func (t *Terminal) handleCSI(readChan chan MeasuredRune) (renderRequired bool) {
 
 	t.log("CSI P(%q) I(%q) %c", strings.Join(params, ";"), string(intermediate), final)
 
-	for _, b := range intermediate {
-		t.processRunes(MeasuredRune{
-			Rune:  b,
-			Width: 1,
-		})
-	}
-
 	switch final {
 	case 'c':
 		return t.csiSendDeviceAttributesHandler(params)
@@ -73,6 +66,10 @@ func (t *Terminal) handleCSI(readChan chan MeasuredRune) (renderRequired bool) {
 		return t.csiSetMarginsHandler(params)
 	case 't':
 		return t.csiWindowManipulation(params)
+	case 'q':
+		if string(intermediate) == " " {
+			return t.csiCursorSelection(params)
+		}
 	case 'A':
 		return t.csiCursorUpHandler(params)
 	case 'B':
@@ -112,14 +109,21 @@ func (t *Terminal) handleCSI(readChan chan MeasuredRune) (renderRequired bool) {
 			return t.csiSoftResetHandler(params)
 		}
 		return false
-	default:
-		// TODO review this:
-		// if this is an unknown CSI sequence, write it to stdout as we can't handle it?
-		//_ = t.writeToRealStdOut(append([]rune{0x1b, '['}, raw...)...)
-		_ = raw
-		t.log("UNKNOWN CSI P(%s) I(%s) %c", strings.Join(params, ";"), string(intermediate), final)
-		return false
 	}
+
+	for _, b := range intermediate {
+		t.processRunes(MeasuredRune{
+			Rune:  b,
+			Width: 1,
+		})
+	}
+
+	// TODO review this:
+	// if this is an unknown CSI sequence, write it to stdout as we can't handle it?
+	//_ = t.writeToRealStdOut(append([]rune{0x1b, '['}, raw...)...)
+	_ = raw
+	t.log("UNKNOWN CSI P(%s) I(%s) %c", strings.Join(params, ";"), string(intermediate), final)
+	return false
 
 }
 
@@ -963,10 +967,28 @@ func (t *Terminal) sgrSequenceHandler(params []string) bool {
 		}
 	}
 
+	x := t.GetActiveBuffer().CursorColumn()
+	y := t.GetActiveBuffer().CursorLine()
+	if cell := t.GetActiveBuffer().GetCell(x, y); cell != nil {
+		cell.attr = t.GetActiveBuffer().cursorAttr
+	}
+
 	return false
 }
 
 func (t *Terminal) csiSoftResetHandler(params []string) bool {
 	t.reset()
+	return true
+}
+
+func (t *Terminal) csiCursorSelection(params []string) (renderRequired bool) {
+	if len(params) == 0 {
+		return false
+	}
+	i, err := strconv.Atoi(params[0])
+	if err != nil {
+		return false
+	}
+	t.GetActiveBuffer().SetCursorShape(CursorShape(i))
 	return true
 }
