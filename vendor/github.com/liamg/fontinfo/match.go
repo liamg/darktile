@@ -25,7 +25,16 @@ var fontDirs = []string{
 	"/usr/local/share/fonts",
 	"/usr/share/fonts",
 	filepath.Join(os.Getenv("XDG_DATA_HOME"), "fonts"),
-	filepath.Join(os.Getenv("XDG_DATA_DIRS"), "fonts"),
+}
+
+func init() {
+	dataDirs := strings.Split(os.Getenv("XDG_DATA_DIRS"), string(os.PathListSeparator))
+	for _, dir := range dataDirs {
+		if dir == "" {
+			continue
+		}
+		fontDirs = append(fontDirs, filepath.Join(dir, "fonts"))
+	}
 }
 
 // Match finds all fonts installed on the system which match the provided matchers
