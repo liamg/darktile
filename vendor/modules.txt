@@ -60,7 +60,7 @@ github.com/hajimehoshi/ebiten/v2/internal/uidriver/mobile
 github.com/hajimehoshi/ebiten/v2/text
 # github.com/inconshreveable/mousetrap v1.0.0
 github.com/inconshreveable/mousetrap
-# github.com/liamg/fontinfo v0.1.1
+# github.com/liamg/fontinfo v0.1.3
 ## explicit
 github.com/liamg/fontinfo
 # github.com/lxn/walk v0.0.0-20191128110447-55ccb3a9f5c1
