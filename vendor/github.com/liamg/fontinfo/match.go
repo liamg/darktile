@@ -3,6 +3,7 @@ package fontinfo
 import (
 	"io/fs"
 	"os"
+	"os/user"
 	"path/filepath"
 	"strings"
 )
@@ -43,7 +44,16 @@ func Match(matchers ...matcher) ([]Font, error) {
 	var fonts []Font
 	meta := make(map[string]*fontMetadata)
 
+	var home string
+	if usr, _ := user.Current(); usr != nil {
+		home = usr.HomeDir
+	}
+
 	for _, dir := range fontDirs {
+
+		if home != "" && strings.HasPrefix(dir, "~/") {
+			dir = filepath.Join(home, dir[2:])
+		}
 
 		if info, err := os.Stat(dir); os.IsNotExist(err) {
 			continue
@@ -65,7 +75,7 @@ func Match(matchers ...matcher) ([]Font, error) {
 					defer f.Close()
 					metadata, err := readMetadata(f)
 					if err != nil {
-						return err
+						continue
 					}
 					for _, match := range matchers {
 						if !match(metadata) {
