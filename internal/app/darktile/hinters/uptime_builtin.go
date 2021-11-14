@@ -1,3 +1,5 @@
+//go:build cgo && (linux || netbsd)
+
 package hinters
 
 import (

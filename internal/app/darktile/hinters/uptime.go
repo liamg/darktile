@@ -1,4 +1,5 @@
-//go:build cgo && (!linux || unix)
+//go:build cgo && (freebsd || openbsd)
+
 package hinters
 
 /*
