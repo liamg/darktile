@@ -103,7 +103,7 @@ func (g *GUI) watchForUpdate() {
 	for range g.updateChan {
 		ebiten.ScheduleFrame()
 		go func() {
-			for g.keyState.AnythingPressed() {
+			if g.keyState.AnythingPressed() {
 				time.Sleep(time.Millisecond * 10)
 				ebiten.ScheduleFrame()
 			}

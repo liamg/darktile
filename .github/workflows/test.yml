@@ -16,5 +16,6 @@ jobs:
         uses: actions/checkout@v2
       - name: Test
         run: |
+          sudo apt update
           sudo apt install xorg-dev libgl1-mesa-dev
           DISPLAY=:0 go test -mod=vendor ./...
