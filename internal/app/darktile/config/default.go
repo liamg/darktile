@@ -35,7 +35,7 @@ var defaultTheme = Theme{
 	BrightMagenta:       "#c397d8",
 	BrightCyan:          "#70c0b1",
 	BrightWhite:         "#eaeaea",
-	Background:          "#1d1f21",
+	Background:          "#000000",
 	Foreground:          "#c5c8c6",
 	SelectionBackground: "#33aa33",
 	SelectionForeground: "#ffffff",
