@@ -4,7 +4,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 
 	"github.com/liamg/darktile/internal/app/darktile/termutil"
@@ -52,7 +51,5 @@ func (h *DmesgTimestampHinter) Click(api HintAPI) error {
 }
 
 func setSysStartTime() {
-	sysInfo := &syscall.Sysinfo_t{}
-	_ = syscall.Sysinfo(sysInfo)
-	sysStart = time.Now().Local().Add(time.Duration(int(sysInfo.Uptime*-1)) * time.Second)
+	sysStart = time.Now().Local().Add(time.Duration(int(getUptime()*-1)) * time.Second)
 }
