@@ -62,6 +62,8 @@ func New(screen *ebiten.Image, terminal *termutil.Terminal, fontManager *font.Ma
 }
 
 func (r *Render) Draw() {
+	r.terminal.Lock()
+	defer r.terminal.Unlock()
 
 	// 1. fill frame with default background colour
 	r.frame.Fill(r.theme.DefaultBackground())

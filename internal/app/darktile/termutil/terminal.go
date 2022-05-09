@@ -7,6 +7,7 @@ import (
 	"io"
 	"os"
 	"os/exec"
+	"sync"
 
 	"github.com/creack/pty"
 	"golang.org/x/term"
@@ -20,6 +21,7 @@ const (
 
 // Terminal communicates with the underlying terminal
 type Terminal struct {
+	mu                sync.Mutex
 	windowManipulator WindowManipulator
 	pty               *os.File
 	updateChan        chan struct{}
@@ -196,17 +198,20 @@ func (t *Terminal) requestRender() {
 	}
 }
 
+func (t *Terminal) processSequence(mr MeasuredRune) (render bool) {
+	if mr.Rune == 0x1b {
+		return t.handleANSI(t.processChan)
+	}
+	return t.processRunes(mr)
+}
+
 func (t *Terminal) process() {
 	for {
 		select {
 		case <-t.closeChan:
 			return
 		case mr := <-t.processChan:
-			if mr.Rune == 0x1b { // ANSI escape char, which means this is a sequence
-				if t.handleANSI(t.processChan) {
-					t.requestRender()
-				}
-			} else if t.processRunes(mr) { // otherwise it's just an individual rune we need to process
+			if t.processSequence(mr) {
 				t.requestRender()
 			}
 		}
@@ -214,6 +219,8 @@ func (t *Terminal) process() {
 }
 
 func (t *Terminal) processRunes(runes ...MeasuredRune) (renderRequired bool) {
+	t.mu.Lock()
+	defer t.mu.Unlock()
 
 	for _, r := range runes {
 
@@ -226,31 +233,31 @@ func (t *Terminal) processRunes(runes ...MeasuredRune) (renderRequired bool) {
 			//DING DING DING
 			continue
 		case 0x8: //backspace
-			t.GetActiveBuffer().backspace()
+			t.activeBuffer.backspace()
 			renderRequired = true
 		case 0x9: //tab
-			t.GetActiveBuffer().tab()
+			t.activeBuffer.tab()
 			renderRequired = true
 		case 0xa, 0xc: //newLine/form feed
-			t.GetActiveBuffer().newLine()
+			t.activeBuffer.newLine()
 			renderRequired = true
 		case 0xb: //vertical tab
-			t.GetActiveBuffer().verticalTab()
+			t.activeBuffer.verticalTab()
 			renderRequired = true
 		case 0xd: //carriageReturn
-			t.GetActiveBuffer().carriageReturn()
+			t.activeBuffer.carriageReturn()
 			renderRequired = true
 		case 0xe: //shiftOut
-			t.GetActiveBuffer().currentCharset = 1
+			t.activeBuffer.currentCharset = 1
 		case 0xf: //shiftIn
-			t.GetActiveBuffer().currentCharset = 0
+			t.activeBuffer.currentCharset = 0
 		default:
 			if r.Rune < 0x20 {
 				// handle any other control chars here?
 				continue
 			}
 
-			t.GetActiveBuffer().write(t.translateRune(r))
+			t.activeBuffer.write(t.translateRune(r))
 			renderRequired = true
 		}
 	}
@@ -259,7 +266,7 @@ func (t *Terminal) processRunes(runes ...MeasuredRune) (renderRequired bool) {
 }
 
 func (t *Terminal) translateRune(b MeasuredRune) MeasuredRune {
-	table := t.GetActiveBuffer().charsets[t.GetActiveBuffer().currentCharset]
+	table := t.activeBuffer.charsets[t.activeBuffer.currentCharset]
 	if table == nil {
 		return b
 	}
@@ -305,4 +312,12 @@ func (t *Terminal) useMainBuffer() {
 
 func (t *Terminal) useAltBuffer() {
 	t.switchBuffer(AltBuffer)
+}
+
+func (t *Terminal) Lock() {
+	t.mu.Lock()
+}
+
+func (t *Terminal) Unlock() {
+	t.mu.Unlock()
 }

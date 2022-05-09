@@ -22,14 +22,17 @@ func (g *GUI) Layout(outsideWidth, outsideHeight int) (int, int) {
 
 func (g *GUI) resize(w, h int) {
 
-	if g.fontManager.CharSize().X == 0 || g.fontManager.CharSize().Y == 0 {
+	if g.fontManager.CharSize().X == 0 || g.fontManager.CharSize().Y == 0 || g.terminal == nil {
 		return
 	}
 
 	cols := uint16(w / g.fontManager.CharSize().X)
 	rows := uint16(h / g.fontManager.CharSize().Y)
 
-	if g.terminal != nil && g.terminal.IsRunning() {
+	g.terminal.Lock()
+	defer g.terminal.Unlock()
+
+	if g.terminal.IsRunning() {
 		_ = g.terminal.SetSize(rows, cols)
 	}
 }
