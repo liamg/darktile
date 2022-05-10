@@ -30,6 +30,8 @@ type press struct {
 }
 
 func (k *keyState) AnythingPressed() bool {
+	k.mu.Lock()
+	defer k.mu.Unlock()
 	return len(k.keys) > 0
 }
 

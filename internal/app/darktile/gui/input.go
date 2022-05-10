@@ -37,6 +37,8 @@ var modifiableKeys = map[ebiten.Key]uint8{
 }
 
 func (g *GUI) handleInput() error {
+	g.terminal.Lock()
+	defer g.terminal.Unlock()
 
 	if err := g.handleMouse(); err != nil {
 		return err

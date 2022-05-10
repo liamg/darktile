@@ -102,12 +102,12 @@ func (g *GUI) Run() error {
 func (g *GUI) watchForUpdate() {
 	for range g.updateChan {
 		ebiten.ScheduleFrame()
-		go func() {
-			if g.keyState.AnythingPressed() {
+		if g.keyState.AnythingPressed() {
+			go func() {
 				time.Sleep(time.Millisecond * 10)
 				ebiten.ScheduleFrame()
-			}
-		}()
+			}()
+		}
 	}
 }
 

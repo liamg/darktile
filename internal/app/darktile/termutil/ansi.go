@@ -6,6 +6,9 @@ func (t *Terminal) handleANSI(readChan chan MeasuredRune) (renderRequired bool) 
 
 	t.log("ANSI SEQ %c 0x%X", r.Rune, r.Rune)
 
+	t.mu.Lock()
+	defer t.mu.Unlock()
+
 	switch r.Rune {
 	case '[':
 		return t.handleCSI(readChan)
