@@ -929,6 +929,7 @@ func (t *Terminal) sgrSequenceHandler(params []string) bool {
 			t.GetActiveBuffer().getCursorAttr().bold = false
 		case "22":
 			t.GetActiveBuffer().getCursorAttr().dim = false
+			t.GetActiveBuffer().getCursorAttr().bold = false
 		case "23":
 			t.GetActiveBuffer().getCursorAttr().italic = false
 		case "24":
