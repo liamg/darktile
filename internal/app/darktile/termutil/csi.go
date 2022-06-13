@@ -911,7 +911,9 @@ func (t *Terminal) sgrSequenceHandler(params []string) bool {
 			*attr = CellAttributes{}
 		case "1", "01":
 			t.GetActiveBuffer().getCursorAttr().bold = true
+			t.GetActiveBuffer().getCursorAttr().dim = false
 		case "2", "02":
+			t.GetActiveBuffer().getCursorAttr().bold = false
 			t.GetActiveBuffer().getCursorAttr().dim = true
 		case "3", "03":
 			t.GetActiveBuffer().getCursorAttr().italic = true
@@ -929,6 +931,7 @@ func (t *Terminal) sgrSequenceHandler(params []string) bool {
 			t.GetActiveBuffer().getCursorAttr().bold = false
 		case "22":
 			t.GetActiveBuffer().getCursorAttr().dim = false
+			t.GetActiveBuffer().getCursorAttr().bold = false
 		case "23":
 			t.GetActiveBuffer().getCursorAttr().italic = false
 		case "24":
