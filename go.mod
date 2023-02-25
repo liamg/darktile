@@ -14,7 +14,7 @@ require (
 	github.com/stretchr/testify v1.7.0
 	golang.org/x/exp v0.0.0-20210729172720-737cce5152fc // indirect
 	golang.org/x/image v0.0.0-20210628002857-a66eb6448b8d
-	golang.org/x/sys v0.0.0-20210630005230-0f9fa26af87c // indirect
+	golang.org/x/sys v0.1.0 // indirect
 	golang.org/x/term v0.0.0-20201126162022-7de9c90e9dd1
 	gopkg.in/yaml.v2 v2.4.0
 	mvdan.cc/xurls v1.1.0
