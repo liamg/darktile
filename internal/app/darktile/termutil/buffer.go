@@ -440,6 +440,7 @@ func (buffer *Buffer) write(runes ...MeasuredRune) {
 				buffer.newLineEx(true)
 
 				newLine := buffer.getCurrentLine()
+				newLine.wrapped = true
 				if len(newLine.cells) == 0 {
 					newLine.append(buffer.defaultCell(true))
 				}
