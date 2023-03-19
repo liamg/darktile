@@ -131,6 +131,7 @@ func TestBufferWriteIncrementsCursorCorrectly(t *testing.T) {
 	writeRaw(b, 'x')
 	require.Equal(t, uint16(1), b.CursorColumn())
 	require.Equal(t, uint16(1), b.CursorLine())
+	require.Equal(t, true, b.getCurrentLine().wrapped)
 
 	writeRaw(b, 'x')
 	require.Equal(t, uint16(2), b.CursorColumn())
