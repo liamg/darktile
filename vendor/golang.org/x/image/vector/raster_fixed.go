@@ -32,24 +32,13 @@ type int1ϕ int32
 // The Rasterizer's bufU32 field, nominally of type []uint32 (since that slice
 // is also used by other code), can be thought of as a []int2ϕ during the
 // fixedLineTo method. Lines of code that are actually like:
+//
 //	buf[i] += uint32(etc) // buf has type []uint32.
+//
 // can be thought of as
+//
 //	buf[i] += int2ϕ(etc)  // buf has type []int2ϕ.
 type int2ϕ int32
-
-func fixedMax(x, y int1ϕ) int1ϕ {
-	if x > y {
-		return x
-	}
-	return y
-}
-
-func fixedMin(x, y int1ϕ) int1ϕ {
-	if x < y {
-		return x
-	}
-	return y
-}
 
 func fixedFloor(x int1ϕ) int32 { return int32(x >> ϕ) }
 func fixedCeil(x int1ϕ) int32  { return int32((x + fxOneMinusIota) >> ϕ) }
@@ -82,7 +71,7 @@ func (z *Rasterizer) fixedLineTo(bx, by float32) {
 	width := int32(z.size.X)
 
 	for ; y < yMax; y++ {
-		dy := fixedMin(int1ϕ(y+1)<<ϕ, byϕ) - fixedMax(int1ϕ(y)<<ϕ, ayϕ)
+		dy := min(int1ϕ(y+1)<<ϕ, byϕ) - max(int1ϕ(y)<<ϕ, ayϕ)
 		xNext := x + int1ϕ(float32(dy)*dxdy)
 		if y < 0 {
 			x = xNext

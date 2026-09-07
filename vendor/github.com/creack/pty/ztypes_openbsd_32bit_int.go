@@ -1,5 +1,5 @@
+//go:build openbsd
 // +build openbsd
-// +build 386 amd64 arm arm64
 
 package pty
 

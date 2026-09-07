@@ -16,66 +16,102 @@
 //
 // You can start the game by calling the function RunGame.
 //
-//     // Game implements ebiten.Game interface.
-//     type Game struct{}
+//	// Game implements ebiten.Game interface.
+//	type Game struct{}
 //
-//     // Update proceeds the game state.
-//     // Update is called every tick (1/60 [s] by default).
-//     func (g *Game) Update() error {
-//         // Write your game's logical update.
-//         return nil
-//     }
+//	// Update proceeds the game state.
+//	// Update is called every tick (1/60 [s] by default).
+//	func (g *Game) Update() error {
+//	    // Write your game's logical update.
+//	    return nil
+//	}
 //
-//     // Draw draws the game screen.
-//     // Draw is called every frame (typically 1/60[s] for 60Hz display).
-//     func (g *Game) Draw(screen *ebiten.Image) {
-//         // Write your game's rendering.
-//     }
+//	// Draw draws the game screen.
+//	// Draw is called every frame (typically 1/60[s] for 60Hz display).
+//	func (g *Game) Draw(screen *ebiten.Image) {
+//	    // Write your game's rendering.
+//	}
 //
-//     // Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
-//     // If you don't have to adjust the screen size with the outside size, just return a fixed size.
-//     func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
-//         return 320, 240
-//     }
+//	// Layout takes the outside size (e.g., the window size) and returns the (logical) screen size.
+//	// If you don't have to adjust the screen size with the outside size, just return a fixed size.
+//	func (g *Game) Layout(outsideWidth, outsideHeight int) (screenWidth, screenHeight int) {
+//	    return 320, 240
+//	}
 //
-//     func main() {
-//         game := &Game{}
-//         // Specify the window size as you like. Here, a doubled size is specified.
-//         ebiten.SetWindowSize(640, 480)
-//         ebiten.SetWindowTitle("Your game's title")
-//         // Call ebiten.RunGame to start your game loop.
-//         if err := ebiten.RunGame(game); err != nil {
-//             log.Fatal(err)
-//         }
-//     }
+//	func main() {
+//	    game := &Game{}
+//	    // Specify the window size as you like. Here, a doubled size is specified.
+//	    ebiten.SetWindowSize(640, 480)
+//	    ebiten.SetWindowTitle("Your game's title")
+//	    // Call ebiten.RunGame to start your game loop.
+//	    if err := ebiten.RunGame(game); err != nil {
+//	        log.Fatal(err)
+//	    }
+//	}
 //
 // In the API document, 'the main thread' means the goroutine in init(), main() and their callees without 'go'
-// statement. It is assured that 'the main thread' runs on the OS main thread. There are some Ebiten functions (e.g.,
+// statement. It is assured that 'the main thread' runs on the OS main thread. There are some Ebitengine functions (e.g.,
 // DeviceScaleFactor) that must be called on the main thread under some conditions (typically, before ebiten.RunGame
 // is called).
 //
-// Environment variables
+// # Environment variables
 //
-// `EBITEN_SCREENSHOT_KEY` environment variable specifies the key
+// `EBITENGINE_SCREENSHOT_KEY` environment variable specifies the key
 // to take a screenshot. For example, if you run your game with
-// `EBITEN_SCREENSHOT_KEY=q`, you can take a game screen's screenshot
-// by pressing Q key. This works only on desktops.
+// `EBITENGINE_SCREENSHOT_KEY=q`, you can take a game screen's screenshot
+// by pressing Q key. This works only on desktops and browsers.
 //
-// `EBITEN_INTERNAL_IMAGES_KEY` environment variable specifies the key
+// `EBITENGINE_INTERNAL_IMAGES_KEY` environment variable specifies the key
 // to dump all the internal images. This is valid only when the build tag
-// 'ebitendebug' is specified. This works only on desktops.
+// 'ebitenginedebug' is specified. This works only on desktops and browsers.
 //
-// Build tags
+// `EBITENGINE_GRAPHICS_LIBRARY` environment variable specifies the graphics library.
+// If the specified graphics library is not available, RunGame returns an error.
+// This environment variable works when RunGame is called or RunGameWithOptions is called with GraphicsLibraryAuto.
+// This can take one of the following value:
 //
-// `ebitendebug` outputs a log of graphics commands. This is useful to know what happens in Ebiten. In general, the
+//	"auto":         Ebitengine chooses the graphics library automatically. This is the default value.
+//	"opengl":       OpenGL, OpenGL ES, or WebGL.
+//	"directx":      DirectX. This works only on Windows.
+//	"metal":        Metal. This works only on macOS or iOS.
+//	"playstation5": PlayStation 5. This works only on PlayStation 5.
+//
+// `EBITENGINE_DIRECTX` environment variable specifies various parameters for DirectX.
+// You can specify multiple values separated by a comma. The default value is empty (i.e. no parameters).
+//
+//	"debug":                      Use a debug layer.
+//	"warp":                       Use WARP (i.e. software rendering).
+//	"version=VERSION":            Specify a DirectX version (e.g. 11).
+//	"featurelevel=FEATURE_LEVEL": Specify a feature level (e.g. 11_0). This is for DirectX 12.
+//
+// The options taking arguments are exclusive, and if multiples are specified, the lastly specified value is adopted.
+//
+// The possible values for the option "version" are "11" and "12".
+// If the version is not specified, the default version 11 is adopted.
+// On Xbox, the "version" option is ignored and DirectX 12 is always adopted.
+//
+// The option "featurelevel" is valid only for DirectX 12.
+// The possible values are "11_0", "11_1", "12_0", "12_1", and "12_2". The default value is "11_0".
+//
+// # Build tags
+//
+// `ebitenginedebug` outputs a log of graphics commands. This is useful to know what happens in Ebitengine. In general, the
 // number of graphics commands affects the performance of your game.
 //
-// `ebitengl` forces to use OpenGL in any environments.
+// `ebitenginegldebug` enables a debug mode for OpenGL. This is valid only when the graphics library is OpenGL.
+// This affects performance very much.
 //
-// `ebitenwebgl1` forces to use WebGL 1 on browsers.
-//
-// `ebitensinglethread` disables Ebiten's thread safety to unlock maximum performance. If you use this you will have
-// to manage threads yourself. Functions like IsKeyPressed will no longer be concurrent-safe with this build tag.
+// `ebitenginesinglethread` disables Ebitengine's thread safety to unlock maximum performance. If you use this you will have
+// to manage threads yourself. Functions like `SetWindowSize` will no longer be concurrent-safe with this build tag.
 // They must be called from the main thread or the same goroutine as the given game's callback functions like Update
-// to RunGame.
+// `ebitenginesinglethread` works only with desktops and consoles.
+// `ebitenginesinglethread` was deprecated as of v2.7. Use RunGameOptions.SingleThread instead.
+//
+// `microsoftgdk` is for Microsoft GDK (e.g. Xbox).
+//
+// `nintendosdk` is for NintendoSDK (e.g. Nintendo Switch).
+//
+// `nintendosdkprofile` enables a profiler for NintendoSDK.
+//
+// `playstation5` is for PlayStation 5.
 package ebiten

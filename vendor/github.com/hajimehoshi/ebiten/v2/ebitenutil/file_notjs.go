@@ -12,11 +12,7 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-//go:build (darwin || freebsd || linux || windows) && !js && !android && !ios
-// +build darwin freebsd linux windows
-// +build !js
-// +build !android
-// +build !ios
+//go:build !android && !ios && !js
 
 package ebitenutil
 
@@ -29,7 +25,9 @@ import (
 //
 // The path parts should be separated with slash '/' on any environments.
 //
-// Note that this doesn't work on mobiles.
+// OpenFile doesn't work on mobiles.
+//
+// Deprecated: as of v2.4. Use os.Open on desktops and http.Get on browsers instead.
 func OpenFile(path string) (ReadSeekCloser, error) {
 	return os.Open(filepath.FromSlash(path))
 }

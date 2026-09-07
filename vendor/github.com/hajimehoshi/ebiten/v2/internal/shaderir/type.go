@@ -25,7 +25,7 @@ type Type struct {
 	Length int
 }
 
-func (t *Type) Equal(rhs *Type) bool {
+func (t Type) Equal(rhs *Type) bool {
 	if t.Main != rhs.Main {
 		return false
 	}
@@ -43,7 +43,7 @@ func (t *Type) Equal(rhs *Type) bool {
 	return true
 }
 
-func (t *Type) String() string {
+func (t Type) String() string {
 	switch t.Main {
 	case None:
 		return "none"
@@ -59,6 +59,12 @@ func (t *Type) String() string {
 		return "vec3"
 	case Vec4:
 		return "vec4"
+	case IVec2:
+		return "ivec2"
+	case IVec3:
+		return "ivec3"
+	case IVec4:
+		return "ivec4"
 	case Mat2:
 		return "mat2"
 	case Mat3:
@@ -66,7 +72,7 @@ func (t *Type) String() string {
 	case Mat4:
 		return "mat4"
 	case Array:
-		return fmt.Sprintf("%s[%d]", t.Sub[0].String(), t.Length)
+		return fmt.Sprintf("[%d]%s", t.Length, t.Sub[0].String())
 	case Struct:
 		str := "struct{"
 		sub := make([]string, 0, len(t.Sub))
@@ -77,12 +83,17 @@ func (t *Type) String() string {
 		str += "}"
 		return str
 	default:
-		return fmt.Sprintf("?(unknown type: %d)", t)
+		return fmt.Sprintf("?(unknown type: %d)", t.Main)
 	}
 }
 
-func (t *Type) FloatNum() int {
+func (t Type) DwordCount() int {
 	switch t.Main {
+	case Bool:
+		// The size of a bool varies by the shader language, but use 1 for simplicity.
+		return 1
+	case Int:
+		return 1
 	case Float:
 		return 1
 	case Vec2:
@@ -91,6 +102,12 @@ func (t *Type) FloatNum() int {
 		return 3
 	case Vec4:
 		return 4
+	case IVec2:
+		return 2
+	case IVec3:
+		return 3
+	case IVec4:
+		return 4
 	case Mat2:
 		return 4
 	case Mat3:
@@ -98,8 +115,64 @@ func (t *Type) FloatNum() int {
 	case Mat4:
 		return 16
 	case Array:
-		return t.Length * t.Sub[0].FloatNum()
+		return t.Length * t.Sub[0].DwordCount()
 	default: // TODO: Parse a struct correctly
+		return -1
+	}
+}
+
+func (t Type) IsFloatVector() bool {
+	switch t.Main {
+	case Vec2, Vec3, Vec4:
+		return true
+	}
+	return false
+}
+
+func (t Type) IsIntVector() bool {
+	switch t.Main {
+	case IVec2, IVec3, IVec4:
+		return true
+	}
+	return false
+}
+
+func (t Type) VectorElementCount() int {
+	switch t.Main {
+	case Vec2:
+		return 2
+	case Vec3:
+		return 3
+	case Vec4:
+		return 4
+	case IVec2:
+		return 2
+	case IVec3:
+		return 3
+	case IVec4:
+		return 4
+	default:
+		return -1
+	}
+}
+
+func (t Type) IsMatrix() bool {
+	switch t.Main {
+	case Mat2, Mat3, Mat4:
+		return true
+	}
+	return false
+}
+
+func (t Type) MatrixSize() int {
+	switch t.Main {
+	case Mat2:
+		return 2
+	case Mat3:
+		return 3
+	case Mat4:
+		return 4
+	default:
 		return -1
 	}
 }
@@ -114,9 +187,13 @@ const (
 	Vec2
 	Vec3
 	Vec4
+	IVec2
+	IVec3
+	IVec4
 	Mat2
 	Mat3
 	Mat4
+	Texture
 	Array
 	Struct
 )
@@ -177,10 +254,8 @@ func (p *Program) LocalVariableType(topBlock, block *Block, idx int) Type {
 			return Type{Main: Vec4}
 		case idx < nv+1:
 			return p.Varyings[idx-1]
-		case idx == nv+1:
-			return Type{Main: Vec4}
 		default:
-			return localVariableType(p, topBlock, block, idx-(nv+2))
+			return localVariableType(p, topBlock, block, idx-(nv+1))
 		}
 	default:
 		return localVariableType(p, topBlock, block, idx)

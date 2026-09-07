@@ -1,4 +1,4 @@
-// Copyright 2013 The Ebiten Authors
+// Copyright 2013 The Ebitengine Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -17,393 +17,182 @@
 package ebiten
 
 import (
+	"fmt"
 	"strings"
 
-	"github.com/hajimehoshi/ebiten/v2/internal/driver"
+	"github.com/hajimehoshi/ebiten/v2/internal/ui"
 )
 
 // A Key represents a keyboard key.
-// These keys represent pysical keys of US keyboard.
+// These keys represent physical keys of US keyboard.
 // For example, KeyQ represents Q key on US keyboards and ' (quote) key on Dvorak keyboards.
 type Key int
 
 // Keys.
 const (
-	KeyA              Key = Key(driver.KeyA)
-	KeyB              Key = Key(driver.KeyB)
-	KeyC              Key = Key(driver.KeyC)
-	KeyD              Key = Key(driver.KeyD)
-	KeyE              Key = Key(driver.KeyE)
-	KeyF              Key = Key(driver.KeyF)
-	KeyG              Key = Key(driver.KeyG)
-	KeyH              Key = Key(driver.KeyH)
-	KeyI              Key = Key(driver.KeyI)
-	KeyJ              Key = Key(driver.KeyJ)
-	KeyK              Key = Key(driver.KeyK)
-	KeyL              Key = Key(driver.KeyL)
-	KeyM              Key = Key(driver.KeyM)
-	KeyN              Key = Key(driver.KeyN)
-	KeyO              Key = Key(driver.KeyO)
-	KeyP              Key = Key(driver.KeyP)
-	KeyQ              Key = Key(driver.KeyQ)
-	KeyR              Key = Key(driver.KeyR)
-	KeyS              Key = Key(driver.KeyS)
-	KeyT              Key = Key(driver.KeyT)
-	KeyU              Key = Key(driver.KeyU)
-	KeyV              Key = Key(driver.KeyV)
-	KeyW              Key = Key(driver.KeyW)
-	KeyX              Key = Key(driver.KeyX)
-	KeyY              Key = Key(driver.KeyY)
-	KeyZ              Key = Key(driver.KeyZ)
-	KeyAltLeft        Key = Key(driver.KeyAltLeft)
-	KeyAltRight       Key = Key(driver.KeyAltRight)
-	KeyArrowDown      Key = Key(driver.KeyArrowDown)
-	KeyArrowLeft      Key = Key(driver.KeyArrowLeft)
-	KeyArrowRight     Key = Key(driver.KeyArrowRight)
-	KeyArrowUp        Key = Key(driver.KeyArrowUp)
-	KeyBackquote      Key = Key(driver.KeyBackquote)
-	KeyBackslash      Key = Key(driver.KeyBackslash)
-	KeyBackspace      Key = Key(driver.KeyBackspace)
-	KeyBracketLeft    Key = Key(driver.KeyBracketLeft)
-	KeyBracketRight   Key = Key(driver.KeyBracketRight)
-	KeyCapsLock       Key = Key(driver.KeyCapsLock)
-	KeyComma          Key = Key(driver.KeyComma)
-	KeyContextMenu    Key = Key(driver.KeyContextMenu)
-	KeyControlLeft    Key = Key(driver.KeyControlLeft)
-	KeyControlRight   Key = Key(driver.KeyControlRight)
-	KeyDelete         Key = Key(driver.KeyDelete)
-	KeyDigit0         Key = Key(driver.KeyDigit0)
-	KeyDigit1         Key = Key(driver.KeyDigit1)
-	KeyDigit2         Key = Key(driver.KeyDigit2)
-	KeyDigit3         Key = Key(driver.KeyDigit3)
-	KeyDigit4         Key = Key(driver.KeyDigit4)
-	KeyDigit5         Key = Key(driver.KeyDigit5)
-	KeyDigit6         Key = Key(driver.KeyDigit6)
-	KeyDigit7         Key = Key(driver.KeyDigit7)
-	KeyDigit8         Key = Key(driver.KeyDigit8)
-	KeyDigit9         Key = Key(driver.KeyDigit9)
-	KeyEnd            Key = Key(driver.KeyEnd)
-	KeyEnter          Key = Key(driver.KeyEnter)
-	KeyEqual          Key = Key(driver.KeyEqual)
-	KeyEscape         Key = Key(driver.KeyEscape)
-	KeyF1             Key = Key(driver.KeyF1)
-	KeyF2             Key = Key(driver.KeyF2)
-	KeyF3             Key = Key(driver.KeyF3)
-	KeyF4             Key = Key(driver.KeyF4)
-	KeyF5             Key = Key(driver.KeyF5)
-	KeyF6             Key = Key(driver.KeyF6)
-	KeyF7             Key = Key(driver.KeyF7)
-	KeyF8             Key = Key(driver.KeyF8)
-	KeyF9             Key = Key(driver.KeyF9)
-	KeyF10            Key = Key(driver.KeyF10)
-	KeyF11            Key = Key(driver.KeyF11)
-	KeyF12            Key = Key(driver.KeyF12)
-	KeyHome           Key = Key(driver.KeyHome)
-	KeyInsert         Key = Key(driver.KeyInsert)
-	KeyMetaLeft       Key = Key(driver.KeyMetaLeft)
-	KeyMetaRight      Key = Key(driver.KeyMetaRight)
-	KeyMinus          Key = Key(driver.KeyMinus)
-	KeyNumLock        Key = Key(driver.KeyNumLock)
-	KeyNumpad0        Key = Key(driver.KeyNumpad0)
-	KeyNumpad1        Key = Key(driver.KeyNumpad1)
-	KeyNumpad2        Key = Key(driver.KeyNumpad2)
-	KeyNumpad3        Key = Key(driver.KeyNumpad3)
-	KeyNumpad4        Key = Key(driver.KeyNumpad4)
-	KeyNumpad5        Key = Key(driver.KeyNumpad5)
-	KeyNumpad6        Key = Key(driver.KeyNumpad6)
-	KeyNumpad7        Key = Key(driver.KeyNumpad7)
-	KeyNumpad8        Key = Key(driver.KeyNumpad8)
-	KeyNumpad9        Key = Key(driver.KeyNumpad9)
-	KeyNumpadAdd      Key = Key(driver.KeyNumpadAdd)
-	KeyNumpadDecimal  Key = Key(driver.KeyNumpadDecimal)
-	KeyNumpadDivide   Key = Key(driver.KeyNumpadDivide)
-	KeyNumpadEnter    Key = Key(driver.KeyNumpadEnter)
-	KeyNumpadEqual    Key = Key(driver.KeyNumpadEqual)
-	KeyNumpadMultiply Key = Key(driver.KeyNumpadMultiply)
-	KeyNumpadSubtract Key = Key(driver.KeyNumpadSubtract)
-	KeyPageDown       Key = Key(driver.KeyPageDown)
-	KeyPageUp         Key = Key(driver.KeyPageUp)
-	KeyPause          Key = Key(driver.KeyPause)
-	KeyPeriod         Key = Key(driver.KeyPeriod)
-	KeyPrintScreen    Key = Key(driver.KeyPrintScreen)
-	KeyQuote          Key = Key(driver.KeyQuote)
-	KeyScrollLock     Key = Key(driver.KeyScrollLock)
-	KeySemicolon      Key = Key(driver.KeySemicolon)
-	KeyShiftLeft      Key = Key(driver.KeyShiftLeft)
-	KeyShiftRight     Key = Key(driver.KeyShiftRight)
-	KeySlash          Key = Key(driver.KeySlash)
-	KeySpace          Key = Key(driver.KeySpace)
-	KeyTab            Key = Key(driver.KeyTab)
-	KeyAlt            Key = Key(driver.KeyReserved0)
-	KeyControl        Key = Key(driver.KeyReserved1)
-	KeyShift          Key = Key(driver.KeyReserved2)
-	KeyMeta           Key = Key(driver.KeyReserved3)
+	KeyA              Key = Key(ui.KeyA)
+	KeyB              Key = Key(ui.KeyB)
+	KeyC              Key = Key(ui.KeyC)
+	KeyD              Key = Key(ui.KeyD)
+	KeyE              Key = Key(ui.KeyE)
+	KeyF              Key = Key(ui.KeyF)
+	KeyG              Key = Key(ui.KeyG)
+	KeyH              Key = Key(ui.KeyH)
+	KeyI              Key = Key(ui.KeyI)
+	KeyJ              Key = Key(ui.KeyJ)
+	KeyK              Key = Key(ui.KeyK)
+	KeyL              Key = Key(ui.KeyL)
+	KeyM              Key = Key(ui.KeyM)
+	KeyN              Key = Key(ui.KeyN)
+	KeyO              Key = Key(ui.KeyO)
+	KeyP              Key = Key(ui.KeyP)
+	KeyQ              Key = Key(ui.KeyQ)
+	KeyR              Key = Key(ui.KeyR)
+	KeyS              Key = Key(ui.KeyS)
+	KeyT              Key = Key(ui.KeyT)
+	KeyU              Key = Key(ui.KeyU)
+	KeyV              Key = Key(ui.KeyV)
+	KeyW              Key = Key(ui.KeyW)
+	KeyX              Key = Key(ui.KeyX)
+	KeyY              Key = Key(ui.KeyY)
+	KeyZ              Key = Key(ui.KeyZ)
+	KeyAltLeft        Key = Key(ui.KeyAltLeft)
+	KeyAltRight       Key = Key(ui.KeyAltRight)
+	KeyArrowDown      Key = Key(ui.KeyArrowDown)
+	KeyArrowLeft      Key = Key(ui.KeyArrowLeft)
+	KeyArrowRight     Key = Key(ui.KeyArrowRight)
+	KeyArrowUp        Key = Key(ui.KeyArrowUp)
+	KeyBackquote      Key = Key(ui.KeyBackquote)
+	KeyBackslash      Key = Key(ui.KeyBackslash)
+	KeyBackspace      Key = Key(ui.KeyBackspace)
+	KeyBracketLeft    Key = Key(ui.KeyBracketLeft)
+	KeyBracketRight   Key = Key(ui.KeyBracketRight)
+	KeyCapsLock       Key = Key(ui.KeyCapsLock)
+	KeyComma          Key = Key(ui.KeyComma)
+	KeyContextMenu    Key = Key(ui.KeyContextMenu)
+	KeyControlLeft    Key = Key(ui.KeyControlLeft)
+	KeyControlRight   Key = Key(ui.KeyControlRight)
+	KeyDelete         Key = Key(ui.KeyDelete)
+	KeyDigit0         Key = Key(ui.KeyDigit0)
+	KeyDigit1         Key = Key(ui.KeyDigit1)
+	KeyDigit2         Key = Key(ui.KeyDigit2)
+	KeyDigit3         Key = Key(ui.KeyDigit3)
+	KeyDigit4         Key = Key(ui.KeyDigit4)
+	KeyDigit5         Key = Key(ui.KeyDigit5)
+	KeyDigit6         Key = Key(ui.KeyDigit6)
+	KeyDigit7         Key = Key(ui.KeyDigit7)
+	KeyDigit8         Key = Key(ui.KeyDigit8)
+	KeyDigit9         Key = Key(ui.KeyDigit9)
+	KeyEnd            Key = Key(ui.KeyEnd)
+	KeyEnter          Key = Key(ui.KeyEnter)
+	KeyEqual          Key = Key(ui.KeyEqual)
+	KeyEscape         Key = Key(ui.KeyEscape)
+	KeyF1             Key = Key(ui.KeyF1)
+	KeyF2             Key = Key(ui.KeyF2)
+	KeyF3             Key = Key(ui.KeyF3)
+	KeyF4             Key = Key(ui.KeyF4)
+	KeyF5             Key = Key(ui.KeyF5)
+	KeyF6             Key = Key(ui.KeyF6)
+	KeyF7             Key = Key(ui.KeyF7)
+	KeyF8             Key = Key(ui.KeyF8)
+	KeyF9             Key = Key(ui.KeyF9)
+	KeyF10            Key = Key(ui.KeyF10)
+	KeyF11            Key = Key(ui.KeyF11)
+	KeyF12            Key = Key(ui.KeyF12)
+	KeyF13            Key = Key(ui.KeyF13)
+	KeyF14            Key = Key(ui.KeyF14)
+	KeyF15            Key = Key(ui.KeyF15)
+	KeyF16            Key = Key(ui.KeyF16)
+	KeyF17            Key = Key(ui.KeyF17)
+	KeyF18            Key = Key(ui.KeyF18)
+	KeyF19            Key = Key(ui.KeyF19)
+	KeyF20            Key = Key(ui.KeyF20)
+	KeyF21            Key = Key(ui.KeyF21)
+	KeyF22            Key = Key(ui.KeyF22)
+	KeyF23            Key = Key(ui.KeyF23)
+	KeyF24            Key = Key(ui.KeyF24)
+	KeyHome           Key = Key(ui.KeyHome)
+	KeyInsert         Key = Key(ui.KeyInsert)
+	KeyIntlBackslash  Key = Key(ui.KeyIntlBackslash)
+	KeyMetaLeft       Key = Key(ui.KeyMetaLeft)
+	KeyMetaRight      Key = Key(ui.KeyMetaRight)
+	KeyMinus          Key = Key(ui.KeyMinus)
+	KeyNumLock        Key = Key(ui.KeyNumLock)
+	KeyNumpad0        Key = Key(ui.KeyNumpad0)
+	KeyNumpad1        Key = Key(ui.KeyNumpad1)
+	KeyNumpad2        Key = Key(ui.KeyNumpad2)
+	KeyNumpad3        Key = Key(ui.KeyNumpad3)
+	KeyNumpad4        Key = Key(ui.KeyNumpad4)
+	KeyNumpad5        Key = Key(ui.KeyNumpad5)
+	KeyNumpad6        Key = Key(ui.KeyNumpad6)
+	KeyNumpad7        Key = Key(ui.KeyNumpad7)
+	KeyNumpad8        Key = Key(ui.KeyNumpad8)
+	KeyNumpad9        Key = Key(ui.KeyNumpad9)
+	KeyNumpadAdd      Key = Key(ui.KeyNumpadAdd)
+	KeyNumpadDecimal  Key = Key(ui.KeyNumpadDecimal)
+	KeyNumpadDivide   Key = Key(ui.KeyNumpadDivide)
+	KeyNumpadEnter    Key = Key(ui.KeyNumpadEnter)
+	KeyNumpadEqual    Key = Key(ui.KeyNumpadEqual)
+	KeyNumpadMultiply Key = Key(ui.KeyNumpadMultiply)
+	KeyNumpadSubtract Key = Key(ui.KeyNumpadSubtract)
+	KeyPageDown       Key = Key(ui.KeyPageDown)
+	KeyPageUp         Key = Key(ui.KeyPageUp)
+	KeyPause          Key = Key(ui.KeyPause)
+	KeyPeriod         Key = Key(ui.KeyPeriod)
+	KeyPrintScreen    Key = Key(ui.KeyPrintScreen)
+	KeyQuote          Key = Key(ui.KeyQuote)
+	KeyScrollLock     Key = Key(ui.KeyScrollLock)
+	KeySemicolon      Key = Key(ui.KeySemicolon)
+	KeyShiftLeft      Key = Key(ui.KeyShiftLeft)
+	KeyShiftRight     Key = Key(ui.KeyShiftRight)
+	KeySlash          Key = Key(ui.KeySlash)
+	KeySpace          Key = Key(ui.KeySpace)
+	KeyTab            Key = Key(ui.KeyTab)
+	KeyAlt            Key = Key(ui.KeyAlt)
+	KeyControl        Key = Key(ui.KeyControl)
+	KeyShift          Key = Key(ui.KeyShift)
+	KeyMeta           Key = Key(ui.KeyMeta)
 	KeyMax            Key = KeyMeta
 
 	// Keys for backward compatibility.
 	// Deprecated: as of v2.1.
-	Key0            Key = Key(driver.KeyDigit0)
-	Key1            Key = Key(driver.KeyDigit1)
-	Key2            Key = Key(driver.KeyDigit2)
-	Key3            Key = Key(driver.KeyDigit3)
-	Key4            Key = Key(driver.KeyDigit4)
-	Key5            Key = Key(driver.KeyDigit5)
-	Key6            Key = Key(driver.KeyDigit6)
-	Key7            Key = Key(driver.KeyDigit7)
-	Key8            Key = Key(driver.KeyDigit8)
-	Key9            Key = Key(driver.KeyDigit9)
-	KeyApostrophe   Key = Key(driver.KeyQuote)
-	KeyDown         Key = Key(driver.KeyArrowDown)
-	KeyGraveAccent  Key = Key(driver.KeyBackquote)
-	KeyKP0          Key = Key(driver.KeyNumpad0)
-	KeyKP1          Key = Key(driver.KeyNumpad1)
-	KeyKP2          Key = Key(driver.KeyNumpad2)
-	KeyKP3          Key = Key(driver.KeyNumpad3)
-	KeyKP4          Key = Key(driver.KeyNumpad4)
-	KeyKP5          Key = Key(driver.KeyNumpad5)
-	KeyKP6          Key = Key(driver.KeyNumpad6)
-	KeyKP7          Key = Key(driver.KeyNumpad7)
-	KeyKP8          Key = Key(driver.KeyNumpad8)
-	KeyKP9          Key = Key(driver.KeyNumpad9)
-	KeyKPDecimal    Key = Key(driver.KeyNumpadDecimal)
-	KeyKPDivide     Key = Key(driver.KeyNumpadDivide)
-	KeyKPEnter      Key = Key(driver.KeyNumpadEnter)
-	KeyKPEqual      Key = Key(driver.KeyNumpadEqual)
-	KeyKPMultiply   Key = Key(driver.KeyNumpadMultiply)
-	KeyKPSubtract   Key = Key(driver.KeyNumpadSubtract)
-	KeyLeft         Key = Key(driver.KeyArrowLeft)
-	KeyLeftBracket  Key = Key(driver.KeyBracketLeft)
-	KeyMenu         Key = Key(driver.KeyContextMenu)
-	KeyRight        Key = Key(driver.KeyArrowRight)
-	KeyRightBracket Key = Key(driver.KeyBracketRight)
-	KeyUp           Key = Key(driver.KeyArrowUp)
+	Key0            Key = Key(ui.KeyDigit0)
+	Key1            Key = Key(ui.KeyDigit1)
+	Key2            Key = Key(ui.KeyDigit2)
+	Key3            Key = Key(ui.KeyDigit3)
+	Key4            Key = Key(ui.KeyDigit4)
+	Key5            Key = Key(ui.KeyDigit5)
+	Key6            Key = Key(ui.KeyDigit6)
+	Key7            Key = Key(ui.KeyDigit7)
+	Key8            Key = Key(ui.KeyDigit8)
+	Key9            Key = Key(ui.KeyDigit9)
+	KeyApostrophe   Key = Key(ui.KeyQuote)
+	KeyDown         Key = Key(ui.KeyArrowDown)
+	KeyGraveAccent  Key = Key(ui.KeyBackquote)
+	KeyKP0          Key = Key(ui.KeyNumpad0)
+	KeyKP1          Key = Key(ui.KeyNumpad1)
+	KeyKP2          Key = Key(ui.KeyNumpad2)
+	KeyKP3          Key = Key(ui.KeyNumpad3)
+	KeyKP4          Key = Key(ui.KeyNumpad4)
+	KeyKP5          Key = Key(ui.KeyNumpad5)
+	KeyKP6          Key = Key(ui.KeyNumpad6)
+	KeyKP7          Key = Key(ui.KeyNumpad7)
+	KeyKP8          Key = Key(ui.KeyNumpad8)
+	KeyKP9          Key = Key(ui.KeyNumpad9)
+	KeyKPAdd        Key = Key(ui.KeyNumpadAdd)
+	KeyKPDecimal    Key = Key(ui.KeyNumpadDecimal)
+	KeyKPDivide     Key = Key(ui.KeyNumpadDivide)
+	KeyKPEnter      Key = Key(ui.KeyNumpadEnter)
+	KeyKPEqual      Key = Key(ui.KeyNumpadEqual)
+	KeyKPMultiply   Key = Key(ui.KeyNumpadMultiply)
+	KeyKPSubtract   Key = Key(ui.KeyNumpadSubtract)
+	KeyLeft         Key = Key(ui.KeyArrowLeft)
+	KeyLeftBracket  Key = Key(ui.KeyBracketLeft)
+	KeyMenu         Key = Key(ui.KeyContextMenu)
+	KeyRight        Key = Key(ui.KeyArrowRight)
+	KeyRightBracket Key = Key(ui.KeyBracketRight)
+	KeyUp           Key = Key(ui.KeyArrowUp)
 )
-
-func (k Key) isValid() bool {
-	switch k {
-	case KeyA:
-		return true
-	case KeyB:
-		return true
-	case KeyC:
-		return true
-	case KeyD:
-		return true
-	case KeyE:
-		return true
-	case KeyF:
-		return true
-	case KeyG:
-		return true
-	case KeyH:
-		return true
-	case KeyI:
-		return true
-	case KeyJ:
-		return true
-	case KeyK:
-		return true
-	case KeyL:
-		return true
-	case KeyM:
-		return true
-	case KeyN:
-		return true
-	case KeyO:
-		return true
-	case KeyP:
-		return true
-	case KeyQ:
-		return true
-	case KeyR:
-		return true
-	case KeyS:
-		return true
-	case KeyT:
-		return true
-	case KeyU:
-		return true
-	case KeyV:
-		return true
-	case KeyW:
-		return true
-	case KeyX:
-		return true
-	case KeyY:
-		return true
-	case KeyZ:
-		return true
-	case KeyAlt:
-		return true
-	case KeyAltLeft:
-		return true
-	case KeyAltRight:
-		return true
-	case KeyArrowDown:
-		return true
-	case KeyArrowLeft:
-		return true
-	case KeyArrowRight:
-		return true
-	case KeyArrowUp:
-		return true
-	case KeyBackquote:
-		return true
-	case KeyBackslash:
-		return true
-	case KeyBackspace:
-		return true
-	case KeyBracketLeft:
-		return true
-	case KeyBracketRight:
-		return true
-	case KeyCapsLock:
-		return true
-	case KeyComma:
-		return true
-	case KeyContextMenu:
-		return true
-	case KeyControl:
-		return true
-	case KeyControlLeft:
-		return true
-	case KeyControlRight:
-		return true
-	case KeyDelete:
-		return true
-	case KeyDigit0:
-		return true
-	case KeyDigit1:
-		return true
-	case KeyDigit2:
-		return true
-	case KeyDigit3:
-		return true
-	case KeyDigit4:
-		return true
-	case KeyDigit5:
-		return true
-	case KeyDigit6:
-		return true
-	case KeyDigit7:
-		return true
-	case KeyDigit8:
-		return true
-	case KeyDigit9:
-		return true
-	case KeyEnd:
-		return true
-	case KeyEnter:
-		return true
-	case KeyEqual:
-		return true
-	case KeyEscape:
-		return true
-	case KeyF1:
-		return true
-	case KeyF2:
-		return true
-	case KeyF3:
-		return true
-	case KeyF4:
-		return true
-	case KeyF5:
-		return true
-	case KeyF6:
-		return true
-	case KeyF7:
-		return true
-	case KeyF8:
-		return true
-	case KeyF9:
-		return true
-	case KeyF10:
-		return true
-	case KeyF11:
-		return true
-	case KeyF12:
-		return true
-	case KeyHome:
-		return true
-	case KeyInsert:
-		return true
-	case KeyMeta:
-		return true
-	case KeyMetaLeft:
-		return true
-	case KeyMetaRight:
-		return true
-	case KeyMinus:
-		return true
-	case KeyNumLock:
-		return true
-	case KeyNumpad0:
-		return true
-	case KeyNumpad1:
-		return true
-	case KeyNumpad2:
-		return true
-	case KeyNumpad3:
-		return true
-	case KeyNumpad4:
-		return true
-	case KeyNumpad5:
-		return true
-	case KeyNumpad6:
-		return true
-	case KeyNumpad7:
-		return true
-	case KeyNumpad8:
-		return true
-	case KeyNumpad9:
-		return true
-	case KeyNumpadAdd:
-		return true
-	case KeyNumpadDecimal:
-		return true
-	case KeyNumpadDivide:
-		return true
-	case KeyNumpadEnter:
-		return true
-	case KeyNumpadEqual:
-		return true
-	case KeyNumpadMultiply:
-		return true
-	case KeyNumpadSubtract:
-		return true
-	case KeyPageDown:
-		return true
-	case KeyPageUp:
-		return true
-	case KeyPause:
-		return true
-	case KeyPeriod:
-		return true
-	case KeyPrintScreen:
-		return true
-	case KeyQuote:
-		return true
-	case KeyScrollLock:
-		return true
-	case KeySemicolon:
-		return true
-	case KeyShift:
-		return true
-	case KeyShiftLeft:
-		return true
-	case KeyShiftRight:
-		return true
-	case KeySlash:
-		return true
-	case KeySpace:
-		return true
-	case KeyTab:
-		return true
-
-	default:
-		return false
-	}
-}
 
 // String returns a string representing the key.
 //
@@ -552,10 +341,36 @@ func (k Key) String() string {
 		return "F11"
 	case KeyF12:
 		return "F12"
+	case KeyF13:
+		return "F13"
+	case KeyF14:
+		return "F14"
+	case KeyF15:
+		return "F15"
+	case KeyF16:
+		return "F16"
+	case KeyF17:
+		return "F17"
+	case KeyF18:
+		return "F18"
+	case KeyF19:
+		return "F19"
+	case KeyF20:
+		return "F20"
+	case KeyF21:
+		return "F21"
+	case KeyF22:
+		return "F22"
+	case KeyF23:
+		return "F23"
+	case KeyF24:
+		return "F24"
 	case KeyHome:
 		return "Home"
 	case KeyInsert:
 		return "Insert"
+	case KeyIntlBackslash:
+		return "IntlBackslash"
 	case KeyMeta:
 		return "Meta"
 	case KeyMetaLeft:
@@ -800,12 +615,38 @@ func keyNameToKeyCode(name string) (Key, bool) {
 		return KeyF11, true
 	case "f12":
 		return KeyF12, true
+	case "f13":
+		return KeyF13, true
+	case "f14":
+		return KeyF14, true
+	case "f15":
+		return KeyF15, true
+	case "f16":
+		return KeyF16, true
+	case "f17":
+		return KeyF17, true
+	case "f18":
+		return KeyF18, true
+	case "f19":
+		return KeyF19, true
+	case "f20":
+		return KeyF20, true
+	case "f21":
+		return KeyF21, true
+	case "f22":
+		return KeyF22, true
+	case "f23":
+		return KeyF23, true
+	case "f24":
+		return KeyF24, true
 	case "graveaccent":
 		return KeyGraveAccent, true
 	case "home":
 		return KeyHome, true
 	case "insert":
 		return KeyInsert, true
+	case "intlbackslash":
+		return KeyIntlBackslash, true
 	case "kp0":
 		return KeyKP0, true
 	case "kp1":
@@ -826,6 +667,8 @@ func keyNameToKeyCode(name string) (Key, bool) {
 		return KeyKP8, true
 	case "kp9":
 		return KeyKP9, true
+	case "kpadd":
+		return KeyKPAdd, true
 	case "kpdecimal":
 		return KeyKPDecimal, true
 	case "kpdivide":
@@ -924,4 +767,19 @@ func keyNameToKeyCode(name string) (Key, bool) {
 		return KeyUp, true
 	}
 	return 0, false
+}
+
+// MarshalText implements encoding.TextMarshaler.
+func (k Key) MarshalText() ([]byte, error) {
+	return []byte(k.String()), nil
+}
+
+// UnmarshalText implements encoding.TextUnmarshaler
+func (k *Key) UnmarshalText(text []byte) error {
+	key, ok := keyNameToKeyCode(string(text))
+	if !ok {
+		return fmt.Errorf("ebiten: unexpected key name: %s", string(text))
+	}
+	*k = key
+	return nil
 }

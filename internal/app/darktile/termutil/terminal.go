@@ -38,10 +38,14 @@ type Terminal struct {
 	initialCommand    string
 }
 
+// processChanCapacity is how many runes can be queued ahead of the parser
+// before reads from the pty block.
+const processChanCapacity = 0xffff
+
 // NewTerminal creates a new terminal instance
 func New(options ...Option) *Terminal {
 	term := &Terminal{
-		processChan: make(chan MeasuredRune, 0xffff),
+		processChan: make(chan MeasuredRune, processChanCapacity),
 		closeChan:   make(chan struct{}),
 		theme:       &Theme{},
 	}

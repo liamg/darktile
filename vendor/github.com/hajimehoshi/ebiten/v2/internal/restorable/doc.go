@@ -16,7 +16,7 @@
 // and restores its pixel data from the commands when context lost happens.
 //
 // When a function like DrawImage or Fill is called, an Image tries to record
-// the information for restoring.
+// the information for restoration.
 //
 // * Context lost
 //
@@ -24,9 +24,9 @@
 // to make more room on GPU memory.
 // This can happen e.g. when GPU memory usage is high, or just switching applications
 // might cause context lost on mobiles.
-// As Ebiten's image data is on GPU memory, the game can't continue when context lost happens
+// As Ebitengine's image data is on GPU memory, the game can't continue when context lost happens
 // without restoring image information.
-// The package restorable is the package to record information for such restoring.
+// The package restorable is the package to record information for such restoration.
 //
 // * DrawImage
 //
@@ -37,7 +37,7 @@
 // In other words, If A.DrawImage(B, ...) is called,
 // it can be said that the image A depends on the image B.
 //
-// * Fill, ReplacePixels and Dispose
+// * Fill, WritePixels and Dispose
 //
 // These functions are also drawing functions and the target image stores the pixel data
 // instead of draw image history items. There is no dependency here.
@@ -46,7 +46,7 @@
 //
 // After any of the drawing functions is called, the target image can't be depended on by
 // any other images. For example, if an image A depends on an image B, and B is changed
-// by a Fill call after that, the image A can't depend on the image B any more.
+// by a Fill call after that, the image A can't depend on the image B anymore.
 // In this case, as the image B can no longer be used to restore the image A,
 // the image A becomes 'stale'.
 // As all the stale images are resolved before context lost happens,

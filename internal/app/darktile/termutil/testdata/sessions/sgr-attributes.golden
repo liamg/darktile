@@ -1,0 +1,26 @@
+size: 40x10
+buffer: main
+title: ""
+cursor: col=8 row=7 visible=true
+scroll-region: none
+
+--- text ---
+  0|plain|
+  1|bold dim italic|
+  2|underline strike|
+  3|inverse blink|
+  4|redgreenblue|
+  5|on-red bright|
+  6|8bit24bit|
+  7|combined|
+  8||
+  9||
+
+--- attributes ---
+row 1: [0-3]fg=#c5c8c6 bg=#000000+bold [4-4]fg=nil bg=nil [5-7]fg=nil bg=nil+dim [8-8]fg=nil bg=nil [9-14]fg=nil bg=nil+italic
+row 2: [0-8]fg=nil bg=nil+underline [9-9]fg=nil bg=nil [10-15]fg=nil bg=nil+strikethrough
+row 3: [0-6]fg=nil bg=nil+inverse [7-7]fg=nil bg=nil [8-12]fg=nil bg=nil+blink
+row 4: [0-2]fg=#cc6666 bg=nil [3-7]fg=#b5bd68 bg=nil [8-11]fg=#81a2be bg=nil
+row 5: [0-5]fg=#c5c8c6 bg=#cc6666 [7-12]fg=#d54e53 bg=#000000
+row 6: [0-3]fg=#ff0000 bg=#000000 [4-8]fg=#123456 bg=#000000
+row 7: [0-7]fg=#cc6666 bg=nil+bold+underline

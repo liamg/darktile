@@ -1,0 +1,2 @@
+go test fuzz v1
+string("[99M\x1b[99L\x1b[99xP\x1b[99@")

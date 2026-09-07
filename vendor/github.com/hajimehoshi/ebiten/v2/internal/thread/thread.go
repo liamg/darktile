@@ -15,58 +15,83 @@
 package thread
 
 import (
-	"errors"
+	"context"
+	"runtime"
 )
 
-// Thread defines threading behavior in Ebiten.
 type Thread interface {
-	Call(func() error) error
-	Loop()
+	Loop(ctx context.Context) error
+	Call(f func())
+	CallAsync(f func())
+
+	private()
+}
+
+type queueItem struct {
+	f    func()
+	sync bool
 }
 
 // OSThread represents an OS thread.
 type OSThread struct {
-	funcs   chan func() error
-	results chan error
+	funcs chan queueItem
+	done  chan struct{}
 }
 
 // NewOSThread creates a new thread.
-//
-// It is assumed that the OS thread is fixed by runtime.LockOSThread when NewOSThread is called.
 func NewOSThread() *OSThread {
 	return &OSThread{
-		funcs:   make(chan func() error),
-		results: make(chan error),
+		funcs: make(chan queueItem),
+		done:  make(chan struct{}),
 	}
 }
 
-// BreakLoop represents an termination of the loop.
-var BreakLoop = errors.New("break loop")
-
-// Loop starts the thread loop until a posted function returns BreakLoop.
+// Loop starts the thread loop until Stop is called on the current OS thread.
 //
-// Loop must be called on the thread.
-func (t *OSThread) Loop() {
-	for f := range t.funcs {
-		err := f()
-		if err == BreakLoop {
-			t.results <- nil
-			return
+// Loop returns ctx's error if exists.
+//
+// Loop must be called on the OS thread.
+func (t *OSThread) Loop(ctx context.Context) error {
+	runtime.LockOSThread()
+	defer runtime.UnlockOSThread()
+
+	for {
+		select {
+		case item := <-t.funcs:
+			func() {
+				if item.sync {
+					defer func() {
+						t.done <- struct{}{}
+					}()
+				}
+				item.f()
+			}()
+		case <-ctx.Done():
+			return ctx.Err()
 		}
-		t.results <- err
 	}
 }
 
 // Call calls f on the thread.
 //
-// Do not call this from the same thread. This would block forever.
-//
-// If f returns BreakLoop, Loop returns.
+// Do not call Call from the same thread. Call would block forever.
 //
 // Call blocks if Loop is not called.
-func (t *OSThread) Call(f func() error) error {
-	t.funcs <- f
-	return <-t.results
+func (t *OSThread) Call(f func()) {
+	t.funcs <- queueItem{f: f, sync: true}
+	<-t.done
+}
+
+func (t *OSThread) private() {
+}
+
+// CallAsync tries to queue f.
+// CallAsync returns immediately if f can be queued.
+// CallAsync blocks if f cannot be queued.
+//
+// Do not call CallAsync from the same thread. CallAsync would block forever.
+func (t *OSThread) CallAsync(f func()) {
+	t.funcs <- queueItem{f: f, sync: false}
 }
 
 // NoopThread is used to disable threading.
@@ -77,10 +102,20 @@ func NewNoopThread() *NoopThread {
 	return &NoopThread{}
 }
 
-// Loop does nothing
-func (t *NoopThread) Loop() {}
+// Loop does nothing.
+func (t *NoopThread) Loop(ctx context.Context) error {
+	return nil
+}
 
-// Call executes the func immediately
-func (t *NoopThread) Call(f func() error) error {
-	return f()
+// Call executes the func immediately.
+func (t *NoopThread) Call(f func()) {
+	f()
+}
+
+// CallAsync executes the func immediately.
+func (t *NoopThread) CallAsync(f func()) {
+	f()
+}
+
+func (t *NoopThread) private() {
 }

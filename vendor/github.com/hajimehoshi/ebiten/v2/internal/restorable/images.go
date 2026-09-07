@@ -15,34 +15,54 @@
 package restorable
 
 import (
-	"path/filepath"
+	"image"
+	"runtime"
+	"sync"
+	"sync/atomic"
 
-	"github.com/hajimehoshi/ebiten/v2/internal/driver"
+	"github.com/hajimehoshi/ebiten/v2/internal/debug"
 	"github.com/hajimehoshi/ebiten/v2/internal/graphicscommand"
+	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver"
 )
 
-// forceRestoring reports whether restoring forcely happens or not.
-var forceRestoring = false
+// forceRestoration reports whether restoration forcibly happens or not.
+// This is used only for testing.
+var forceRestoration = false
 
-// NeedsRestoring reports whether restoring process works or not.
-func NeedsRestoring() bool {
-	if forceRestoring {
-		return true
-	}
-	return graphicscommand.NeedsRestoring()
+// disabled indicates that restoration is disabled or not.
+// Restoration is enabled by default for some platforms like Android for safety.
+// Before SetGame, it is not possible to determine whether restoration is needed or not.
+var disabled atomic.Bool
+
+var disabledOnce sync.Once
+
+// Disable disables restoration.
+func Disable() {
+	disabled.Store(true)
 }
 
-// EnableRestoringForTesting forces to enable restoring for testing.
-func EnableRestoringForTesting() {
-	forceRestoring = true
+// needsRestoration reports whether restoration process works or not.
+func needsRestoration() bool {
+	if forceRestoration {
+		return true
+	}
+	// TODO: If Vulkan is introduced, restoration might not be needed.
+	if runtime.GOOS == "android" {
+		return !disabled.Load()
+	}
+	return false
+}
+
+// AlwaysReadPixelsFromGPU reports whether ReadPixels always reads pixels from GPU or not.
+func AlwaysReadPixelsFromGPU() bool {
+	return !needsRestoration()
 }
 
 // images is a set of Image objects.
 type images struct {
 	images      map[*Image]struct{}
 	shaders     map[*Shader]struct{}
-	lastTarget  *Image
-	contextLost bool
+	contextLost atomic.Bool
 }
 
 // theImages represents the images for the current process.
@@ -51,75 +71,67 @@ var theImages = &images{
 	shaders: map[*Shader]struct{}{},
 }
 
-// ResolveStaleImages flushes the queued draw commands and resolves
-// all stale images.
-//
-// ResolveStaleImages is intended to be called at the end of a frame.
-func ResolveStaleImages() error {
-	if err := graphicscommand.FlushCommands(); err != nil {
+func SwapBuffers(graphicsDriver graphicsdriver.Graphics) error {
+	if debug.IsDebug {
+		debug.FrameLogf("Internal image sizes:\n")
+		imgs := make([]*graphicscommand.Image, 0, len(theImages.images))
+		for i := range theImages.images {
+			imgs = append(imgs, i.image)
+		}
+		graphicscommand.LogImagesInfo(imgs)
+	}
+	return resolveStaleImages(graphicsDriver, true)
+}
+
+// resolveStaleImages flushes the queued draw commands and resolves all stale images.
+// If endFrame is true, the current screen might be used to present when flushing the commands.
+func resolveStaleImages(graphicsDriver graphicsdriver.Graphics, endFrame bool) error {
+	// When Disable is called, all the images data should be evicted once.
+	if disabled.Load() {
+		disabledOnce.Do(func() {
+			for img := range theImages.images {
+				img.makeStale(image.Rect(0, 0, img.width, img.height))
+			}
+		})
+	}
+
+	if err := graphicscommand.FlushCommands(graphicsDriver, endFrame); err != nil {
 		return err
 	}
-	if !NeedsRestoring() {
+	if !needsRestoration() {
 		return nil
 	}
-	return theImages.resolveStaleImages()
+	return theImages.resolveStaleImages(graphicsDriver)
 }
 
 // RestoreIfNeeded restores the images.
 //
-// Restoring means to make all *graphicscommand.Image objects have their textures and framebuffers.
-func RestoreIfNeeded() error {
-	if !NeedsRestoring() {
+// Restoration means to make all *graphicscommand.Image objects have their textures and framebuffers.
+func RestoreIfNeeded(graphicsDriver graphicsdriver.Graphics) error {
+	if !needsRestoration() {
 		return nil
 	}
 
-	if !forceRestoring {
-		var r bool
-
-		if canDetectContextLostExplicitly {
-			r = theImages.contextLost
-		} else {
-			// As isInvalidated() is expensive, call this only for one image.
-			// This assumes that if there is one image that is invalidated, all images are invalidated.
-			for img := range theImages.images {
-				// The screen image might not have a texture. Skip this.
-				if img.screen {
-					continue
-				}
-				var err error
-				r, err = img.isInvalidated()
-				if err != nil {
-					return err
-				}
-				break
-			}
-		}
-
-		if !r {
-			return nil
-		}
-	}
-
-	err := graphicscommand.ResetGraphicsDriverState()
-	if err == driver.GraphicsNotReady {
+	if !forceRestoration && !theImages.contextLost.Load() {
 		return nil
 	}
-	if err != nil {
+
+	if err := graphicscommand.ResetGraphicsDriverState(graphicsDriver); err != nil {
 		return err
 	}
-	return theImages.restore()
+	return theImages.restore(graphicsDriver)
 }
 
 // DumpImages dumps all the current images to the specified directory.
 //
 // This is for testing usage.
-func DumpImages(dir string) error {
+func DumpImages(graphicsDriver graphicsdriver.Graphics, dir string) (string, error) {
+	images := make([]*graphicscommand.Image, 0, len(theImages.images))
 	for img := range theImages.images {
-		if err := img.Dump(filepath.Join(dir, "*.png"), false); err != nil {
-			return err
-		}
+		images = append(images, img.image)
 	}
-	return nil
+
+	return graphicscommand.DumpImages(images, graphicsDriver, dir)
 }
 
 // add adds img to the images.
@@ -143,30 +155,38 @@ func (i *images) removeShader(shader *Shader) {
 }
 
 // resolveStaleImages resolves stale images.
-func (i *images) resolveStaleImages() error {
-	i.lastTarget = nil
+func (i *images) resolveStaleImages(graphicsDriver graphicsdriver.Graphics) error {
 	for img := range i.images {
-		if err := img.resolveStale(); err != nil {
+		if err := img.resolveStale(graphicsDriver); err != nil {
 			return err
 		}
 	}
 	return nil
 }
 
-// makeStaleIfDependingOn makes all the images stale that depend on target.
+// makeStaleIfDependingOn makes all the images stale that depend on src.
 //
-// When target is modified, all images depending on target can't be restored with target.
+// When src is modified, all images depending on src can't be restored with src.
 // makeStaleIfDependingOn is called in such situation.
-func (i *images) makeStaleIfDependingOn(target *Image) {
-	if target == nil {
-		panic("restorable: target must not be nil at makeStaleIfDependingOn")
+func (i *images) makeStaleIfDependingOn(src *Image) {
+	if src == nil {
+		panic("restorable: src must not be nil at makeStaleIfDependingOn")
 	}
-	if i.lastTarget == target {
-		return
-	}
-	i.lastTarget = target
 	for img := range i.images {
-		img.makeStaleIfDependingOn(target)
+		img.makeStaleIfDependingOn(src)
+	}
+}
+
+// makeStaleIfDependingOnAtRegion makes all the images stale that depend on src at srcRegion.
+//
+// When src is modified, all images depending on src can't be restored with src at srcRegion.
+// makeStaleIfDependingOnAtRegion is called in such situation.
+func (i *images) makeStaleIfDependingOnAtRegion(src *Image, srcRegion image.Rectangle) {
+	if src == nil {
+		panic("restorable: src must not be nil at makeStaleIfDependingOnAtRegion")
+	}
+	for img := range i.images {
+		img.makeStaleIfDependingOnAtRegion(src, srcRegion)
 	}
 }
 
@@ -182,29 +202,25 @@ func (i *images) makeStaleIfDependingOnShader(shader *Shader) {
 
 // restore restores the images.
 //
-// Restoring means to make all *graphicscommand.Image objects have their textures and framebuffers.
-func (i *images) restore() error {
-	if !NeedsRestoring() {
-		panic("restorable: restore cannot be called when restoring is disabled")
+// Restoration means to make all *graphicscommand.Image objects have their textures and framebuffers.
+func (i *images) restore(graphicsDriver graphicsdriver.Graphics) error {
+	if !needsRestoration() {
+		panic("restorable: restore cannot be called when restoration is disabled")
 	}
 
-	// Dispose all the shaders ahead of restoring. A current shader ID and a new shader ID can be duplicated.
+	// Dispose all the shaders ahead of restoration. A current shader ID and a new shader ID can be duplicated.
 	for s := range i.shaders {
-		if needsDisposingWhenRestoring {
-			s.shader.Dispose()
-		}
+		s.shader.Dispose()
 		s.shader = nil
 	}
 	for s := range i.shaders {
 		s.restore()
 	}
 
-	// Dispose all the images ahead of restoring. A current texture ID and a new texture ID can be duplicated.
+	// Dispose all the images ahead of restoration. A current texture ID and a new texture ID can be duplicated.
 	// TODO: Write a test to confirm that ID duplication never happens.
 	for i := range i.images {
-		if needsDisposingWhenRestoring {
-			i.image.Dispose()
-		}
+		i.image.Dispose()
 		i.image = nil
 	}
 
@@ -216,9 +232,7 @@ func (i *images) restore() error {
 	}
 	images := map[*Image]struct{}{}
 	for i := range i.images {
-		if !i.priority {
-			images[i] = struct{}{}
-		}
+		images[i] = struct{}{}
 	}
 	edges := map[edge]struct{}{}
 	for t := range images {
@@ -227,22 +241,15 @@ func (i *images) restore() error {
 		}
 	}
 
-	sorted := []*Image{}
-	for i := range i.images {
-		if i.priority {
-			sorted = append(sorted, i)
-		}
-	}
+	var sorted []*Image
 	for len(images) > 0 {
-		// current repesents images that have no incoming edges.
+		// current represents images that have no incoming edges.
 		current := map[*Image]struct{}{}
 		for i := range images {
 			current[i] = struct{}{}
 		}
 		for e := range edges {
-			if _, ok := current[e.target]; ok {
-				delete(current, e.target)
-			}
+			delete(current, e.target)
 		}
 		for i := range current {
 			delete(images, i)
@@ -260,30 +267,30 @@ func (i *images) restore() error {
 	}
 
 	for _, img := range sorted {
-		if err := img.restore(); err != nil {
+		if err := img.restore(graphicsDriver); err != nil {
 			return err
 		}
 	}
 
-	i.contextLost = false
+	i.contextLost.Store(false)
 
 	return nil
 }
 
+var graphicsDriverInitialized bool
+
 // InitializeGraphicsDriverState initializes the graphics driver state.
-func InitializeGraphicsDriverState() error {
-	return graphicscommand.InitializeGraphicsDriverState()
+func InitializeGraphicsDriverState(graphicsDriver graphicsdriver.Graphics) error {
+	graphicsDriverInitialized = true
+	return graphicscommand.InitializeGraphicsDriverState(graphicsDriver)
 }
 
 // MaxImageSize returns the maximum size of an image.
-func MaxImageSize() int {
-	return graphicscommand.MaxImageSize()
+func MaxImageSize(graphicsDriver graphicsdriver.Graphics) int {
+	return graphicscommand.MaxImageSize(graphicsDriver)
 }
 
 // OnContextLost is called when the context lost is detected in an explicit way.
 func OnContextLost() {
-	if !canDetectContextLostExplicitly {
-		panic("restorable: OnContextLost cannot be called in this environment")
-	}
-	theImages.contextLost = true
+	theImages.contextLost.Store(true)
 }

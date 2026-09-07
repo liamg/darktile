@@ -15,14 +15,14 @@
 package ebiten
 
 import (
-	"fmt"
-
 	"image/color"
 
 	"github.com/hajimehoshi/ebiten/v2/internal/affine"
 )
 
-// ColorMDim is a dimension of a ColorM.
+// ColorMDim is the dimension of a ColorM.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 const ColorMDim = affine.ColorMDim
 
 // A ColorM represents a matrix to transform coloring when rendering an image.
@@ -33,52 +33,86 @@ const ColorMDim = affine.ColorMDim
 // the color is multiplied again.
 //
 // The initial value is identity.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 type ColorM struct {
-	impl *affine.ColorM
+	impl affine.ColorM
 
 	_ [0]func() // Marks as non-comparable.
 }
 
+func (c *ColorM) affineColorM() affine.ColorM {
+	if c.impl != nil {
+		return c.impl
+	}
+	return affine.ColorMIdentity{}
+}
+
 // String returns a string representation of ColorM.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) String() string {
-	b, t := c.impl.UnsafeElements()
-	return fmt.Sprintf("[[%f, %f, %f, %f, %f], [%f, %f, %f, %f, %f], [%f, %f, %f, %f, %f], [%f, %f, %f, %f, %f]]",
-		b[0], b[4], b[8], b[12], t[0],
-		b[1], b[5], b[9], b[13], t[1],
-		b[2], b[6], b[10], b[14], t[2],
-		b[3], b[7], b[11], b[15], t[3])
+	return c.affineColorM().String()
 }
 
 // Reset resets the ColorM as identity.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) Reset() {
-	c.impl = nil
+	c.impl = affine.ColorMIdentity{}
 }
 
 // Apply pre-multiplies a vector (r, g, b, a, 1) by the matrix
 // where r, g, b, and a are clr's values in straight-alpha format.
 // In other words, Apply calculates ColorM * (r, g, b, a, 1)^T.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) Apply(clr color.Color) color.Color {
-	return c.impl.Apply(clr)
+	return c.affineColorM().Apply(clr)
 }
 
 // Concat multiplies a color matrix with the other color matrix.
-// This is same as muptiplying the matrix other and the matrix c in this order.
+// This is same as multiplying the matrix other and the matrix c in this order.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) Concat(other ColorM) {
-	c.impl = c.impl.Concat(other.impl)
+	o := other.impl
+	if o == nil {
+		return
+	}
+	c.impl = c.affineColorM().Concat(o)
 }
 
 // Scale scales the matrix by (r, g, b, a).
+//
+// Deprecated: as of v2.5. Use ColorScale or the colorm package instead.
 func (c *ColorM) Scale(r, g, b, a float64) {
-	c.impl = c.impl.Scale(float32(r), float32(g), float32(b), float32(a))
+	c.impl = c.affineColorM().Scale(float32(r), float32(g), float32(b), float32(a))
+}
+
+// ScaleWithColor scales the matrix by clr.
+//
+// Deprecated: as of v2.5. Use ColorScale or the colorm package instead.
+func (c *ColorM) ScaleWithColor(clr color.Color) {
+	cr, cg, cb, ca := clr.RGBA()
+	if ca == 0 {
+		c.Scale(0, 0, 0, 0)
+		return
+	}
+	c.Scale(float64(cr)/float64(ca), float64(cg)/float64(ca), float64(cb)/float64(ca), float64(ca)/0xffff)
 }
 
 // Translate translates the matrix by (r, g, b, a).
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) Translate(r, g, b, a float64) {
-	c.impl = c.impl.Translate(float32(r), float32(g), float32(b), float32(a))
+	c.impl = c.affineColorM().Translate(float32(r), float32(g), float32(b), float32(a))
 }
 
 // RotateHue rotates the hue.
 // theta represents rotating angle in radian.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) RotateHue(theta float64) {
 	c.ChangeHSV(theta, 1, 1)
 }
@@ -89,28 +123,38 @@ func (c *ColorM) RotateHue(theta float64) {
 // valueScale is a value to scale value (a.k.a. brightness).
 //
 // This conversion uses RGB to/from YCrCb conversion.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) ChangeHSV(hueTheta float64, saturationScale float64, valueScale float64) {
-	c.impl = c.impl.ChangeHSV(hueTheta, float32(saturationScale), float32(valueScale))
+	c.impl = affine.ChangeHSV(c.affineColorM(), hueTheta, float32(saturationScale), float32(valueScale))
 }
 
 // Element returns a value of a matrix at (i, j).
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) Element(i, j int) float64 {
-	return float64(c.impl.Element(i, j))
+	return float64(c.affineColorM().At(i, j))
 }
 
 // SetElement sets an element at (i, j).
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) SetElement(i, j int, element float64) {
-	c.impl = c.impl.SetElement(i, j, float32(element))
+	c.impl = affine.ColorMSetElement(c.affineColorM(), i, j, float32(element))
 }
 
 // IsInvertible returns a boolean value indicating
 // whether the matrix c is invertible or not.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) IsInvertible() bool {
-	return c.impl.IsInvertible()
+	return c.affineColorM().IsInvertible()
 }
 
 // Invert inverts the matrix.
 // If c is not invertible, Invert panics.
+//
+// Deprecated: as of v2.5. Use the colorm package instead.
 func (c *ColorM) Invert() {
-	c.impl = c.impl.Invert()
+	c.impl = c.affineColorM().Invert()
 }

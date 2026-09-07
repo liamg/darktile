@@ -2,3 +2,5 @@
 .vscode
 /darktile
 *.swp
+/.cache
+/dist

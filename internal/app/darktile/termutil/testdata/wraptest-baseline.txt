@@ -1,0 +1,25 @@
+1.  wrap works                           yes
+2.  wrap is deferred                     yes
+3.  CPR beyond last column               yes
+4.  CR works at margin                   yes
+5.  BS works at margin                   yes
+6.  TAB wraps at margin                  no
+7.  TAB cancels wrap                     no
+8.  NL cancels wrap                      no
+9.  NUL cancels wrap                     no
+10. BEL cancels wrap                     no
+11. RI cancels wrap                      no
+12. SGR cancels wrap                     no
+13. SM cancels wrap                      no
+14. CUP cancels wrap                     yes
+15. CUF cancels wrap                     yes
+16. EL cancels wrap                      no
+17. ED cancels wrap                      no
+18. DCH cancels wrap                     no
+19. ICH cancels wrap                     no
+20. ECH cancels wrap                     no
+21. CPR cancels wrap                     no
+22. DECSC cancels wrap                   no
+23. DECRC restores wrap                  yes
+24. DECRC restores decawm=on             no
+25. DECRC restores decawm=off            no

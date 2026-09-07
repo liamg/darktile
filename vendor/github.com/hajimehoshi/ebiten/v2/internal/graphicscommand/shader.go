@@ -15,21 +15,38 @@
 package graphicscommand
 
 import (
-	"github.com/hajimehoshi/ebiten/v2/internal/driver"
+	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver"
 	"github.com/hajimehoshi/ebiten/v2/internal/shaderir"
 )
 
-type Shader struct {
-	shader driver.Shader
+var nextShaderID = 1
+
+func genNextShaderID() int {
+	id := nextShaderID
+	nextShaderID++
+	return id
 }
 
-func NewShader(ir *shaderir.Program) *Shader {
-	s := &Shader{}
+type Shader struct {
+	shader graphicsdriver.Shader
+	ir     *shaderir.Program
+	id     int
+
+	// name is used only for logging.
+	name string
+}
+
+func NewShader(ir *shaderir.Program, name string) *Shader {
+	s := &Shader{
+		ir:   ir,
+		id:   genNextShaderID(),
+		name: name,
+	}
 	c := &newShaderCommand{
 		result: s,
 		ir:     ir,
 	}
-	theCommandQueue.Enqueue(c)
+	theCommandQueueManager.enqueueCommand(c)
 	return s
 }
 
@@ -37,5 +54,9 @@ func (s *Shader) Dispose() {
 	c := &disposeShaderCommand{
 		target: s,
 	}
-	theCommandQueue.Enqueue(c)
+	theCommandQueueManager.enqueueCommand(c)
+}
+
+func (s *Shader) unit() shaderir.Unit {
+	return s.ir.Unit
 }

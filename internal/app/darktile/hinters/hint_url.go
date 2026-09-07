@@ -1,10 +1,16 @@
 package hinters
 
 import (
+	"regexp"
+
 	"github.com/liamg/darktile/internal/app/darktile/termutil"
 	"github.com/skratchdot/open-golang/open"
-	"mvdan.cc/xurls"
+	"mvdan.cc/xurls/v2"
 )
+
+// xurls.Strict() builds the pattern on every call, and Match runs on every
+// pointer move.
+var urlPattern *regexp.Regexp = xurls.Strict()
 
 func init() {
 	register(&URLHinter{}, PriorityHigh)
@@ -15,7 +21,7 @@ type URLHinter struct {
 }
 
 func (h *URLHinter) Match(text string, cursorIndex int) (matched bool, offset int, length int) {
-	matches := xurls.Strict.FindAllStringIndex(text, -1)
+	matches := urlPattern.FindAllStringIndex(text, -1)
 	for _, match := range matches {
 		if match[0] <= cursorIndex && match[1] > cursorIndex {
 			return true, match[0], match[1] - match[0]

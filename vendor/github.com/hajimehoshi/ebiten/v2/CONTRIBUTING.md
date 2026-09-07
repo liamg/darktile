@@ -1,26 +1,34 @@
-# Contributing to Ebiten
+# Contributing to Ebitengine
 
-Ebiten is an open source project and we appreciate your contributions!
+Ebitengine is an open source project and we appreciate your contributions!
 
-There are some rules for Ebiten contribution.
+There are some rules for Ebitengine contribution.
+
+## Filing an issue in the GitHub issue
+
+File an issue in the GitHub issues, if you find a problem or have a feature request but this is not filed.
+
+Except for very trivial fixes like fixing misspelling, it is a must to have an issue.
 
 ## Asking us when you are not sure
 
+In Ebitengine, problems might not be documented very well in GitHub issues. Please ask us before you work on such issue.
+
 You can ask us at these communities:
 
- * [Ebiten Discord Server](https://discord.gg/3tVdM5H8cC)
- * `#ebiten` channel in [Gophers Slack](https://invite.slack.golangbridge.org/)
+ * [Ebitengine Discord Server](https://discord.gg/3tVdM5H8cC)
+ * `#ebitengine` channel in [Gophers Slack](https://invite.slack.golangbridge.org/)
  * [GitHub Discussion](https://github.com/hajimehoshi/ebiten/discussions)
 
 ## Following the Go convention
 
-Please follow the Go convension like [Effective Go](https://golang.org/doc/effective_go.html).
+Please follow the Go convention like [Effective Go](https://golang.org/doc/effective_go.html).
 For example, formatting by `go fmt` is required.
 
 ## Adding copyright comments to each file
 
 ```go
-// Copyright [YYYY] The Ebiten Authors
+// Copyright [YYYY] The Ebitengine Authors
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -37,15 +45,12 @@ For example, formatting by `go fmt` is required.
 
 You don't have to update existing files' license comments.
 
-## Adding build tags for examples
+## Implementation details
 
-```go
-//go:build example
-// +build example
-```
+See the [documents](https://ebitengine.org/en/documents/implementation.html) about internal implementation.
 
-`example` is to prevent from installing executions by `go get github.com/hajimehoshi/ebiten/v2/...`.
+## Fixing the documentation
 
-## Documentation
+Ebitengine's documentations are managed at [ebitengine/ebitengine.org](https://github.com/ebitengine/ebitengine.org).
 
-See the [documents](https://ebiten.org/documents/implementation.html) about internal implementation.
+Before submitting a documentation PR, read through the [README](https://github.com/ebitengine/ebitengine.org/blob/main/README.md) in that repo.

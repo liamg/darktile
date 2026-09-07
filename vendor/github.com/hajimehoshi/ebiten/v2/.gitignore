@@ -3,4 +3,12 @@
 *.aar
 *.apk
 *.tar.gz
+.idea
 .vscode
+go.work
+go.work.sum
+
+*.fxc
+!dummy.fxc
+*.metallib
+!dummy.metallib

@@ -1,0 +1,16 @@
+size: 20x6
+buffer: main
+title: "alt title"
+cursor: col=13 row=1 visible=true
+scroll-region: none
+
+--- text ---
+  0|main line one|
+  1|main line two|
+  2||
+  3||
+  4||
+  5||
+
+--- attributes ---
+(all cells at defaults)

@@ -1,0 +1,18 @@
+size: 12x8
+buffer: main
+title: ""
+cursor: col=5 row=4 visible=true
+scroll-region: none
+
+--- text ---
+  0|the quick br|
+  1|own fox jump|
+  2|s|
+  3|exactly12chr|
+  4|short|
+  5||
+  6||
+  7||
+
+--- attributes ---
+(all cells at defaults)

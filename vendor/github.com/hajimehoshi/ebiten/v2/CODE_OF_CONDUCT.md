@@ -1,3 +1,3 @@
 # Code of Conduct
 
-We obey the [Go Community Code of Conduct](https://golang.org/conduct).
+We adhere to the [Go Community Code of Conduct](https://go.dev/conduct).

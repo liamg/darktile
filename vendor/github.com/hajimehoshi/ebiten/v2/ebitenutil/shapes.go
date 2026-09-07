@@ -15,55 +15,35 @@
 package ebitenutil
 
 import (
-	"image"
 	"image/color"
-	"math"
 
 	"github.com/hajimehoshi/ebiten/v2"
+	"github.com/hajimehoshi/ebiten/v2/vector"
 )
-
-var (
-	emptyImage    = ebiten.NewImage(3, 3)
-	emptySubImage = emptyImage.SubImage(image.Rect(1, 1, 2, 2)).(*ebiten.Image)
-)
-
-func init() {
-	emptyImage.Fill(color.White)
-}
-
-func colorToScale(clr color.Color) (float64, float64, float64, float64) {
-	cr, cg, cb, ca := clr.RGBA()
-	if ca == 0 {
-		return 0, 0, 0, 0
-	}
-	return float64(cr) / float64(ca), float64(cg) / float64(ca), float64(cb) / float64(ca), float64(ca) / 0xffff
-}
 
 // DrawLine draws a line segment on the given destination dst.
 //
 // DrawLine is intended to be used mainly for debugging or prototyping purpose.
+//
+// Deprecated: as of v2.5. Use [github.com/hajimehoshi/ebiten/v2/vector.StrokeLine] without anti-aliasing instead.
 func DrawLine(dst *ebiten.Image, x1, y1, x2, y2 float64, clr color.Color) {
-	length := math.Hypot(x2-x1, y2-y1)
-
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(length, 1)
-	op.GeoM.Rotate(math.Atan2(y2-y1, x2-x1))
-	op.GeoM.Translate(x1, y1)
-	op.ColorM.Scale(colorToScale(clr))
-	// Filter must be 'nearest' filter (default).
-	// Linear filtering would make edges blurred.
-	dst.DrawImage(emptySubImage, op)
+	vector.StrokeLine(dst, float32(x1), float32(y1), float32(x2), float32(y2), 1, clr, false)
 }
 
 // DrawRect draws a rectangle on the given destination dst.
 //
 // DrawRect is intended to be used mainly for debugging or prototyping purpose.
+//
+// Deprecated: as of v2.5. Use [github.com/hajimehoshi/ebiten/v2/vector.FillRect] without anti-aliasing instead.
 func DrawRect(dst *ebiten.Image, x, y, width, height float64, clr color.Color) {
-	op := &ebiten.DrawImageOptions{}
-	op.GeoM.Scale(width, height)
-	op.GeoM.Translate(x, y)
-	op.ColorM.Scale(colorToScale(clr))
-	// Filter must be 'nearest' filter (default).
-	// Linear filtering would make edges blurred.
-	dst.DrawImage(emptyImage.SubImage(image.Rect(1, 1, 2, 2)).(*ebiten.Image), op)
+	vector.FillRect(dst, float32(x), float32(y), float32(width), float32(height), clr, false)
+}
+
+// DrawCircle draws a circle on given destination dst.
+//
+// DrawCircle is intended to be used mainly for debugging or prototyping purpose.
+//
+// Deprecated: as of v2.5. Use [github.com/hajimehoshi/ebiten/v2/vector.FillCircle] without anti-aliasing instead.
+func DrawCircle(dst *ebiten.Image, cx, cy, r float64, clr color.Color) {
+	vector.FillCircle(dst, float32(cx), float32(cy), float32(r), clr, false)
 }

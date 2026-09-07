@@ -1,0 +1,151 @@
+// Copyright 2022 The Ebitengine Authors
+//
+// Licensed under the Apache License, Version 2.0 (the "License");
+// you may not use this file except in compliance with the License.
+// You may obtain a copy of the License at
+//
+//     http://www.apache.org/licenses/LICENSE-2.0
+//
+// Unless required by applicable law or agreed to in writing, software
+// distributed under the License is distributed on an "AS IS" BASIS,
+// WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+// See the License for the specific language governing permissions and
+// limitations under the License.
+
+//go:build (freebsd || linux || netbsd || openbsd) && !android && !nintendosdk && !playstation5
+
+package opengl
+
+import (
+	"bufio"
+	"bytes"
+	"os/exec"
+	"strings"
+
+	"github.com/hajimehoshi/ebiten/v2/internal/glfw"
+	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver"
+	"github.com/hajimehoshi/ebiten/v2/internal/graphicsdriver/opengl/gl"
+)
+
+func isGLXExtensionForGL2Available() bool {
+	var buf bytes.Buffer
+	cmd := exec.Command("glxinfo")
+	cmd.Stdout = &buf
+	if err := cmd.Run(); err != nil {
+		return false
+	}
+
+	const (
+		indent = "    "
+		ext    = "GLX_EXT_create_context_es2_profile"
+	)
+
+	var listingExtensions bool
+	s := bufio.NewScanner(&buf)
+	for s.Scan() {
+		line := s.Text()
+		if !listingExtensions {
+			if line == "GLX extensions:" {
+				listingExtensions = true
+			}
+			continue
+		}
+
+		if !strings.HasPrefix(line, indent) {
+			listingExtensions = false
+			break
+		}
+
+		for len(line) > 0 {
+			head, tail, _ := strings.Cut(line, ",")
+			if strings.TrimSpace(head) == ext {
+				return true
+			}
+			line = tail
+		}
+	}
+	return false
+}
+
+type graphicsPlatform struct {
+	window *glfw.Window
+}
+
+// NewGraphics creates an implementation of graphicsdriver.Graphics for OpenGL.
+// The returned graphics value is nil iff the error is not nil.
+func NewGraphics() (graphicsdriver.Graphics, error) {
+	ctx, err := gl.NewDefaultContext()
+	if err != nil {
+		return nil, err
+	}
+
+	if err := setGLFWClientAPI(ctx.IsES()); err != nil {
+		return nil, err
+	}
+
+	return newGraphics(ctx), nil
+}
+
+func setGLFWClientAPI(isES bool) error {
+	if isES {
+		if err := glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLESAPI); err != nil {
+			return err
+		}
+		if err := glfw.WindowHint(glfw.ContextVersionMajor, 3); err != nil {
+			return err
+		}
+		if err := glfw.WindowHint(glfw.ContextVersionMinor, 0); err != nil {
+			return err
+		}
+		// Use GLX if the extension allows, or use EGL otherwise.
+		// Prefer GLX since EGL might not work well on Wayland (#3152).
+		if !isGLXExtensionForGL2Available() {
+			if err := glfw.WindowHint(glfw.ContextCreationAPI, glfw.EGLContextAPI); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+
+	if err := glfw.WindowHint(glfw.ClientAPI, glfw.OpenGLAPI); err != nil {
+		return err
+	}
+	if err := glfw.WindowHint(glfw.ContextVersionMajor, 3); err != nil {
+		return err
+	}
+	if err := glfw.WindowHint(glfw.ContextVersionMinor, 2); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (g *Graphics) SetGLFWWindow(window *glfw.Window) {
+	g.window = window
+}
+
+func (g *Graphics) makeContextCurrent() error {
+	return g.window.MakeContextCurrent()
+}
+
+func (g *Graphics) swapBuffers() error {
+	// Call SwapIntervals even though vsync is not changed.
+	// When toggling to fullscreen, vsync state might be reset unexpectedly (#1787).
+
+	// SwapInterval is affected by the current monitor of the window.
+	// This needs to be called at least after SetMonitor.
+	// Without SwapInterval after SetMonitor, vsynch doesn't work (#375).
+	if g.vsync {
+		if err := g.window.SwapInterval(1); err != nil {
+			return err
+		}
+	} else {
+		if err := g.window.SwapInterval(0); err != nil {
+			return err
+		}
+	}
+
+	if err := g.window.SwapBuffers(); err != nil {
+		return err
+	}
+	return nil
+}

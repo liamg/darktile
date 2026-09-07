@@ -28,6 +28,13 @@
 // another io.Writer, copying the underlying TTF file, but this package does
 // not provide an encoder. Specifically, there is no API to build a different
 // TTF file, whether 'from scratch' or by modifying an existing one.
+//
+// # Security Considerations
+//
+// This package is not hardened against malicious inputs.
+// Crashes, excessive CPU or memory consumption, or similar misbehavior
+// caused by malicious or corrupt inputs will be handled as ordinary bugs,
+// not vulnerabilities.
 package sfnt // import "golang.org/x/image/font/sfnt"
 
 // This implementation was written primarily to the
@@ -153,30 +160,30 @@ type NameID uint16
 
 const (
 	NameIDCopyright                  NameID = 0
-	NameIDFamily                            = 1
-	NameIDSubfamily                         = 2
-	NameIDUniqueIdentifier                  = 3
-	NameIDFull                              = 4
-	NameIDVersion                           = 5
-	NameIDPostScript                        = 6
-	NameIDTrademark                         = 7
-	NameIDManufacturer                      = 8
-	NameIDDesigner                          = 9
-	NameIDDescription                       = 10
-	NameIDVendorURL                         = 11
-	NameIDDesignerURL                       = 12
-	NameIDLicense                           = 13
-	NameIDLicenseURL                        = 14
-	NameIDTypographicFamily                 = 16
-	NameIDTypographicSubfamily              = 17
-	NameIDCompatibleFull                    = 18
-	NameIDSampleText                        = 19
-	NameIDPostScriptCID                     = 20
-	NameIDWWSFamily                         = 21
-	NameIDWWSSubfamily                      = 22
-	NameIDLightBackgroundPalette            = 23
-	NameIDDarkBackgroundPalette             = 24
-	NameIDVariationsPostScriptPrefix        = 25
+	NameIDFamily                     NameID = 1
+	NameIDSubfamily                  NameID = 2
+	NameIDUniqueIdentifier           NameID = 3
+	NameIDFull                       NameID = 4
+	NameIDVersion                    NameID = 5
+	NameIDPostScript                 NameID = 6
+	NameIDTrademark                  NameID = 7
+	NameIDManufacturer               NameID = 8
+	NameIDDesigner                   NameID = 9
+	NameIDDescription                NameID = 10
+	NameIDVendorURL                  NameID = 11
+	NameIDDesignerURL                NameID = 12
+	NameIDLicense                    NameID = 13
+	NameIDLicenseURL                 NameID = 14
+	NameIDTypographicFamily          NameID = 16
+	NameIDTypographicSubfamily       NameID = 17
+	NameIDCompatibleFull             NameID = 18
+	NameIDSampleText                 NameID = 19
+	NameIDPostScriptCID              NameID = 20
+	NameIDWWSFamily                  NameID = 21
+	NameIDWWSSubfamily               NameID = 22
+	NameIDLightBackgroundPalette     NameID = 23
+	NameIDDarkBackgroundPalette      NameID = 24
+	NameIDVariationsPostScriptPrefix NameID = 25
 )
 
 // Units are an integral number of abstract, scalable "font units". The em
@@ -214,8 +221,9 @@ func u32(b []byte) uint32 {
 // copying from the source to a caller-supplied buffer, and instead provide
 // direct access to the underlying []byte data.
 type source struct {
-	b []byte
-	r io.ReaderAt
+	b       []byte
+	r       io.ReaderAt
+	minSize int // r is known to contain at least minSize bytes
 
 	// TODO: add a caching layer, if we're using the io.ReaderAt? Note that
 	// this might make a source no longer safe to use concurrently.
@@ -253,6 +261,17 @@ func (s *source) view(buf []byte, offset, length int) ([]byte, error) {
 			return nil, errInvalidBounds
 		}
 		return s.b[offset : offset+length], nil
+	}
+
+	if end := offset + length; end > s.minSize && length > 1<<20 {
+		// We're reading more than 1MiB, and we don't know whether
+		// the file contains this data. Check that the data exists
+		// before we try to allocate.
+		var oneByte [1]byte
+		if n, err := s.r.ReadAt(oneByte[:], int64(end)-1); err != nil || n != 1 {
+			return nil, errInvalidBounds
+		}
+		s.minSize = end
 	}
 
 	// Read from the io.ReaderAt.
@@ -745,7 +764,7 @@ func (f *Font) initialize(offset int, isDfont bool) error {
 	f.cached.xHeight = xHeight
 
 	if !hasXHeightCapHeight {
-		xh, ch, err := f.initOS2Version1()
+		xh, ch, err := f.initOS2VersionBelow2()
 		if err != nil {
 			return err
 		}
@@ -1201,7 +1220,7 @@ func (f *Font) glyphTopOS2(b *Buffer, ppem fixed.Int26_6, r rune) (int32, error)
 	return int32(min), nil
 }
 
-func (f *Font) initOS2Version1() (xHeight, capHeight int32, err error) {
+func (f *Font) initOS2VersionBelow2() (xHeight, capHeight int32, err error) {
 	ppem := fixed.Int26_6(f.UnitsPerEm())
 	var b Buffer
 
@@ -1235,12 +1254,14 @@ func (f *Font) parseOS2(buf []byte) (buf1 []byte, hasXHeightCapHeight bool, xHei
 	if err != nil {
 		return nil, false, 0, 0, err
 	}
-	if vers <= 1 {
-		const headerSize = 86
+	if vers < 2 {
+		// "The original TrueType specification had this table at 68 bytes long."
+		// https://developer.apple.com/fonts/TrueType-Reference-Manual/RM06/Chap6OS2.html
+		const headerSize = 68
 		if f.os2.length < headerSize {
 			return nil, false, 0, 0, errInvalidOS2Table
 		}
-		// Will resolve xHeight and capHeight later, see initOS2Version1.
+		// Will resolve xHeight and capHeight later, see initOS2VersionBelow2.
 		return buf, false, 0, 0, nil
 	}
 	const headerSize = 96

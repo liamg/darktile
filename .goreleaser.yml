@@ -1,6 +1,9 @@
+version: 2
+
+# The X11 headers cgo needs are installed by the release workflow instead of
+# here, so that a local `goreleaser build --snapshot` does not try to sudo apt.
 before:
     hooks:
-    - sudo apt install xorg-dev libgl1-mesa-dev
     - go mod vendor
 builds:
   -
@@ -20,7 +23,7 @@ checksum:
   name_template: '{{ .ProjectName }}_checksums.txt'
 
 snapshot:
-  name_template: "{{ .Tag }}-next"
+  version_template: "{{ .Tag }}-next"
 
 changelog:
   sort: asc
@@ -31,11 +34,11 @@ changelog:
 
 archives:
   -
-    format: binary
+    formats: [binary]
     name_template: "{{ .Binary}}-{{ .Os }}-{{ .Arch }}"
 
+# The repository is deliberately not pinned here: GoReleaser infers it from the
+# remote, which is what the owner wants and also lets a fork cut its own
+# releases instead of failing against someone else's repository.
 release:
   prerelease: auto
-  github:
-    owner: liamg
-    name: darktile

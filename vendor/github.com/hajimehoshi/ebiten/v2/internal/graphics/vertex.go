@@ -14,167 +14,167 @@
 
 package graphics
 
-import (
-	"sync"
+const (
+	ShaderSrcImageCount = 4
+
+	// PreservedUniformVariablesCount represents the number of preserved uniform variables.
+	// Any shaders in Ebitengine must have these uniform variables.
+	PreservedUniformVariablesCount = 1 + // the destination texture size
+		1 + // the source texture sizes array
+		1 + // the destination image region origin
+		1 + // the destination image region size
+		1 + // the source image region origins
+		1 + // the source image region sizes array
+		1 // the projection matrix
+
+	ProjectionMatrixUniformVariableIndex = 6
+
+	PreservedUniformDwordCount = 2 + // the destination texture size
+		2*ShaderSrcImageCount + // the source texture sizes array
+		2 + // the destination image region origin
+		2 + // the destination image region size
+		2*ShaderSrcImageCount + // the source image region origins array
+		2*ShaderSrcImageCount + // the source image region sizes array
+		16 // the projection matrix
+
+	ProjectionMatrixUniformDwordIndex = 2 +
+		2*ShaderSrcImageCount +
+		2 +
+		2 +
+		2*ShaderSrcImageCount +
+		2*ShaderSrcImageCount
 )
 
 const (
-	ShaderImageNum = 4
-
-	// PreservedUniformVariablesNum represents the number of preserved uniform variables.
-	// Any shaders in Ebiten must have these uniform variables.
-	PreservedUniformVariablesNum = 1 + // the destination texture size
-		1 + // the texture sizes array
-		1 + // the texture destination region's origin
-		1 + // the texture destination region's size
-		1 + // the offsets array of the second and the following images
-		1 + // the texture source region's origin
-		1 // the texture source region's size
-
-	DestinationTextureSizeUniformVariableIndex         = 0
-	TextureSizesUniformVariableIndex                   = 1
-	TextureDestinationRegionOriginUniformVariableIndex = 2
-	TextureDestinationRegionSizeUniformVariableIndex   = 3
-	TextureSourceOffsetsUniformVariableIndex           = 4
-	TextureSourceRegionOriginUniformVariableIndex      = 5
-	TextureSourceRegionSizeUniformVariableIndex        = 6
-)
-
-const (
-	IndicesNum     = (1 << 16) / 3 * 3 // Adjust num for triangles.
-	VertexFloatNum = 8
+	VertexFloatCount = 12
 )
 
 var (
-	quadIndices = []uint16{0, 1, 2, 1, 2, 3}
+	quadIndices = []uint32{0, 1, 2, 1, 2, 3}
 )
 
-func QuadIndices() []uint16 {
+func QuadIndices() []uint32 {
 	return quadIndices
 }
 
-var (
-	theVerticesBackend = &verticesBackend{}
-)
-
-// TODO: The logic is very similar to atlas.temporaryPixels. Unify them.
-
-type verticesBackend struct {
-	backend          []float32
-	pos              int
-	notFullyUsedTime int
-
-	m sync.Mutex
-}
-
-func verticesBackendFloat32Size(size int) int {
-	l := 128 * VertexFloatNum
-	for l < size {
-		l *= 2
-	}
-	return l
-}
-
-func (v *verticesBackend) slice(n int) []float32 {
-	v.m.Lock()
-	defer v.m.Unlock()
-
-	need := n * VertexFloatNum
-	if len(v.backend) < v.pos+need {
-		v.backend = make([]float32, verticesBackendFloat32Size(v.pos+need))
-		v.pos = 0
-	}
-	s := v.backend[v.pos : v.pos+need]
-	v.pos += need
-	return s
-}
-
-func (v *verticesBackend) lockAndReset(f func() error) error {
-	v.m.Lock()
-	defer v.m.Unlock()
-
-	if err := f(); err != nil {
-		return err
-	}
-
-	const maxNotFullyUsedTime = 60
-	if verticesBackendFloat32Size(v.pos) < len(v.backend) {
-		if v.notFullyUsedTime < maxNotFullyUsedTime {
-			v.notFullyUsedTime++
-		}
-	} else {
-		v.notFullyUsedTime = 0
-	}
-
-	if v.notFullyUsedTime == maxNotFullyUsedTime && len(v.backend) > 0 {
-		v.backend = nil
-	}
-
-	v.pos = 0
-	return nil
-}
-
-// Vertices returns a float32 slice for n vertices.
-// Vertices returns a slice that never overlaps with other slices returned this function,
-// and users can do optimization based on this fact.
-func Vertices(n int) []float32 {
-	return theVerticesBackend.slice(n)
-}
-
-func LockAndResetVertices(f func() error) error {
-	return theVerticesBackend.lockAndReset(f)
-}
-
-// QuadVertices returns a float32 slice for a quadrangle.
-// QuadVertices returns a slice that never overlaps with other slices returned this function,
-// and users can do optimization based on this fact.
-func QuadVertices(sx0, sy0, sx1, sy1 float32, a, b, c, d, tx, ty float32, cr, cg, cb, ca float32) []float32 {
+// QuadVerticesFromSrcAndMatrix sets a float32 slice for a quadrangle.
+func QuadVerticesFromSrcAndMatrix(dst []float32, sx0, sy0, sx1, sy1 float32, a, b, c, d, tx, ty float32, cr, cg, cb, ca float32) {
 	x := sx1 - sx0
 	y := sy1 - sy0
 	ax, by, cx, dy := a*x, b*y, c*x, d*y
-	u0, v0, u1, v1 := float32(sx0), float32(sy0), float32(sx1), float32(sy1)
-
-	// Use the vertex backend instead of calling make to reduce GCs (#1521).
-	vs := theVerticesBackend.slice(4)
+	u0, v0, u1, v1 := sx0, sy0, sx1, sy1
 
 	// This function is very performance-sensitive and implement in a very dumb way.
-	_ = vs[:4*VertexFloatNum]
 
-	vs[0] = tx
-	vs[1] = ty
-	vs[2] = u0
-	vs[3] = v0
-	vs[4] = cr
-	vs[5] = cg
-	vs[6] = cb
-	vs[7] = ca
+	// Remove the boundary check.
+	dst = dst[:4*VertexFloatCount]
 
-	vs[8] = ax + tx
-	vs[9] = cx + ty
-	vs[10] = u1
-	vs[11] = v0
-	vs[12] = cr
-	vs[13] = cg
-	vs[14] = cb
-	vs[15] = ca
+	dst[0] = adjustDestinationPixel(tx)
+	dst[1] = adjustDestinationPixel(ty)
+	dst[2] = u0
+	dst[3] = v0
+	dst[4] = cr
+	dst[5] = cg
+	dst[6] = cb
+	dst[7] = ca
 
-	vs[16] = by + tx
-	vs[17] = dy + ty
-	vs[18] = u0
-	vs[19] = v1
-	vs[20] = cr
-	vs[21] = cg
-	vs[22] = cb
-	vs[23] = ca
+	dst[VertexFloatCount] = adjustDestinationPixel(ax + tx)
+	dst[VertexFloatCount+1] = adjustDestinationPixel(cx + ty)
+	dst[VertexFloatCount+2] = u1
+	dst[VertexFloatCount+3] = v0
+	dst[VertexFloatCount+4] = cr
+	dst[VertexFloatCount+5] = cg
+	dst[VertexFloatCount+6] = cb
+	dst[VertexFloatCount+7] = ca
 
-	vs[24] = ax + by + tx
-	vs[25] = cx + dy + ty
-	vs[26] = u1
-	vs[27] = v1
-	vs[28] = cr
-	vs[29] = cg
-	vs[30] = cb
-	vs[31] = ca
+	dst[2*VertexFloatCount] = adjustDestinationPixel(by + tx)
+	dst[2*VertexFloatCount+1] = adjustDestinationPixel(dy + ty)
+	dst[2*VertexFloatCount+2] = u0
+	dst[2*VertexFloatCount+3] = v1
+	dst[2*VertexFloatCount+4] = cr
+	dst[2*VertexFloatCount+5] = cg
+	dst[2*VertexFloatCount+6] = cb
+	dst[2*VertexFloatCount+7] = ca
 
-	return vs
+	dst[3*VertexFloatCount] = adjustDestinationPixel(ax + by + tx)
+	dst[3*VertexFloatCount+1] = adjustDestinationPixel(cx + dy + ty)
+	dst[3*VertexFloatCount+2] = u1
+	dst[3*VertexFloatCount+3] = v1
+	dst[3*VertexFloatCount+4] = cr
+	dst[3*VertexFloatCount+5] = cg
+	dst[3*VertexFloatCount+6] = cb
+	dst[3*VertexFloatCount+7] = ca
+}
+
+// QuadVerticesFromDstAndSrc sets a float32 slice for a quadrangle.
+func QuadVerticesFromDstAndSrc(dst []float32, dx0, dy0, dx1, dy1, sx0, sy0, sx1, sy1, cr, cg, cb, ca float32) {
+	dx0 = adjustDestinationPixel(dx0)
+	dy0 = adjustDestinationPixel(dy0)
+	dx1 = adjustDestinationPixel(dx1)
+	dy1 = adjustDestinationPixel(dy1)
+
+	// Remove the boundary check.
+	dst = dst[:4*VertexFloatCount]
+
+	dst[0] = dx0
+	dst[1] = dy0
+	dst[2] = sx0
+	dst[3] = sy0
+	dst[4] = cr
+	dst[5] = cg
+	dst[6] = cb
+	dst[7] = ca
+
+	dst[VertexFloatCount] = dx1
+	dst[VertexFloatCount+1] = dy0
+	dst[VertexFloatCount+2] = sx1
+	dst[VertexFloatCount+3] = sy0
+	dst[VertexFloatCount+4] = cr
+	dst[VertexFloatCount+5] = cg
+	dst[VertexFloatCount+6] = cb
+	dst[VertexFloatCount+7] = ca
+
+	dst[2*VertexFloatCount] = dx0
+	dst[2*VertexFloatCount+1] = dy1
+	dst[2*VertexFloatCount+2] = sx0
+	dst[2*VertexFloatCount+3] = sy1
+	dst[2*VertexFloatCount+4] = cr
+	dst[2*VertexFloatCount+5] = cg
+	dst[2*VertexFloatCount+6] = cb
+	dst[2*VertexFloatCount+7] = ca
+
+	dst[3*VertexFloatCount] = dx1
+	dst[3*VertexFloatCount+1] = dy1
+	dst[3*VertexFloatCount+2] = sx1
+	dst[3*VertexFloatCount+3] = sy1
+	dst[3*VertexFloatCount+4] = cr
+	dst[3*VertexFloatCount+5] = cg
+	dst[3*VertexFloatCount+6] = cb
+	dst[3*VertexFloatCount+7] = ca
+}
+
+func adjustDestinationPixel(x float32) float32 {
+	// Avoid the center of the pixel, which is problematic (#929, #1171).
+	// Instead, align the vertices with about 1/3 pixels.
+	//
+	// The intention here is roughly this code:
+	//
+	//     float32(math.Floor((float64(x)+1.0/6.0)*3) / 3)
+	//
+	// The actual implementation is more optimized than the above implementation.
+	ix := float32(int(x))
+	if x < 0 && x != ix {
+		ix -= 1
+	}
+	frac := x - ix
+	switch {
+	case frac < 3.0/16.0:
+		return ix
+	case frac < 8.0/16.0:
+		return ix + 5.0/16.0
+	case frac < 13.0/16.0:
+		return ix + 11.0/16.0
+	default:
+		return ix + 16.0/16.0
+	}
 }

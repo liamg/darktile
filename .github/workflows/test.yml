@@ -1,21 +1,55 @@
 on: [push, pull_request]
 name: Test
+
+# Every job runs inside the flake devShell rather than against apt packages, so
+# CI gets the same toolchain, mesa and ImageMagick as a developer's machine.
+# That matters most for the render goldens, which are compared pixel for pixel
+# and would drift with the graphics stack otherwise.
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   test:
-    strategy:
-      matrix:
-        go-version: [1.17.x]
-        os: [ubuntu-latest]
-    runs-on: ${{ matrix.os }}
+    name: Unit tests
+    runs-on: ubuntu-latest
     steps:
-      - name: Install Go
-        uses: actions/setup-go@v2
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix develop --command go build ./...
+      - run: nix develop --command go vet ./...
+      - run: nix develop --command go test ./...
+
+  vulnerabilities:
+    name: Vulnerabilities
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix develop --command govulncheck ./...
+
+  conformance:
+    name: Conformance
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      # Both compare against a checked-in baseline of current failures and fail
+      # only on new ones. Neither is expected to pass outright.
+      - run: nix develop --command ./scripts/esctest.sh
+      - run: nix develop --command ./scripts/wraptest.sh
+
+  render:
+    name: Render goldens
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: cachix/install-nix-action@v31
+      - run: nix develop --command ./scripts/render-golden.sh
+      # A render change is meant to be looked at, so keep the diff images.
+      - uses: actions/upload-artifact@v7
+        if: failure()
         with:
-          go-version: ${{ matrix.go-version }}
-      - name: Checkout code
-        uses: actions/checkout@v2
-      - name: Test
-        run: |
-          sudo apt update
-          sudo apt install xorg-dev libgl1-mesa-dev
-          DISPLAY=:0 go test -mod=vendor ./...
+          name: render-diff
+          path: .cache/render/

@@ -1,0 +1,16 @@
+size: 20x6
+buffer: main
+title: ""
+cursor: col=0 row=2 visible=true
+scroll-region: none
+
+--- text ---
+  0|abcd|
+  1|     pqrst|
+  2|   uvyz|
+  3||
+  4||
+  5||
+
+--- attributes ---
+(all cells at defaults)

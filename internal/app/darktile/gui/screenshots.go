@@ -7,6 +7,8 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+
+	"github.com/hajimehoshi/ebiten/v2"
 )
 
 func (g *GUI) RequestScreenshot(filename string) {
@@ -20,6 +22,11 @@ func (g *GUI) RequestScreenshot(filename string) {
 		filename = filepath.Join(targetdir, filename)
 	}
 	g.screenshotFilename = filename
+
+	// The screenshot is written from Draw, which only runs when a frame is
+	// scheduled. Without this, a request made while the terminal is idle waits
+	// for unrelated output before it takes effect.
+	ebiten.ScheduleFrame()
 }
 
 func (g *GUI) takeScreenshot(screen image.Image) {

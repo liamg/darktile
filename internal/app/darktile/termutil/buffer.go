@@ -277,10 +277,18 @@ func (buffer *Buffer) ViewHeight() uint16 {
 
 func (buffer *Buffer) deleteLine() {
 	index := int(buffer.RawLine())
+	if index >= len(buffer.lines) {
+		return
+	}
 	buffer.lines = buffer.lines[:index+copy(buffer.lines[index:], buffer.lines[index+1:])]
 }
 
 func (buffer *Buffer) insertLine() {
+
+	// The buffer only grows as content is written, so the cursor can legitimately
+	// sit below the last line that exists. Splicing at that position needs the
+	// line to be there first.
+	buffer.getCurrentLine()
 
 	if !buffer.InScrollableRegion() {
 		pos := buffer.RawLine()
@@ -290,10 +298,16 @@ func (buffer *Buffer) insertLine() {
 			newLineCount = maxLines
 		}
 
+		// At maximum scrollback the oldest lines fall off to make room. If the
+		// cursor is inside that discarded range there is nothing above it left
+		// to shift, so the insert has no effect.
+		dropped := uint64(len(buffer.lines)) + 1 - newLineCount
+		if pos < dropped {
+			return
+		}
+
 		out := make([]Line, newLineCount)
-		copy(
-			out[:pos-(uint64(len(buffer.lines))+1-newLineCount)],
-			buffer.lines[uint64(len(buffer.lines))+1-newLineCount:pos])
+		copy(out[:pos-dropped], buffer.lines[dropped:pos])
 		out[pos] = newLine()
 		copy(out[pos+1:], buffer.lines[pos:])
 		buffer.lines = out
@@ -323,10 +337,18 @@ func (buffer *Buffer) insertLine() {
 
 func (buffer *Buffer) insertBlankCharacters(count int) {
 
+	count = clampCount(count, int(buffer.viewWidth))
+
 	index := int(buffer.RawLine())
+	col := int(buffer.cursorPosition.Col)
+	if index >= len(buffer.lines) || col > len(buffer.lines[index].cells) {
+		// Everything past the end of the line is already blank.
+		return
+	}
+
 	for i := 0; i < count; i++ {
 		cells := buffer.lines[index].cells
-		buffer.lines[index].cells = append(cells[:buffer.cursorPosition.Col], append([]Cell{buffer.defaultCell(true)}, cells[buffer.cursorPosition.Col:]...)...)
+		buffer.lines[index].cells = append(cells[:col], append([]Cell{buffer.defaultCell(true)}, cells[col:]...)...)
 	}
 }
 
@@ -339,7 +361,7 @@ func (buffer *Buffer) insertLines(count int) {
 
 	buffer.cursorPosition.Col = 0
 
-	for i := 0; i < count; i++ {
+	for i := 0; i < clampCount(count, int(buffer.viewHeight)); i++ {
 		buffer.insertLine()
 	}
 
@@ -354,10 +376,20 @@ func (buffer *Buffer) deleteLines(count int) {
 
 	buffer.cursorPosition.Col = 0
 
-	for i := 0; i < count; i++ {
+	for i := 0; i < clampCount(count, int(buffer.viewHeight)); i++ {
 		buffer.deleteLine()
 	}
 
+}
+
+// Repeat counts come straight from the program, so they can be arbitrarily
+// large. Anything past the visible area is a no-op, and acting on it anyway
+// costs time proportional to the number the program picked.
+func clampCount(count, max int) int {
+	if count > max {
+		return max
+	}
+	return count
 }
 
 func (buffer *Buffer) index() {
@@ -395,7 +427,9 @@ func (buffer *Buffer) reverseIndex() {
 
 	if uint(cursorVY) == buffer.topMargin {
 		buffer.areaScrollDown(1)
-	} else if cursorVY > 0 {
+	} else if cursorVY > 0 && buffer.cursorPosition.Line > 0 {
+		// cursorVY is a view line and can be past the end of a partly filled
+		// buffer, so the raw line has to be checked on its own or it wraps.
 		buffer.cursorPosition.Line--
 	}
 }

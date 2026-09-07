@@ -1,0 +1,18 @@
+size: 40x8
+buffer: main
+title: ""
+cursor: col=10 row=2 visible=true
+scroll-region: none
+
+--- text ---
+  0|┌────────┐|
+  1|│plain    │|
+  2|└────────┘|
+  3||
+  4||
+  5||
+  6||
+  7||
+
+--- attributes ---
+(all cells at defaults)

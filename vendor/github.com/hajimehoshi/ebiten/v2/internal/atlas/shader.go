@@ -22,35 +22,68 @@ import (
 )
 
 type Shader struct {
-	shader *restorable.Shader
+	ir      *shaderir.Program
+	shader  *restorable.Shader
+	unit    shaderir.Unit
+	name    string
+	cleanup runtime.Cleanup
 }
 
-func NewShader(program *shaderir.Program) *Shader {
-	s := &Shader{
-		shader: restorable.NewShader(program),
+func NewShader(ir *shaderir.Program, name string) *Shader {
+	// A shader is initialized lazily, and the lock is not needed.
+	return &Shader{
+		ir:   ir,
+		name: name,
+		unit: ir.Unit,
 	}
-	runtime.SetFinalizer(s, (*Shader).MarkDisposed)
-	return s
 }
 
-// MarkDisposed marks the shader as disposed. The actual operation is deferred.
-// MarkDisposed can be called from finalizers.
-//
-// A function from finalizer must not be blocked, but disposing operation can be blocked.
-// Defer this operation until it becomes safe. (#913)
-func (s *Shader) MarkDisposed() {
-	deferredM.Lock()
-	deferred = append(deferred, func() {
-		s.dispose()
-	})
-	deferredM.Unlock()
+func (s *Shader) ensureShader() *restorable.Shader {
+	if s.shader != nil {
+		return s.shader
+	}
+	s.shader = restorable.NewShader(s.ir, s.name)
+	s.cleanup = runtime.AddCleanup(s, func(shader *restorable.Shader) {
+		// A function from cleanup must not be blocked, but disposing operation can be blocked.
+		// Defer this operation until it becomes safe. (#913)
+		appendDeferred(func() {
+			shader.Dispose()
+		})
+	}, s.shader)
+	return s.shader
 }
 
-func (s *Shader) dispose() {
-	runtime.SetFinalizer(s, nil)
+// Deallocate deallocates the internal state.
+func (s *Shader) Deallocate() {
+	backendsM.Lock()
+	defer backendsM.Unlock()
+
+	if !inFrame {
+		appendDeferred(func() {
+			s.deallocate()
+		})
+		return
+	}
+
+	s.deallocate()
+}
+
+func (s *Shader) deallocate() {
+	s.cleanup.Stop()
 	if s.shader == nil {
 		return
 	}
 	s.shader.Dispose()
 	s.shader = nil
 }
+
+var (
+	NearestFilterShader = &Shader{
+		shader: restorable.NearestFilterShader,
+		unit:   restorable.NearestFilterShader.Unit(),
+	}
+	LinearFilterShader = &Shader{
+		shader: restorable.LinearFilterShader,
+		unit:   restorable.LinearFilterShader.Unit(),
+	}
+)

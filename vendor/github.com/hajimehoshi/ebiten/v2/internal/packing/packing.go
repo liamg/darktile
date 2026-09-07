@@ -17,23 +17,37 @@ package packing
 
 import (
 	"errors"
-)
-
-const (
-	minSize = 1
+	"fmt"
+	"image"
 )
 
 type Page struct {
 	root    *Node
-	size    int
+	width   int
+	height  int
 	maxSize int
-
-	rollbackExtension func()
 }
 
-func NewPage(initSize int, maxSize int) *Page {
+func isPositivePowerOf2(x int) bool {
+	if x <= 0 {
+		return false
+	}
+	return x&(x-1) == 0
+}
+
+func NewPage(initWidth, initHeight int, maxSize int) *Page {
+	if !isPositivePowerOf2(initWidth) {
+		panic(fmt.Sprintf("packing: initWidth must be a positive power of 2 but %d", initWidth))
+	}
+	if !isPositivePowerOf2(initHeight) {
+		panic(fmt.Sprintf("packing: initHeight must be a positive power of 2 but %d", initHeight))
+	}
+	if !isPositivePowerOf2(maxSize) {
+		panic(fmt.Sprintf("packing: maxSize must be a positive power of 2 but %d", maxSize))
+	}
 	return &Page{
-		size:    initSize,
+		width:   initWidth,
+		height:  initHeight,
 		maxSize: maxSize,
 	}
 }
@@ -46,10 +60,7 @@ func (p *Page) IsEmpty() bool {
 }
 
 type Node struct {
-	x      int
-	y      int
-	width  int
-	height int
+	region image.Rectangle
 	used   bool
 
 	parent *Node
@@ -67,8 +78,8 @@ func (n *Node) canFree() bool {
 	return n.child0.canFree() && n.child1.canFree()
 }
 
-func (n *Node) Region() (x, y, width, height int) {
-	return n.x, n.y, n.width, n.height
+func (n *Node) Region() image.Rectangle {
+	return n.region
 }
 
 // square returns a float value indicating how much the given rectangle is close to a square.
@@ -84,94 +95,78 @@ func square(width, height int) float64 {
 	return float64(height) / float64(width)
 }
 
-func (p *Page) alloc(n *Node, width, height int) *Node {
-	if n.width < width || n.height < height {
+func alloc(n *Node, width, height int) *Node {
+	if n.region.Dx() < width || n.region.Dy() < height {
 		return nil
 	}
 	if n.used {
 		return nil
 	}
 	if n.child0 == nil && n.child1 == nil {
-		if n.width == width && n.height == height {
+		if n.region.Dx() == width && n.region.Dy() == height {
 			n.used = true
 			return n
 		}
-		if square(n.width-width, n.height) >= square(n.width, n.height-height) {
+		if square(n.region.Dx()-width, n.region.Dy()) >= square(n.region.Dx(), n.region.Dy()-height) {
 			// Split vertically
 			n.child0 = &Node{
-				x:      n.x,
-				y:      n.y,
-				width:  width,
-				height: n.height,
+				region: image.Rect(n.region.Min.X, n.region.Min.Y, n.region.Min.X+width, n.region.Max.Y),
 				parent: n,
 			}
 			n.child1 = &Node{
-				x:      n.x + width,
-				y:      n.y,
-				width:  n.width - width,
-				height: n.height,
+				region: image.Rect(n.region.Min.X+width, n.region.Min.Y, n.region.Max.X, n.region.Max.Y),
 				parent: n,
 			}
 		} else {
-			// Split holizontally
+			// Split horizontally
 			n.child0 = &Node{
-				x:      n.x,
-				y:      n.y,
-				width:  n.width,
-				height: height,
+				region: image.Rect(n.region.Min.X, n.region.Min.Y, n.region.Max.X, n.region.Min.Y+height),
 				parent: n,
 			}
 			n.child1 = &Node{
-				x:      n.x,
-				y:      n.y + height,
-				width:  n.width,
-				height: n.height - height,
+				region: image.Rect(n.region.Min.X, n.region.Min.Y+height, n.region.Max.X, n.region.Max.Y),
 				parent: n,
 			}
 		}
-		return p.alloc(n.child0, width, height)
+		// Note: it now MUST fit, due to above preconditions (repeated here).
+		if n.child0.region.Dx() < width || n.child0.region.Dy() < height {
+			panic(fmt.Sprintf("packing: the newly created child node (%d, %d) unexpectedly does not contain the requested size (%d, %d)", n.child0.region.Dx(), n.child0.region.Dy(), width, height))
+		}
+		// Thus, alloc can't return nil, but it may do another split along the other dimension
+		// to get a node with the exact size (width, height).
+		node := alloc(n.child0, width, height)
+		if node == nil {
+			panic(fmt.Sprintf("packing: could not allocate the requested size (%d, %d) in the newly created child node (%d, %d)", width, height, n.child0.region.Dx(), n.child0.region.Dy()))
+		}
+		return node
 	}
 	if n.child0 == nil || n.child1 == nil {
 		panic("packing: both two children must not be nil at alloc")
 	}
-	if node := p.alloc(n.child0, width, height); node != nil {
+	if node := alloc(n.child0, width, height); node != nil {
 		return node
 	}
-	if node := p.alloc(n.child1, width, height); node != nil {
+	if node := alloc(n.child1, width, height); node != nil {
 		return node
 	}
 	return nil
 }
 
-func (p *Page) Size() int {
-	return p.size
-}
-
-func (p *Page) SetMaxSize(size int) {
-	if p.maxSize > size {
-		panic("packing: maxSize cannot be decreased")
-	}
-	p.maxSize = size
+func (p *Page) Size() (int, int) {
+	return p.width, p.height
 }
 
 func (p *Page) Alloc(width, height int) *Node {
 	if width <= 0 || height <= 0 {
 		panic("packing: width and height must > 0")
 	}
+
 	if p.root == nil {
 		p.root = &Node{
-			width:  p.size,
-			height: p.size,
+			region: image.Rect(0, 0, p.width, p.height),
 		}
 	}
-	if width < minSize {
-		width = minSize
-	}
-	if height < minSize {
-		height = minSize
-	}
-	n := p.alloc(p.root, width, height)
-	return n
+	return p.extendAndAlloc(width, height)
 }
 
 func (p *Page) Free(node *Node) {
@@ -209,30 +204,55 @@ func walk(n *Node, f func(n *Node) error) error {
 	return nil
 }
 
-func (p *Page) Extend(count int) bool {
-	if p.rollbackExtension != nil {
-		panic("packing: Extend cannot be called without rolling back or committing")
+func (p *Page) extendAndAlloc(width, height int) *Node {
+	if n := alloc(p.root, width, height); n != nil {
+		return n
 	}
 
-	if p.size >= p.maxSize {
-		return false
+	if p.width >= p.maxSize && p.height >= p.maxSize {
+		return nil
 	}
 
-	newSize := p.size
-	for i := 0; i < count; i++ {
-		newSize *= 2
-	}
+	// (1, 0), (0, 1), (2, 0), (1, 1), (0, 2), (3, 0), (2, 1), (1, 2), (0, 3), ...
+	for i := 1; ; i++ {
+		for j := 0; j <= i; j++ {
+			newWidth := p.width
+			for k := 0; k < i-j; k++ {
+				newWidth *= 2
+			}
+			newHeight := p.height
+			for k := 0; k < j; k++ {
+				newHeight *= 2
+			}
 
-	if newSize > p.maxSize {
-		return false
-	}
+			if newWidth > p.maxSize || newHeight > p.maxSize {
+				if newWidth > p.maxSize && newHeight > p.maxSize {
+					panic(fmt.Sprintf("packing: too big extension: allocating size: (%d, %d), current size: (%d, %d), new size: (%d, %d), (i, j): (%d, %d), max size: %d", width, height, p.width, p.height, newWidth, newHeight, i, j, p.maxSize))
+				}
+				continue
+			}
 
+			rollback := p.extend(newWidth, newHeight)
+			if n := alloc(p.root, width, height); n != nil {
+				return n
+			}
+			rollback()
+
+			// If the allocation failed even with a maximized page, give up the allocation.
+			if newWidth >= p.maxSize && newHeight >= p.maxSize {
+				return nil
+			}
+		}
+	}
+}
+
+func (p *Page) extend(newWidth int, newHeight int) func() {
 	edgeNodes := []*Node{}
 	abort := errors.New("abort")
 	aborted := false
 	if p.root != nil {
 		_ = walk(p.root, func(n *Node) error {
-			if n.x+n.width < p.size && n.y+n.height < p.size {
+			if n.region.Max.X < p.width && n.region.Max.Y < p.height {
 				return nil
 			}
 			if n.used {
@@ -244,94 +264,81 @@ func (p *Page) Extend(count int) bool {
 		})
 	}
 
+	var rollback func()
+
 	if aborted {
-		origRoot := *p.root
+		origRoot := p.root
+		origRootCloned := *p.root
 
-		leftUpper := p.root
-		leftLower := &Node{
-			x:      0,
-			y:      p.size,
-			width:  p.size,
-			height: newSize - p.size,
+		// Extend the page in the vertical direction.
+		if newHeight-p.height > 0 {
+			upper := p.root
+			lower := &Node{
+				region: image.Rect(0, p.height, p.width, newHeight),
+			}
+			p.root = &Node{
+				region: image.Rect(0, 0, p.width, newHeight),
+				child0: upper,
+				child1: lower,
+			}
+			upper.parent = p.root
+			lower.parent = p.root
 		}
-		left := &Node{
-			x:      0,
-			y:      0,
-			width:  p.size,
-			height: p.size,
-			child0: leftUpper,
-			child1: leftLower,
-		}
-		leftUpper.parent = left
-		leftLower.parent = left
 
-		right := &Node{
-			x:      p.size,
-			y:      0,
-			width:  newSize - p.size,
-			height: newSize,
+		// Extend the page in the horizontal direction.
+		if newWidth-p.width > 0 {
+			left := p.root
+			right := &Node{
+				region: image.Rect(p.width, 0, newWidth, newHeight),
+			}
+			p.root = &Node{
+				region: image.Rect(0, 0, newWidth, newHeight),
+				child0: left,
+				child1: right,
+			}
+			left.parent = p.root
+			right.parent = p.root
 		}
-		p.root = &Node{
-			x:      0,
-			y:      0,
-			width:  newSize,
-			height: newSize,
-			child0: left,
-			child1: right,
-		}
-		left.parent = p.root
-		right.parent = p.root
 
-		origSize := p.size
-		p.rollbackExtension = func() {
-			p.size = origSize
-			p.root = &origRoot
+		origWidth, origHeight := p.width, p.height
+		rollback = func() {
+			p.width = origWidth
+			p.height = origHeight
+			// The node address must not be changed, so use the original root node's pointer (#2584).
+			// As the root node might be modified, restore the content by the cloned content.
+			p.root = origRoot
+			*p.root = origRootCloned
 		}
 	} else {
-		origSize := p.size
-		origWidths := map[*Node]int{}
-		origHeights := map[*Node]int{}
+		origWidth, origHeight := p.width, p.height
+		origMaxXs := map[*Node]int{}
+		origMaxYs := map[*Node]int{}
 
 		for _, n := range edgeNodes {
-			if n.x+n.width == p.size {
-				origWidths[n] = n.width
-				n.width += newSize - p.size
+			if n.region.Max.X == p.width {
+				origMaxXs[n] = n.region.Max.X
+				n.region.Max.X = newWidth
 			}
-			if n.y+n.height == p.size {
-				origHeights[n] = n.height
-				n.height += newSize - p.size
-			}
-		}
-
-		p.rollbackExtension = func() {
-			p.size = origSize
-			for n, w := range origWidths {
-				n.width = w
-			}
-			for n, h := range origHeights {
-				n.height = h
+			if n.region.Max.Y == p.height {
+				origMaxYs[n] = n.region.Max.Y
+				n.region.Max.Y = newHeight
 			}
 		}
+
+		rollback = func() {
+			p.width = origWidth
+			p.height = origHeight
+			for n, x := range origMaxXs {
+				n.region.Max.X = x
+			}
+			for n, y := range origMaxYs {
+				n.region.Max.Y = y
+			}
+		}
 	}
 
-	p.size = newSize
+	p.width = newWidth
+	p.height = newHeight
 
-	return true
-}
-
-// RollbackExtension rollbacks Extend call once.
-func (p *Page) RollbackExtension() {
-	if p.rollbackExtension == nil {
-		panic("packing: RollbackExtension cannot be called without Extend")
-	}
-	p.rollbackExtension()
-	p.rollbackExtension = nil
-}
-
-// CommitExtension commits Extend call.
-func (p *Page) CommitExtension() {
-	if p.rollbackExtension == nil {
-		panic("packing: RollbackExtension cannot be called without Extend")
-	}
-	p.rollbackExtension = nil
+	return rollback
 }

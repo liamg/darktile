@@ -20,6 +20,7 @@ type decoder struct {
 	currentColour color.Color
 	size          image.Point // does not limit image size, just where bg is drawn!
 	scratchpad    map[int]map[int]color.Color
+	oversized     bool
 }
 
 func Decode(reader io.Reader, bg color.Color) (image.Image, error) {
@@ -43,7 +44,11 @@ func (d *decoder) Decode() (image.Image, error) {
 	}
 
 	if err := d.processBody(); err != nil {
-		return nil, fmt.Errorf("error reading sixel header: %s", err)
+		return nil, fmt.Errorf("error reading sixel body: %s", err)
+	}
+
+	if d.oversized {
+		return nil, fmt.Errorf("sixel image exceeds %dx%d", maxDimension, maxDimension)
 	}
 
 	return d.draw(), nil
@@ -88,7 +93,7 @@ func (d *decoder) processHeader() error {
 
 	params := strings.Split(header, ";")
 
-	switch params[1] {
+	switch params[0] {
 	case "0", "1", "5", "6", "":
 		d.aspectRatio = 2
 	case "2":
@@ -157,6 +162,12 @@ func (d *decoder) handleRepeat() error {
 			if err != nil {
 				return fmt.Errorf("invalid count in sixel repeat sequence: %s: %s", countStr, err)
 			}
+			// Each repetition advances the cursor by one column, so a count
+			// past the width limit cannot produce a drawable image and is only
+			// a way to make the decoder spin.
+			if count > maxDimension {
+				return fmt.Errorf("sixel repeat count %d exceeds %d", count, maxDimension)
+			}
 			for i := 0; i < count; i++ {
 				if err := d.processDataChar(byt); err != nil {
 					return err
@@ -221,6 +232,10 @@ func (d *decoder) setRaster(args []string) error {
 	pv, err := strconv.Atoi(args[3])
 	if err != nil {
 		return err
+	}
+
+	if ph < 0 || pv < 0 || ph > maxDimension || pv > maxDimension {
+		return fmt.Errorf("raster size %dx%d is outside 0-%d", ph, pv, maxDimension)
 	}
 
 	d.size = image.Point{X: ph, Y: pv}
@@ -396,7 +411,17 @@ func colourFromHSL(hi, si, li int) color.Color {
 	return color.RGBA{R: uint8(r * 0xff), G: uint8(g * 0xff), B: uint8(b * 0xff), A: 0xff}
 }
 
+// Repeat counts and raster attributes are supplied by the program, so an image
+// can claim to be arbitrarily large. Refusing to grow past this keeps a single
+// escape sequence from allocating gigabytes.
+const maxDimension = 4096
+
 func (d *decoder) set(x, y int) {
+
+	if x >= maxDimension || y >= maxDimension {
+		d.oversized = true
+		return
+	}
 
 	if x > d.size.X {
 		d.size.X = x
@@ -410,7 +435,13 @@ func (d *decoder) set(x, y int) {
 		d.scratchpad[x] = make(map[int]color.Color)
 	}
 
-	d.scratchpad[x][y] = d.currentColour
+	// No colour register has been selected if the image starts with data, and
+	// an unset register reads back as nil.
+	colour := d.currentColour
+	if colour == nil {
+		colour = d.bg
+	}
+	d.scratchpad[x][y] = colour
 }
 
 func (d *decoder) draw() image.Image {

@@ -14,23 +14,38 @@
 
 package graphicscommand
 
-var theThread Thread
+import (
+	"context"
 
-type Thread interface {
-	Call(f func() error) error
+	"github.com/hajimehoshi/ebiten/v2/internal/thread"
+)
+
+var theRenderThread thread.Thread = thread.NewNoopThread()
+
+// SetOSThreadAsRenderThread sets an OS thread as rendering thread e.g. for OpenGL.
+func SetOSThreadAsRenderThread() {
+	theRenderThread = thread.NewOSThread()
 }
 
-// SetMainThread must be called from the main thread (i.e, the goroutine where the thread is created).
-func SetMainThread(thread Thread) {
-	theThread = thread
+func LoopRenderThread(ctx context.Context) {
+	_ = theRenderThread.Loop(ctx)
 }
 
-func runOnMainThread(f func() error) error {
-	// The thread is nil when 1) GOOS=js or 2) using golang.org/x/mobile/gl.
-	// When golang.org/x/mobile/gl is used, all the GL functions are called via Context, which already runs on an
-	// appropriate thread.
-	if theThread == nil {
-		return f()
+// runOnRenderThread calls f on the rendering thread.
+func runOnRenderThread(f func(), sync bool) {
+	if sync {
+		theRenderThread.Call(f)
+		return
 	}
-	return theThread.Call(f)
+
+	// As the current thread doesn't have a capacity in a channel,
+	// CallAsync should block when the previously-queued task is not executed yet.
+	// This blocking is expected as double-buffering is used.
+	theRenderThread.CallAsync(f)
+}
+
+func Terminate() {
+	// Post a task to the render thread to ensure all the queued functions are executed.
+	// This is necessary especially for GLFW. glfw.Terminate will remove the context and any graphics calls after that will be invalidated.
+	theRenderThread.Call(func() {})
 }

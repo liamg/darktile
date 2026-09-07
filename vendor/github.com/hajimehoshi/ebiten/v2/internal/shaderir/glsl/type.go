@@ -20,6 +20,50 @@ import (
 	"github.com/hajimehoshi/ebiten/v2/internal/shaderir"
 )
 
+func opString(op shaderir.Op) string {
+	switch op {
+	case shaderir.Add:
+		return "+"
+	case shaderir.Sub:
+		return "-"
+	case shaderir.NotOp:
+		return "!"
+	case shaderir.ComponentWiseMul, shaderir.MatrixMul:
+		return "*"
+	case shaderir.Div:
+		return "/"
+	case shaderir.ModOp:
+		return "%"
+	case shaderir.LeftShift:
+		return "<<"
+	case shaderir.RightShift:
+		return ">>"
+	case shaderir.LessThanOp:
+		return "<"
+	case shaderir.LessThanEqualOp:
+		return "<="
+	case shaderir.GreaterThanOp:
+		return ">"
+	case shaderir.GreaterThanEqualOp:
+		return ">="
+	case shaderir.EqualOp, shaderir.VectorEqualOp:
+		return "=="
+	case shaderir.NotEqualOp, shaderir.VectorNotEqualOp:
+		return "!="
+	case shaderir.And:
+		return "&"
+	case shaderir.Xor:
+		return "^"
+	case shaderir.Or:
+		return "|"
+	case shaderir.AndAnd:
+		return "&&"
+	case shaderir.OrOr:
+		return "||"
+	}
+	return fmt.Sprintf("?(unexpected operator: %d)", op)
+}
+
 func typeString(t *shaderir.Type) (string, string) {
 	switch t.Main {
 	case shaderir.Array:
@@ -48,6 +92,12 @@ func basicTypeString(t shaderir.BasicType) string {
 		return "vec3"
 	case shaderir.Vec4:
 		return "vec4"
+	case shaderir.IVec2:
+		return "ivec2"
+	case shaderir.IVec3:
+		return "ivec3"
+	case shaderir.IVec4:
+		return "ivec4"
 	case shaderir.Mat2:
 		return "mat2"
 	case shaderir.Mat3:
@@ -71,11 +121,11 @@ func (c *compileContext) builtinFuncString(f shaderir.BuiltinFunc) string {
 		return "dFdx"
 	case shaderir.Dfdy:
 		return "dFdy"
-	case shaderir.Texture2DF:
-		if c.version == GLSLVersionES300 {
-			return "texture"
+	case shaderir.TexelAt:
+		if c.unit == shaderir.Pixels {
+			return "texelFetch"
 		}
-		return "texture2D"
+		return "texture"
 	default:
 		return string(f)
 	}

@@ -111,16 +111,9 @@ func (t *Terminal) handleCSI(readChan chan MeasuredRune) (renderRequired bool) {
 		return false
 	}
 
-	for _, b := range intermediate {
-		t.processRunes(MeasuredRune{
-			Rune:  b,
-			Width: 1,
-		})
-	}
-
-	// TODO review this:
-	// if this is an unknown CSI sequence, write it to stdout as we can't handle it?
-	//_ = t.writeToRealStdOut(append([]rune{0x1b, '['}, raw...)...)
+	// Unknown sequences are dropped. Echoing the intermediate bytes here would
+	// re-enter processRunes while handleANSI still holds t.mu, deadlocking the
+	// parser goroutine for the rest of the session.
 	_ = raw
 	t.log("UNKNOWN CSI P(%s) I(%s) %c", strings.Join(params, ";"), string(intermediate), final)
 	return false
